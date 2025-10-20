@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>modal</title>
+</head>
+<body>
+    <button class="abrir-modal">Iniciar Sesion</button>
+    
+    <!-- ventana modal -->
+    <div class="modal-completo" >
+        <div class="modal-contenido">
+
+            <!-- header del modal -->
+            <div class="modal-header">
+                <h2 class="modal-title">Validar Cédula</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+
+            <!-- fomrulario -->
+            <div class="modal-form">
+                <label class="label-cedula" for="cedula">Ingrese su cédula</label>
+
+                <!-- inputs-->
+                <div class="input-group">
+                    <select name="Nacionalidad" id="Nacionalidad">
+                        <option value="V">V</option>
+                        <option value="E">E</option>
+                    </select>
+                    
+                    <input type="number" id="cedula" placeholder="ej: 12123123" maxlength="8">
+                </div>
+            </div>
+
+            <button class="btn-validar" type="submit" id="btn-validar">Validar</button>
+
+            <!-- mensaje de error -->
+            <div class="mensajeE" id="mensaje "></div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
