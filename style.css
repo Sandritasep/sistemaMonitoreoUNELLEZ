@@ -69,6 +69,7 @@ body{
 .modal-title{
     text-align: center;
     flex: 1;
+    color: #312b2b;
 }
 
 .modal-close{
@@ -80,6 +81,20 @@ body{
     transition: color 0.3s;
 }
 
+.modal-form{
+    margin-bottom: 20px;
+}
+
+.label-cedula{
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+}
+
+.input-group{
+    display: flex;
+}
 
 #Nacionalidad{
     width: 70px;
@@ -101,6 +116,11 @@ body{
     transition: border-color 0.3s;
 }
 
+#cedula:focus{
+    outline: none;
+    border-color: #2560e0;
+}
+
 #btn-validar{
     width: 100%;
     padding: 12px;
@@ -111,6 +131,24 @@ body{
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.3s;
+}
+
+#btn-validar:hover{
+    background-color: #7da4f6;
+}
+
+.validate-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.mensaje {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 14px;
+    display: none;
 }
 
 /* Oculta las flechas en Firefox */
