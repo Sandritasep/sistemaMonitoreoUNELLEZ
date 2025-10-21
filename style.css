@@ -75,8 +75,9 @@ body{
 .modal-close{
     float: right;
     border: none;
+    width: 25px;
     background: none;
-    border-radius: 6px;
+    border-radius: 10px;
     font-size: 25px;
     transition: color 0.3s;
 }
@@ -119,6 +120,7 @@ body{
 #cedula:focus{
     outline: none;
     border-color: #2560e0;
+    box-shadow: 0 4px 20px rgba(19, 56, 243, 0.20);
 }
 
 #btn-validar{
