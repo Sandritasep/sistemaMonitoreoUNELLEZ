@@ -28,7 +28,6 @@ document.addEventListener("keydown", function(event){
 
 //boton cerrar ventana
 btn_cerrarM.addEventListener("click", function(){
-    limpiarForm();
     modal.classList.remove("active");
 });
 
@@ -69,14 +68,16 @@ function validarCedula(){
     }
 };
 
+//limpiar formulario
 function limpiarForm(){
     cedulaIn.value = "";
     tipoCedula.value = "V";
     mensajeDiv.style.display = "block";
 };
 
+//mensaje de error
 function mensajeError(text, type){
     mensajeDiv.textContent = text;
-    mensajeDiv.className = "message" + type;
+    mensajeDiv.className = "mensaje" + type;
     mensajeDiv.style.display ="block";
 };
