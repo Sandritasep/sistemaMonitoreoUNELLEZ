@@ -25,18 +25,18 @@
                 <!-- inputs-->
                 <div class="input-group">
                     <select name="Nacionalidad" id="Nacionalidad">
-                        <option value="V">V</option>
-                        <option value="E">E</option>
+                        <option value="V">V -</option>
+                        <option value="E">E -</option>
                     </select>
                     
-                    <input type="number" id="cedula" placeholder="ej: 12123123" maxlength="8">
+                    <input type="text" id="cedula" placeholder="ej: 12123123" maxlength="8" pattern="[0-9]*">
                 </div>
             </div>
 
             <button class="btn-validar" type="submit" id="btn-validar">Validar</button>
 
             <!-- mensaje de error -->
-            <div class="mensaje" id="mensaje "></div>
+            <div class="mensaje" id="mensaje"></div>
         </div>
     </div>
     
