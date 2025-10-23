@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>modal</title>
 </head>
@@ -36,7 +37,17 @@
             <button class="btn-validar" type="submit" id="btn-validar">Validar</button>
 
             <!-- mensaje de error -->
-            <div class="mensaje" id="mensaje"></div>
+            <div class="caja-mensaje" id="mensaje"></div>
+        </div>
+    </div>
+
+    <div class="modal-success" id="modal-success">
+        <div class="success-content">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+            <p class="success-text">¡Validación Exitosa!</p>
         </div>
     </div>
     

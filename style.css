@@ -153,7 +153,7 @@ body{
     cursor: not-allowed;
 }
 
-.mensaje {
+.caja-mensaje{
     margin-top: 15px;
     padding: 10px;
     border-radius: 4px;
@@ -162,10 +162,16 @@ body{
     display: none;
 }
 
-.mensaje.error{
-    color: rgb(227, 61, 61);
-    background-color: rgb(239, 163, 163);
-    border: 1px solid rgb(239, 163, 163);
+.caja-mensaje.error{
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.caja-mensaje.success{
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #d4edda;
 }
 
 /* Oculta las flechas en Firefox */
@@ -175,3 +181,99 @@ input::-webkit-inner-spin-button {
   margin: 0;
 }
 
+/* caja de muestra de mensaje validacion */
+/* NUEVOS ESTILOS PARA EL MODAL DE ÉXITO */
+.modal-success {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro semitransparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Asegura que esté por encima de todo */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-success.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.success-content {
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.modal-success.active .success-content {
+    transform: scale(1);
+}
+
+.success-text {
+    margin-top: 20px;
+    font-size: 1.2em;
+    color: #4CAF50; /* Color verde para el texto de éxito */
+    font-weight: bold;
+}
+
+
+/* Estilos para el SVG del checkmark animado */
+.checkmark {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    box-shadow: inset 0px 0px 0px #4CAF50; /* Fondo del círculo */
+    animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+    position: relative;
+    margin: 0 auto;
+}
+.checkmark__circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #4CAF50; /* Color del círculo */
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+.checkmark__check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    stroke: #4CAF50; /* Color de la 'V' */
+}
+
+@keyframes stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+@keyframes scale {
+    0%, 100% {
+        transform: none;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+@keyframes fill {
+    100% {
+        box-shadow: inset 0px 0px 0px 30px #4CAF50;
+    }
+}

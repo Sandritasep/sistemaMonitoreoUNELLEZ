@@ -4,26 +4,15 @@ const btn_cerrarM = document.querySelector(".modal-close");
 const cedulaIn = document.getElementById("cedula");
 const validarBtn = document.getElementById("btn-validar");
 const mensajeDiv = document.getElementById("mensaje");
+const tipoCedula = document.getElementById("Nacionalidad");
 const url = "https://arse.unellez.edu.ve/arse/portal/consulta_estudiantes.php"
+
+//para el nuevo modal
+const modalSuccess = document.getElementById("modal-success");
 
 //abrir ventana modal
 btnOpen_iniciar.addEventListener("click", function(){
     modal.classList.add("active");
-});
-
-//enter para activar modal
-document.addEventListener("keydown", function(event) {
-    if(event.key === "Enter"){
-        modal.classList.add("active");
-    }
-});
-
-//esc para desactivar modal
-document.addEventListener("keydown", function(event){
-    if (event.key === "Escape"){
-        limpiarForm();
-        modal.classList.remove("active");
-    }
 });
 
 //boton cerrar ventana
@@ -59,25 +48,39 @@ cedulaIn.addEventListener('input', () => {
 
 function validarCedula(){
     const cedulaa = cedulaIn.value.trim();
-    
+    const tipo = tipoCedula.value;
+
     if (cedulaa == ""){
-        mensajeError("Debe ingresar su cedula", "error");
         limpiarForm();
+        mensajeE("Debe ingresar su cedula", "error");
+        return;
     } else if (cedulaa.length < 6 || cedulaa.length > 8){
-        mensajeError("La cedula debe contener entre 6 a 8 digitos", "error");
+        limpiarForm();
+        mensajeE("Su cedula debe contener entre 6 a 8 digitos", "error");
+        return;
     }
+    //cerrar modal contenido y abrir modal exito
+    modal.classList.remove("active");
+    modalSuccess.classList.add("active");
+
+    setTimeout(() => {
+        modalSuccess.classList.remove("active"); 
+        limpiarForm(); 
+    }, 1500);
 };
 
 //limpiar formulario
 function limpiarForm(){
     cedulaIn.value = "";
     tipoCedula.value = "V";
-    mensajeDiv.style.display = "block";
+    mensajeDiv.style.display = "none";
+    mensajeDiv.className = "caja-mensaje";
+    mensajeDiv.textContent = "";
 };
 
 //mensaje de error
-function mensajeError(text, type){
+function mensajeE(text, type){
     mensajeDiv.textContent = text;
-    mensajeDiv.className = "mensaje" + type;
+    mensajeDiv.className = "caja-mensaje " + type;
     mensajeDiv.style.display ="block";
 };
