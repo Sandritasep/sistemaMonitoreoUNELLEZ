@@ -9,6 +9,7 @@ const url = "https://arse.unellez.edu.ve/arse/portal/consulta_estudiantes.php"
 
 //para el nuevo modal
 const modalSuccess = document.getElementById("modal-success");
+const checkmark = modalSuccess.querySelector(".checkmark");
 
 //abrir ventana modal
 btnOpen_iniciar.addEventListener("click", function(){
@@ -48,7 +49,6 @@ cedulaIn.addEventListener('input', () => {
 
 function validarCedula(){
     const cedulaa = cedulaIn.value.trim();
-    const tipo = tipoCedula.value;
 
     if (cedulaa == ""){
         limpiarForm();
@@ -61,6 +61,12 @@ function validarCedula(){
     }
     //cerrar modal contenido y abrir modal exito
     modal.classList.remove("active");
+    checkmark.classList.remove('animate-checkmark');
+
+    void checkmark.offsetWidth; 
+    // Añadir la clase que activa la animación
+    checkmark.classList.add('animate-checkmark');
+
     modalSuccess.classList.add("active");
 
     setTimeout(() => {
