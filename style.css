@@ -13,15 +13,6 @@ body{
     padding: 20px;
 }
 
-.abrir-modal{
-    border: none;
-    padding: 15px;
-    font-size: 16px;
-    border-radius: 4px;
-    color: white;
-    background-color: #2560e0;
-    cursor: pointer;
-}
 .modal-completo{
     position: fixed;
     top: 0;
@@ -31,7 +22,7 @@ body{
     width: 100%;
     height: 100%;
     visibility: hidden;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.8);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -72,14 +63,15 @@ body{
     color: #312b2b;
 }
 
-.modal-close{
-    float: right;
-    border: none;
-    width: 25px;
-    background: none;
-    border-radius: 10px;
-    font-size: 25px;
-    transition: color 0.3s;
+.mapa-mapa{
+    margin: auto;
+    align-items: center;
+    justify-content: center;
+    background-color: #2560e0;
+}
+#mapa{
+    height: 300px;
+    width: 500px;
 }
 
 .modal-form{

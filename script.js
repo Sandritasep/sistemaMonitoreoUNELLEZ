@@ -1,33 +1,15 @@
-const btnOpen_iniciar = document.querySelector(".abrir-modal");
 const modal = document.querySelector(".modal-completo");
-const btn_cerrarM = document.querySelector(".modal-close");
 const cedulaIn = document.getElementById("cedula");
 const validarBtn = document.getElementById("btn-validar");
 const mensajeDiv = document.getElementById("mensaje");
 const tipoCedula = document.getElementById("Nacionalidad");
-const url = "https://arse.unellez.edu.ve/arse/portal/consulta_estudiantes.php"
-
+const url_validacion_BCKEND = "http://localhost/sistema/validar_cedula.php";
 //para el nuevo modal
 const modalSuccess = document.getElementById("modal-success");
 const checkmark = modalSuccess.querySelector(".checkmark");
 
-//abrir ventana modal
-btnOpen_iniciar.addEventListener("click", function(){
-    modal.classList.add("active");
-});
-
-//boton cerrar ventana
-btn_cerrarM.addEventListener("click", function(){
-    modal.classList.remove("active");
-});
-
-//cerrar ventana con click fuera contenido
-modal.addEventListener("click", (e) => {
-    if (e.target === modal){
-        modal.classList.remove("active");
-        limpiarForm();
-    }
-});
+//inicia con el modal
+modal.classList.add("active");
 
 //boton validar cedula
 validarBtn.addEventListener("click", () => {
@@ -47,6 +29,7 @@ cedulaIn.addEventListener('input', () => {
     cedulaIn.value = cedulaIn.value.replace(/[^0-9]/g, '');
 });
 
+//validar cedula
 function validarCedula(){
     const cedulaa = cedulaIn.value.trim();
 
@@ -59,21 +42,42 @@ function validarCedula(){
         mensajeE("Su cedula debe contener entre 6 a 8 digitos", "error");
         return;
     }
-    //cerrar modal contenido y abrir modal exito
-    modal.classList.remove("active");
-    checkmark.classList.remove('animate-checkmark');
 
-    void checkmark.offsetWidth; 
-    // Añadir la clase que activa la animación
-    checkmark.classList.add('animate-checkmark');
+    // Enviar datos al PHP
+    fetch(url_validacion_BCKEND,{
+        method: 'POST',
+        headers: {
+            'Content-type': 'application/x-www-form-urlenconded',
+        },
+        body: `cedula=${cedula}&nacionalidad=${nacionalidad}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valido){
+            //cerrar modal contenido y abrir modal exito
+            modal.classList.remove("active");
+            checkmark.classList.remove('animate-checkmark');
 
-    modalSuccess.classList.add("active");
+            void checkmark.offsetWidth; 
+            // Añadir la clase que activa la animación
+            checkmark.classList.add('animate-checkmark');
 
-    setTimeout(() => {
-        modalSuccess.classList.remove("active"); 
-        limpiarForm(); 
-    }, 1500);
+            modalSuccess.classList.add("active");
+
+            setTimeout(() => {
+                modalSuccess.classList.remove("active"); 
+                limpiarForm(); 
+            }, 1500);
+        } else {
+            mensajeE(data.mensaje || "Cédula inválida", "error");
+        }
+    })
+    .catch(error => {
+        mensajeE("Error de conexion", "Error");
+        console.error('Error:',error);
+    });
 };
+    
 
 //limpiar formulario
 function limpiarForm(){
@@ -90,3 +94,8 @@ function mensajeE(text, type){
     mensajeDiv.className = "caja-mensaje " + type;
     mensajeDiv.style.display ="block";
 };
+
+var map = L.map('mapa').setView([8.616212, -70.241993], 13);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        }).addTo(map);
