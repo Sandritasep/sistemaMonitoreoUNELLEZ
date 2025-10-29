@@ -41,6 +41,7 @@
         </div>
     </div>
 
+    <!-- modal sesion exitosa -->
     <div class="modal-success" id="modal-success">
         <div class="success-content">
             <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
@@ -51,13 +52,39 @@
         </div>
     </div>
 
+    <!-- modal rutas -->
+    <div class="modal-rutas-completo">
+        <div class="modal-rutas-contenido">
+            <!-- titulo -->
+            <div class="header-rutas">
+                <h2 class="titulo-rutas">Rutas</h2>
+            </div>
+
+            <!-- inputs -->
+            <div class="inputs-rutas">
+                <form class="form-rutas" action="" method="post">
+                    <select name="rutas" id="rutas">
+                        <option value="Ruta 1" data-descripcion="Ciudad Varyna, chigüire, punto fresco, Unellez">Ruta 1</option>
+                        <option value="Ruta 2" data-descripcion="Redoma industrial, parque los mangos, licoreria tal, el castillo de damasco, etc.. unellez">Ruta 2</option>
+                        <option value="Ruta 3" data-descripcion="algo por la raul, etc... unellez">Ruta 3</option>
+                        <option value="Ruta 4" data-descripcion="Creo que juan pablo y bla bla unellez">Ruta 4</option>
+                        <option value="Ruta 5" data-descripcion="ud se va derecho por la 23 de enero y por alla... despues de la subida llega a la Unellez">Ruta 5</option>
+                    </select>
+                </form>
+                <div class="descripcion-rutas" id="descripcionRutas">
+                    Seleccione una ruta para ver el recorrido
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- mapa -->
     <div class="mapa-mapa">
-        <div id="mapa"></div>
+        <div id="mapa">
+        </div>
     </div>
     
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-     crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
       
     <script src="script.js"></script>
 </body>

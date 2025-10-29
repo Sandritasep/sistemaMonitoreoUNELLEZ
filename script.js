@@ -4,9 +4,29 @@ const validarBtn = document.getElementById("btn-validar");
 const mensajeDiv = document.getElementById("mensaje");
 const tipoCedula = document.getElementById("Nacionalidad");
 const url_validacion_BCKEND = "http://localhost/sistema/validar_cedula.php";
-//para el nuevo modal
+
+//para el modal de exito
 const modalSuccess = document.getElementById("modal-success");
 const checkmark = modalSuccess.querySelector(".checkmark");
+
+//para el modal formulario de rutas
+const modal_Rutas = document.querySelector(".modal-rutas-completo");
+
+// para el selector de rutas
+const selectorRutas = document.getElementById('rutas');
+const divDescripcion = document.getElementById('descripcionRutas');
+
+selectorRutas.addEventListener('change', function() {
+    const opcionSeleccionada = selectorRutas.options[selectorRutas.selectedIndex];
+    const descripcion = opcionSeleccionada.getAttribute('data-descripcion');
+
+    if (descripcion) {
+            divDescripcion.textContent = descripcion;
+    } else {
+        // Un valor de fallback en caso de que la opción no tenga el atributo
+        divDescripcion.textContent = "No hay descripción disponible para esta ruta.";
+    }
+});
 
 //inicia con el modal
 modal.classList.add("active");
@@ -43,43 +63,31 @@ function validarCedula(){
         return;
     }
 
-    // Enviar datos al PHP
-    fetch(url_validacion_BCKEND,{
-        method: 'POST',
-        headers: {
-            'Content-type': 'application/x-www-form-urlenconded',
-        },
-        body: `cedula=${cedula}&nacionalidad=${nacionalidad}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.valido){
-            //cerrar modal contenido y abrir modal exito
-            modal.classList.remove("active");
-            checkmark.classList.remove('animate-checkmark');
+    modal.classList.remove("active");
+    checkmark.classList.remove('animate-checkmark');
 
-            void checkmark.offsetWidth; 
-            // Añadir la clase que activa la animación
-            checkmark.classList.add('animate-checkmark');
+    // Añadir la clase que activa la animación
+    void checkmark.offsetWidth; 
+    checkmark.classList.add('animate-checkmark');
+    modalSuccess.classList.add("active");
 
-            modalSuccess.classList.add("active");
-
-            setTimeout(() => {
-                modalSuccess.classList.remove("active"); 
-                limpiarForm(); 
-            }, 1500);
-        } else {
-            mensajeE(data.mensaje || "Cédula inválida", "error");
-        }
-    })
-    .catch(error => {
-        mensajeE("Error de conexion", "Error");
-        console.error('Error:',error);
-    });
+    setTimeout(() => {
+        modalSuccess.classList.remove("active"); 
+        limpiarForm(); 
+    }, 1500);    
 };
-    
 
-//limpiar formulario
+if (!modalSuccess.classList.contains("active")){
+    modal_Rutas.classList.add('active');
+}
+
+modal_Rutas.addEventListener("click", (e) => {
+    if (e.target === modal_Rutas){
+        modal_Rutas.classList.remove("active");
+    }
+});
+
+//limpiar formulario login
 function limpiarForm(){
     cedulaIn.value = "";
     tipoCedula.value = "V";
@@ -95,7 +103,11 @@ function mensajeE(text, type){
     mensajeDiv.style.display ="block";
 };
 
-var map = L.map('mapa').setView([8.616212, -70.241993], 13);
+//mapa
+var map = L.map('mapa', {
+    zoomControl: false,
+    attributionControl: false
+}).setView([8.616212, -70.241993], 15);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19
         }).addTo(map);
