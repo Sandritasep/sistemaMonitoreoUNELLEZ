@@ -6,11 +6,11 @@
 }
 body{
     background-color: #f5f5f5;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    /* display: flex; 
+    justify-content: center; 
+    align-items: center; */
     min-height: 100vh;
-    padding: 20px;
+    padding-top: 70px;
 }
 
 /* header */
@@ -22,7 +22,7 @@ header {
   z-index: 1000; /* Asegura que esté por encima del contenido */
   background-color: rgb(233, 236, 255);
   padding: 10px;
-  margin-bottom: 50px;
+  /* margin-bottom: 50px; */
 }
 
 .lista-enlaces{
@@ -321,12 +321,19 @@ header {
 }
 
 /* barra lateral para las distintas rutas */
-.main-container {
-    display: flex; /* Habilita el layout flexible */
-    height: 100%; /*  Ocupa toda la altura de la ventana */
+.contenedor-mapas{
+
+    display: flex;
+    justify-content: start; /* Centrado horizontal */
+    align-items: flex-start; /* Alinea arriba el contenido de las dos columnas */
+    width: 100%;
+
+    
+    /* display: flex;  Habilita el layout flexible 
+    height: 100%;   Ocupa toda la altura de la ventana 
     width: 100%;
     margin: 0;
-    padding: 0;
+    padding: 0; */
 }
 
 #sidebar {
@@ -336,6 +343,8 @@ header {
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     box-sizing: border-box; /* Asegura que el padding no aumente el ancho total */
     border-radius: 0px 20px 20px 0px;
+    min-height: 500px; 
+    align-self: flex-start;
 }
 
 .sidebar-title {
@@ -372,14 +381,17 @@ header {
 }
 
 .map-container{
-    margin: auto;
+    /* margin: auto; */
+    display: flex;
     align-items: center;
     justify-content: center;
+    flex-grow: 1;
+    /* padding-left: 20px; */
 }
 
 #mapa{
-    height: 300px;
-    width: 500px;
+    height: 500px;
+    width: 800px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
