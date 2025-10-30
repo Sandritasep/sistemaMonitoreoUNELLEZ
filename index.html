@@ -10,6 +10,15 @@
      crossorigin="">
 </head>
 <body>
+
+    <header>
+        <ul class="lista-enlaces">
+            <li class="item-enl"><a class="enlace" href="https://unellez.edu.ve/portal/index.php?unellez=1&mu=b">Portal Unellez</a></li>
+            <li class="item-enl"><a class="enlace" href="https://arse.unellez.edu.ve/arse/portal/login.php">Arse Dux</a></li>
+            <li class="item-enl"><a class="enlace" href="https://www.instagram.com/unellezoficial/">Instagram</a></li>
+        </ul>
+    </header>
+
     <!-- ventana modal -->
     <div class="modal-completo" >
         <div class="modal-contenido">
@@ -62,25 +71,46 @@
 
             <!-- inputs -->
             <div class="inputs-rutas">
-                <form class="form-rutas" action="" method="post">
-                    <select name="rutas" id="rutas">
-                        <option value="Ruta 1" data-descripcion="Ciudad Varyna, chigüire, punto fresco, Unellez">Ruta 1</option>
-                        <option value="Ruta 2" data-descripcion="Redoma industrial, parque los mangos, licoreria tal, el castillo de damasco, etc.. unellez">Ruta 2</option>
-                        <option value="Ruta 3" data-descripcion="algo por la raul, etc... unellez">Ruta 3</option>
-                        <option value="Ruta 4" data-descripcion="Creo que juan pablo y bla bla unellez">Ruta 4</option>
-                        <option value="Ruta 5" data-descripcion="ud se va derecho por la 23 de enero y por alla... despues de la subida llega a la Unellez">Ruta 5</option>
-                    </select>
-                </form>
-                <div class="descripcion-rutas" id="descripcionRutas">
-                    Seleccione una ruta para ver el recorrido
+                <label for="formulario-rutas" class="label-rutas">Escoja la ruta de su preferencia</label>
+
+                <div class="input-group-rutas">
+                    <form class="form-rutas" id="formulario-rutas" action="" method="post">
+                        <select name="rutas" id="rutas">
+                            <option value="" data-descripcion="Seleccione una ruta para ver su recorrido">Options</option>
+                            <option value="Ruta 1" data-descripcion="Ciudad Varyna, chigüire, punto fresco, Unellez">Ruta 1</option>
+                            <option value="Ruta 2" data-descripcion="Redoma industrial, parque los mangos, licoreria tal, el castillo de damasco, etc.. unellez">Ruta 2</option>
+                            <option value="Ruta 3" data-descripcion="algo por la raul, etc... unellez">Ruta 3</option>
+                            <option value="Ruta 4" data-descripcion="Creo que juan pablo y bla bla unellez">Ruta 4</option>
+                            <option value="Ruta 5" data-descripcion="ud se va derecho por la 23 de enero y por alla... despues de la subida llega a la Unellez">Ruta 5</option>
+                        </select>
+                    </form>
+                    <div class="descripcion-rutas" id="descripcionRutas">
+                    </div>
                 </div>
+                <button type="submit" class="btn-ruta">Submit</button>
             </div>
         </div>
     </div>
 
-    <!-- mapa -->
-    <div class="mapa-mapa">
-        <div id="mapa">
+    <!-- barra lateral para las distintas rutas -->
+    <div class="main-container">
+
+        <!-- barra lateral -->
+        <div id="sidebar">
+            <h3 class="sidebar-title">Rutas Disponibles</h3>
+            <ul id="tab-list">
+                <li class="tab-item" data-route="ruta1">Ruta 1</li>
+                <li class="tab-item" data-route="ruta2">Ruta 2</li>
+                <li class="tab-item" data-route="ruta3">Ruta 3</li>
+                <li class="tab-item" data-route="ruta4">Ruta 4</li>
+                <li class="tab-item" data-route="ruta5">Ruta 5</li>
+            </ul>
+        </div>
+
+        <!-- mapa -->
+        <div class="map-container">
+            <div id="mapa">
+            </div>
         </div>
     </div>
     

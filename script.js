@@ -11,15 +11,18 @@ const checkmark = modalSuccess.querySelector(".checkmark");
 
 //para el modal formulario de rutas
 const modal_Rutas = document.querySelector(".modal-rutas-completo");
-
 // para el selector de rutas
 const selectorRutas = document.getElementById('rutas');
 const divDescripcion = document.getElementById('descripcionRutas');
+const descripcionInicial = selectorRutas.options[0].getAttribute('data-descripcion');
+divDescripcion.textContent = descripcionInicial;
 
+//para cambiar las rutas en el select
 selectorRutas.addEventListener('change', function() {
     const opcionSeleccionada = selectorRutas.options[selectorRutas.selectedIndex];
     const descripcion = opcionSeleccionada.getAttribute('data-descripcion');
 
+    divDescripcion.innerHTML = '';
     if (descripcion) {
             divDescripcion.textContent = descripcion;
     } else {
@@ -29,7 +32,7 @@ selectorRutas.addEventListener('change', function() {
 });
 
 //inicia con el modal
-modal.classList.add("active");
+//modal.classList.add("active");
 
 //boton validar cedula
 validarBtn.addEventListener("click", () => {
@@ -74,13 +77,11 @@ function validarCedula(){
     setTimeout(() => {
         modalSuccess.classList.remove("active"); 
         limpiarForm(); 
-    }, 1500);    
+        modal_Rutas.classList.add('active') 
+    }, 1500);  
 };
 
-if (!modalSuccess.classList.contains("active")){
-    modal_Rutas.classList.add('active');
-}
-
+//modal selector de rutas
 modal_Rutas.addEventListener("click", (e) => {
     if (e.target === modal_Rutas){
         modal_Rutas.classList.remove("active");

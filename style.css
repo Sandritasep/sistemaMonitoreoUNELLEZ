@@ -13,6 +13,48 @@ body{
     padding: 20px;
 }
 
+/* header */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000; /* Asegura que esté por encima del contenido */
+  background-color: rgb(233, 236, 255);
+  padding: 10px;
+  margin-bottom: 50px;
+}
+
+.lista-enlaces{
+    display: flex;
+    justify-content: flex-end;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.item-enl{
+    margin: 0 10px;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.item-enl:hover{
+    background-color: #007bff;
+}
+
+.enlace{
+    text-decoration: none;
+    color: black;
+    font-weight: 600;
+}
+
+.enlace:hover{
+    color: white;
+    font-weight: 600;
+}
+
+/* ventana modal login */
 .modal-completo{
     position: fixed;
     top: 0;
@@ -155,7 +197,7 @@ body{
     border: 1px solid #d4edda;
 }
 
-/* formulario rutas */
+/* modal formulario rutas */
 .modal-rutas-completo{
     position: fixed;
     top: 0;
@@ -200,11 +242,23 @@ body{
     margin-bottom: 20px;
 }
 
+.label-rutas{
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+    text-align: left;
+}
+
 .inputs-rutas{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: block;
+    /* justify-content: space-between;
+    align-items: center; */
     text-align: center;
+}
+
+.input-group-rutas {
+    display: flex; /* Asegura que el contenedor de select y descripción no sea flex horizontal */
 }
 
 .form-rutas{
@@ -218,6 +272,15 @@ body{
     background: none;
     border-radius: 10px;
     transition: color 0.3s;
+    text-align: justify; 
+    
+    /* Propiedades adicionales comunes para justificación */
+    line-height: 1; /* Mejora la legibilidad */
+    padding: 15px;
+    border: 1px solid #ccc;
+    width: 300px;
+    margin-left: 10px;
+    margin-bottom: 30px;
 }
 
 #rutas{
@@ -238,13 +301,82 @@ body{
     box-shadow: 0 4px 20px rgba(19, 56, 243, 0.20);
 }
 
-/* caja de muestra de mensaje validacion */
-.mapa-mapa{
+.btn-ruta{
+    font-weight: 600;
+    width: 100%;
+    padding: 12px;
+    background-color: #2560e0;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-ruta:hover{
+    background-color: #437df9;
+    font-weight: 900;
+    box-shadow: 0 4px 20px rgba(19, 47, 188, 0.5);
+}
+
+/* barra lateral para las distintas rutas */
+.main-container {
+    display: flex; /* Habilita el layout flexible */
+    height: 100%; /*  Ocupa toda la altura de la ventana */
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#sidebar {
+    width: 250px; /* Ancho fijo para la barra lateral */
+    background-color: white;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    box-sizing: border-box; /* Asegura que el padding no aumente el ancho total */
+    border-radius: 0px 20px 20px 0px;
+}
+
+.sidebar-title {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 10px;
+}
+
+#tab-list {
+    list-style: none; /* Quita los puntos de la lista */
+    padding: 0;
+    margin: 0;
+}
+
+.tab-item {
+    padding: 10px 15px;
+    margin-bottom: 5px;
+    background-color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.tab-item:hover {
+    background-color: #e0e0e0;
+}
+
+.tab-item.active {
+    background-color: #007bff; /* Color para la pestaña activa */
+    color: white;
+    font-weight: bold;
+}
+
+.map-container{
     margin: auto;
     align-items: center;
     justify-content: center;
-    background-color: #2560e0;
 }
+
 #mapa{
     height: 300px;
     width: 500px;
