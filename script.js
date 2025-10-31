@@ -3,7 +3,6 @@ const cedulaIn = document.getElementById("cedula");
 const validarBtn = document.getElementById("btn-validar");
 const mensajeDiv = document.getElementById("mensaje");
 const tipoCedula = document.getElementById("Nacionalidad");
-const url_validacion_BCKEND = "http://localhost/sistema/validar_cedula.php";
 
 //para el modal de exito
 const modalSuccess = document.getElementById("modal-success");
@@ -11,11 +10,42 @@ const checkmark = modalSuccess.querySelector(".checkmark");
 
 //para el modal formulario de rutas
 const modal_Rutas = document.querySelector(".modal-rutas-completo");
+const btnRuta = document.querySelector(".btn-ruta");
 // para el selector de rutas
 const selectorRutas = document.getElementById('rutas');
 const divDescripcion = document.getElementById('descripcionRutas');
 const descripcionInicial = selectorRutas.options[0].getAttribute('data-descripcion');
 divDescripcion.textContent = descripcionInicial;
+
+//para la barra lateral
+const tabItems = document.querySelectorAll('.tab-item');
+const tituloRuta = document.querySelector('.titulo-ruta');
+
+//inicia con el modal
+//modal.classList.add("active");
+
+function cambiarRuta(event) {
+    tabItems.forEach(item => {
+        item.classList.remove('active');
+    });
+
+    event.currentTarget.classList.add('active');
+    const nuevoTitulo = event.currentTarget.textContent;
+    tituloRuta.textContent = nuevoTitulo;
+
+    // **(Aquí iría tu lógica existente para cambiar el mapa o la ruta)**
+    // const rutaSeleccionada = event.currentTarget.dataset.route;
+    // cargarMapa(rutaSeleccionada); 
+};
+tabItems.forEach(item => {
+    item.addEventListener('click', cambiarRuta);
+});
+
+// Opcional: Establecer un título inicial y la pestaña 'active' por defecto
+/*if (tabItems.length > 0) {
+    tabItems[0].classList.add('active'); // Activa el primer elemento
+    tituloRuta.textContent = tabItems[0].textContent; // Establece el título inicial
+}*/
 
 //para cambiar las rutas en el select
 selectorRutas.addEventListener('change', function() {
@@ -31,8 +61,10 @@ selectorRutas.addEventListener('change', function() {
     }
 });
 
-//inicia con el modal
-//modal.classList.add("active");
+//cerrar el modal rutas con el boton (por ahora)
+btnRuta.addEventListener('click', () => {
+    modal_Rutas.classList.remove("active");
+})
 
 //boton validar cedula
 validarBtn.addEventListener("click", () => {

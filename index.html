@@ -77,11 +77,11 @@
                     <form class="form-rutas" id="formulario-rutas" action="" method="post">
                         <select name="rutas" id="rutas">
                             <option value="" data-descripcion="Seleccione una ruta para ver su recorrido">Options</option>
-                            <option value="Ruta 1" data-descripcion="Ciudad Varyna, chigüire, punto fresco, Unellez">Ruta 1</option>
-                            <option value="Ruta 2" data-descripcion="Redoma industrial, parque los mangos, licoreria tal, el castillo de damasco, etc.. unellez">Ruta 2</option>
-                            <option value="Ruta 3" data-descripcion="algo por la raul, etc... unellez">Ruta 3</option>
-                            <option value="Ruta 4" data-descripcion="Creo que juan pablo y bla bla unellez">Ruta 4</option>
-                            <option value="Ruta 5" data-descripcion="ud se va derecho por la 23 de enero y por alla... despues de la subida llega a la Unellez">Ruta 5</option>
+                            <option value="Ruta 1" data-descripcion="Ciudad Varyna - Unellez">Ruta 1</option>
+                            <option value="Ruta 2" data-descripcion="Redoma industrial - Unellez">Ruta 2</option>
+                            <option value="Ruta 3" data-descripcion="Raul Leoni - Unellez">Ruta 3</option>
+                            <option value="Ruta 4" data-descripcion="Juan Pablo - Unellez">Ruta 4</option>
+                            <option value="Ruta 5" data-descripcion="No se - Unellez">Ruta 5</option>
                         </select>
                     </form>
                     <div class="descripcion-rutas" id="descripcionRutas">
@@ -99,16 +99,18 @@
         <div id="sidebar">
             <h3 class="sidebar-title">Rutas Disponibles</h3>
             <ul id="tab-list">
-                <li class="tab-item" data-route="ruta1">Ruta 1</li>
-                <li class="tab-item" data-route="ruta2">Ruta 2</li>
-                <li class="tab-item" data-route="ruta3">Ruta 3</li>
-                <li class="tab-item" data-route="ruta4">Ruta 4</li>
-                <li class="tab-item" data-route="ruta5">Ruta 5</li>
+                <li class="tab-item" data-route="ruta1" data-descripcion="Ciudad Varyna-Unellez">Ruta 1</li>
+                <li class="tab-item" data-route="ruta2" data-descripcion="Raul Leoni-Unellez">Ruta 2</li>
+                <li class="tab-item" data-route="ruta3" data-descripcion="Juan Pablo-Unellez">Ruta 3</li>
+                <li class="tab-item" data-route="ruta4" data-descripcion="Redoma Industrial-Unellez">Ruta 4</li>
+                <li class="tab-item" data-route="ruta5" data-descripcion="Cuatricentenaria-Unellez">Ruta 5</li>
             </ul>
         </div>
 
          <!-- mapa -->
         <div class="map-container">
+            <!-- solo si es admin mostrar mapa de todas las rutas juntas -->
+            <h2 class="titulo-ruta">Rutas Unellez</h2>
             <div id="mapa">
             </div>
         </div>
