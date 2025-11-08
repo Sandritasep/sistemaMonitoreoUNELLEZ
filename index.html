@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
      crossorigin="">
+     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
 
@@ -19,39 +20,45 @@
         </ul>
     </header>
 
-    <!-- ventana modal -->
+    <!-- ventana modal inicio -->
     <div class="modal-completo" >
+
+        <!-- imagen de fondo -->
+        <div class="modal-fondo-imagen"></div>
+
+        <!-- capa oscura -->
+        <div class="modal-overlay-oscuro"></div>
+
+        <!-- contenido del modal -->
         <div class="modal-contenido">
 
-            <!-- header del modal -->
-            <div class="modal-header">
-                <h2 class="modal-title">Validar Cédula</h2>
-            </div>
-
-            <!-- fomrulario -->
-            <div class="modal-form">
-                <label class="label-cedula" for="cedula">Ingrese su cédula</label>
-
-                <!-- inputs-->
-                <div class="input-group">
-                    <select name="Nacionalidad" id="Nacionalidad">
-                        <option value="V">V -</option>
-                        <option value="E">E -</option>
-                    </select>
-                    
-                    <input type="text" id="cedula" placeholder="ej: 12123123" maxlength="8" pattern="[0-9]*" inputmode="numeric">
+            <div class="icono-ubi-contenedor">
+                <div class="icono-ubi">
+                    <div class="base"></div>
+                    <div class="relleno" id="rellenoIcono"></div>
                 </div>
             </div>
-
-            <button class="btn-validar" type="submit" id="btn-validar">Validar</button>
-
-            <!-- mensaje de error -->
-            <div class="caja-mensaje" id="mensaje"></div>
         </div>
     </div>
+    
+    <!-- escaner QR carnet -->
+     <div class="modal-qr">
+        <!-- imagen de fondo -->
+        <div class="modal-fondo-imagen"></div>
+        <!-- capa oscura -->
+        <div class="modal-overlay-oscuro"></div>
+
+        <!-- escaner QR -->
+        <div class="modal-container-qr">
+            <div id="reader"></div>
+            <p id="result"></p>
+        </div>
+     </div>
 
     <!-- modal sesion exitosa -->
     <div class="modal-success" id="modal-success">
+        <div class="modal-fondo-imagen"></div>
+        <div class="modal-overlay-oscuro"></div>
         <div class="success-content">
             <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
                 <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
@@ -63,6 +70,8 @@
 
     <!-- modal rutas -->
     <div class="modal-rutas-completo">
+        <div class="modal-fondo-imagen"></div>
+        <div class="modal-overlay-oscuro"></div>
         <div class="modal-rutas-contenido">
             <!-- titulo -->
             <div class="header-rutas">
@@ -87,7 +96,7 @@
                     <div class="descripcion-rutas" id="descripcionRutas">
                     </div>
                 </div>
-                <button type="submit" class="btn-ruta">Submit</button>
+                <button type="submit" class="btn-ruta" onclick='btnRutaaaa()'>Submit</button>
             </div>
         </div>
     </div>
@@ -117,7 +126,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-      
+    <script src="scanerQr.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

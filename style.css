@@ -64,7 +64,7 @@ header {
     width: 100%;
     height: 100%;
     visibility: hidden;
-    background-color: rgba(0, 0, 0, 0.8);
+    /* background-color: rgba(0, 0, 0, 0.8); */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -79,122 +79,137 @@ header {
     visibility: visible;
 }
 
+.modal-fondo-imagen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background-image: url('multimedia/mapaBarinas.png'); 
+    background-size: cover;
+    background-position: center;
+    filter: blur(3px); 
+}
+
+.modal-overlay-oscuro {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    background-color: rgba(0, 0, 0, 0.8); 
+}
+
 .modal-contenido{
+    z-index: 10;
+    position: relative;
     width: 90%;
     max-width: 400px;
     max-height: 90%;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-    transform: translateY(-20px);
+    /* transform: translateY(-20px); */
+    transform: scale(0.8);
+    transform-origin: center;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+
     padding: 30px;
     gap: 1em;
 }
 
-.modal-header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    text-align: center;
-    margin-bottom: 20px;
+.icono-ubi-contenedor{
+    margin: 20px 0;
 }
 
-.modal-title{
-    text-align: center;
-    flex: 1;
-    color: #312b2b;
+.icono-ubi{
+    width: 60px;
+    height: 60px;
+    position: relative;
+    margin: 20px auto 10px;
 }
 
-.modal-form{
-    margin-bottom: 20px;
-}
-
-.label-cedula{
-    display: block;
-    margin-bottom: 8px;
-    color: #555;
-    font-weight: 500;
-}
-
-.input-group{
-    display: flex;
-}
-
-#Nacionalidad{
-    width: 70px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-right: none;
-    border-radius: 4px 0 0 4px;
-    background-color: #f9f9f9;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-#Nacionalidad:focus{
-    border: 1px solid;
-    border-color: #2560e0;
-    outline: none;
-}
-
-#cedula{
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 0 4px 4px 0;
-    font-size: 16px;
-    transition: border-color 0.3s;
-}
-
-#cedula:focus{
-    outline: none;
-    border-color: #2560e0;
-    box-shadow: 0 4px 20px rgba(19, 56, 243, 0.20);
-}
-
-#btn-validar{
-    font-weight: 600;
+.icono-ubi .base{
     width: 100%;
-    padding: 12px;
-    background-color: #2560e0;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    height: 100%;
+    border: 5px solid #007bff; /* Color del contorno */
+    border-radius: 50% 50% 50% 0; /* Forma de gota, ajusta según el diseño */
+    transform: rotate(-45deg); /* Gira para que la punta apunte hacia abajo */
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
-#btn-validar:hover{
-    background-color: #437df9;
-    font-weight: 900;
-    box-shadow: 0 4px 20px rgba(19, 47, 188, 0.5);
+.icono-ubi .relleno{
+    width: 100%;
+    height: 100%;
+    background-color: #007bff; /* Color de relleno */
+    border-radius: 50% 50% 50% 0; 
+    transform: rotate(-45deg); 
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: center; /* El punto de origen de la transformación es abajo */
+    height: 0; /* Empieza vacío */
+    animation: rellenar-ubicacion 1s ease-out forwards;
 }
 
-.validate-btn:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
+/* Definición de la animación de llenado */
+@keyframes rellenar-ubicacion {
+    0% {
+        height: 0;
+        opacity: 0.5;
+    }
+    100% {
+        height: 100%;
+        opacity: 1;
+    }
 }
 
-.caja-mensaje{
-    margin-top: 15px;
-    padding: 10px;
-    border-radius: 4px;
-    text-align: center;
-    font-size: 14px;
-    display: none;
+/* ventana scaner qr */
+.modal-qr{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    visibility: hidden;
+    /* background-color: rgba(0, 0, 0, 0.8); */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
 }
 
-.caja-mensaje.error{
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+.modal-qr.active{
+    opacity: 1;
+    visibility: visible;
 }
 
-.caja-mensaje.success{
-    color: #155724;
-    background-color: #d4edda;
-    border: 1px solid #d4edda;
+.modal-container-qr{
+    z-index: 10;
+    position: relative;
+    width: 90%;
+    max-width: 400px;
+    max-height: 90%;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+    padding: 30px;
+    gap: 1em;
+}
+
+#reader {
+    width: 100%;
+    height: 100%;
 }
 
 /* modal formulario rutas */
@@ -207,7 +222,7 @@ header {
     width: 100%;
     height: 100%;
     visibility: hidden;
-    background-color: rgba(0, 0, 0, 0.8);
+    /* background-color: rgba(0, 0, 0, 0.8); */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -223,6 +238,8 @@ header {
 }
 
 .modal-rutas-contenido{
+    z-index: 10;
+    position: relative;
     width: 90%;
     max-width: 400px;
     max-height: 90%;
@@ -419,11 +436,11 @@ input::-webkit-inner-spin-button {
     bottom: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro semitransparente */
+    /* background-color: rgba(0, 0, 0, 0.9); */
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2000; /* Asegura que esté por encima de todo */
+    z-index: 1000; 
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -435,6 +452,8 @@ input::-webkit-inner-spin-button {
 }
 
 .success-content {
+    z-index: 10;
+    position: relative;
     background-color: white;
     padding: 40px;
     border-radius: 10px;
@@ -464,7 +483,7 @@ input::-webkit-inner-spin-button {
     stroke-width: 2;
     stroke: #fff;
     stroke-miterlimit: 10;
-    box-shadow: inset 0px 0px 0px #4CAF50; /* Fondo del círculo */
+    box-shadow: inset 0px 0px 0px #4CAF50;
     position: relative;
     margin: 0 auto;
 }
@@ -478,7 +497,7 @@ input::-webkit-inner-spin-button {
     stroke-dashoffset: 166;
     stroke-width: 2;
     stroke-miterlimit: 10;
-    stroke: #4CAF50; /* Color del círculo */
+    stroke: #4CAF50;
     fill: none;
 }
 

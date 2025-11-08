@@ -1,28 +1,24 @@
+//modal bienvenida
 const modal = document.querySelector(".modal-completo");
-const cedulaIn = document.getElementById("cedula");
-const validarBtn = document.getElementById("btn-validar");
-const mensajeDiv = document.getElementById("mensaje");
-const tipoCedula = document.getElementById("Nacionalidad");
+const fuera = document.querySelector(".modal-overlay-oscuro")
 
-//para el modal de exito
+//modal de exito
 const modalSuccess = document.getElementById("modal-success");
 const checkmark = modalSuccess.querySelector(".checkmark");
 
-//para el modal formulario de rutas
+//modal formulario de rutas
 const modal_Rutas = document.querySelector(".modal-rutas-completo");
 const btnRuta = document.querySelector(".btn-ruta");
-// para el selector de rutas
+
+//selector de rutas
 const selectorRutas = document.getElementById('rutas');
 const divDescripcion = document.getElementById('descripcionRutas');
 const descripcionInicial = selectorRutas.options[0].getAttribute('data-descripcion');
 divDescripcion.textContent = descripcionInicial;
 
-//para la barra lateral
+//barra lateral
 const tabItems = document.querySelectorAll('.tab-item');
 const tituloRuta = document.querySelector('.titulo-ruta');
-
-//inicia con el modal
-//modal.classList.add("active");
 
 function cambiarRuta(event) {
     tabItems.forEach(item => {
@@ -62,42 +58,25 @@ selectorRutas.addEventListener('change', function() {
 });
 
 //cerrar el modal rutas con el boton (por ahora)
-btnRuta.addEventListener('click', () => {
-    modal_Rutas.classList.remove("active");
-})
+// btnRuta.addEventListener('click', () => {
+//     modal_Rutas.classList.remove("active");
+// })
 
-//boton validar cedula
-validarBtn.addEventListener("click", () => {
-    validarCedula();
-    limpiarForm();
-});
+function btnRutaaaa(){
+    modal_Rutas.classList.remove('active');
+}
 
-//validar con enter
-cedulaIn.addEventListener("keydown", (e) => {
-    if (e.key === "Enter"){
-        validarCedula();
+
+//modal selector de rutas modal
+modal_Rutas.addEventListener("click", (e) => {
+    if (e.target === modal_Rutas){
+        modal_Rutas.classList.remove("active");
     }
 });
 
-//solo numeros
-cedulaIn.addEventListener('input', () => {
-    cedulaIn.value = cedulaIn.value.replace(/[^0-9]/g, '');
-});
 
 //validar cedula
 function validarCedula(){
-    const cedulaa = cedulaIn.value.trim();
-
-    if (cedulaa == ""){
-        limpiarForm();
-        mensajeE("Debe ingresar su cedula", "error");
-        return;
-    } else if (cedulaa.length < 6 || cedulaa.length > 8){
-        limpiarForm();
-        mensajeE("Su cedula debe contener entre 6 a 8 digitos", "error");
-        return;
-    }
-
     modal.classList.remove("active");
     checkmark.classList.remove('animate-checkmark');
 
@@ -107,34 +86,20 @@ function validarCedula(){
     modalSuccess.classList.add("active");
 
     setTimeout(() => {
-        modalSuccess.classList.remove("active"); 
-        limpiarForm(); 
-        modal_Rutas.classList.add('active') 
+        modalSuccess.classList.remove("active");
+        
     }, 1500);  
 };
 
-//modal selector de rutas
-modal_Rutas.addEventListener("click", (e) => {
-    if (e.target === modal_Rutas){
-        modal_Rutas.classList.remove("active");
-    }
-});
+//inicia con el modal
+setTimeout(() => {
+    modal.classList.remove("active");
+    modal_Qr.classList.add("active");
 
-//limpiar formulario login
-function limpiarForm(){
-    cedulaIn.value = "";
-    tipoCedula.value = "V";
-    mensajeDiv.style.display = "none";
-    mensajeDiv.className = "caja-mensaje";
-    mensajeDiv.textContent = "";
-};
 
-//mensaje de error
-function mensajeE(text, type){
-    mensajeDiv.textContent = text;
-    mensajeDiv.className = "caja-mensaje " + type;
-    mensajeDiv.style.display ="block";
-};
+    //modal_Rutas.classList.add('active');
+}, 1500)
+modal.classList.add("active");
 
 //mapa
 var map = L.map('mapa', {
