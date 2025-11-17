@@ -5,56 +5,96 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 body{
-    background-color: #f5f5f5;
-    /* display: flex; 
-    justify-content: center; 
-    align-items: center; */
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    min-height: 100vh;
+    overflow-x: hidden;background-color: #f5f5f5;
     min-height: 100vh;
     padding-top: 70px;
 }
 
-/* header */
+
+/* HEADER */
 header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1000; /* Asegura que esté por encima del contenido */
-  background-color: rgb(233, 236, 255);
-  padding: 10px;
-  /* margin-bottom: 50px; */
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
 }
 
-.lista-enlaces{
+.header-content {
     display: flex;
-    justify-content: flex-end;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-.item-enl{
-    margin: 0 10px;
-    border-radius: 10px;
-    padding: 10px;
+.logo h1 {
+    color: #1a2a6c;
+    font-size: 1.8rem;
+    font-weight: bold;
 }
 
-.item-enl:hover{
-    background-color: #007bff;
+.logo i {
+    margin-right: 10px;
 }
 
-.enlace{
-    text-decoration: none;
-    color: black;
-    font-weight: 600;
+.user-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
-.enlace:hover{
+
+.btn-login {
+    background: #1a2a6c;
     color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
     font-weight: 600;
+    transition: all 0.3s ease;
 }
 
-/* ventana modal login */
+.btn-login:hover {
+    background: #152252;
+    transform: translateY(-2px);
+}
+
+/* Header User Info */
+.user-header-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-welcome {
+    color: #1a2a6c;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.btn-logout-header {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s ease;
+    font-size: 0.8rem;
+}
+
+.btn-logout-header:hover {
+    background: #c82333;
+}
+
+/*  MODAL INICIO */
 .modal-completo{
     position: fixed;
     top: 0;
@@ -86,7 +126,6 @@ header {
     width: 100%;
     height: 100%;
     z-index: 1;
-    background-image: url('multimedia/mapaBarinas.png'); 
     background-size: cover;
     background-position: center;
     filter: blur(3px); 
@@ -135,9 +174,9 @@ header {
 .icono-ubi .base{
     width: 100%;
     height: 100%;
-    border: 5px solid #007bff; /* Color del contorno */
-    border-radius: 50% 50% 50% 0; /* Forma de gota, ajusta según el diseño */
-    transform: rotate(-45deg); /* Gira para que la punta apunte hacia abajo */
+    border: 5px solid #007bff;
+    border-radius: 50% 50% 50% 0; 
+    transform: rotate(-45deg); 
     position: absolute;
     top: 0;
     left: 0;
@@ -146,7 +185,7 @@ header {
 .icono-ubi .relleno{
     width: 100%;
     height: 100%;
-    background-color: #007bff; /* Color de relleno */
+    background-color: #007bff;
     border-radius: 50% 50% 50% 0; 
     transform: rotate(-45deg); 
     position: absolute;
@@ -169,7 +208,7 @@ header {
     }
 }
 
-/* ventana scaner qr */
+/* MODAL SCANNER QR */
 .modal-qr{
     position: fixed;
     top: 0;
@@ -204,7 +243,29 @@ header {
     border-radius: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
     padding: 30px;
+
+    display: flex;
+    flex-direction: column;
     gap: 1em;
+}
+
+/* NUEVO CÓDIGO: Hace que los spans dentro de .header-qr se alineen horizontalmente */
+.header-qr {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+}
+
+.titulo-scanner{
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.cerrar-qr{
+    cursor: pointer;
+    font-size: 30px; /* Hago la X un poco más grande para que se vea mejor */
+    font-weight: bold;
 }
 
 #reader {
@@ -338,78 +399,108 @@ header {
     box-shadow: 0 4px 20px rgba(19, 47, 188, 0.5);
 }
 
-/* barra lateral para las distintas rutas */
-.contenedor-mapas{
-
-    display: flex;
-    justify-content: start; /* Centrado horizontal */
-    align-items: flex-start; /* Alinea arriba el contenido de las dos columnas */
-    width: 100%;
-
-    
-    /* display: flex;  Habilita el layout flexible 
-    height: 100%;   Ocupa toda la altura de la ventana 
-    width: 100%;
-    margin: 0;
-    padding: 0; */
+/* Main Content */
+.main-container {
+    margin-top: 80px;
+    padding: 2rem;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    display: none;
 }
 
-#sidebar {
-    width: 250px; /* Ancho fijo para la barra lateral */
-    background-color: white;
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    box-sizing: border-box; /* Asegura que el padding no aumente el ancho total */
-    border-radius: 0px 20px 20px 0px;
-    min-height: 500px; 
-    align-self: flex-start;
+.main-container.active {
+    display: block;
+}
+
+.content-wrapper {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 300px;
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.user-panel {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.user-avatar {
+    font-size: 3rem;
+    color: #1a2a6c;
+    margin-bottom: 1rem;
+}
+
+.user-info h4 {
+    color: #1a2a6c;
+    margin-bottom: 0.5rem;
+}
+
+.user-info p {
+    color: #666;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.btn-logout {
+    width: 100%;
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 1rem;
+    font-weight: 600;
+}
+
+.btn-logout:hover {
+    background: #c82333;
 }
 
 .sidebar-title {
-    margin-top: 0;
-    color: #333;
-    border-bottom: 2px solid #ccc;
-    padding-bottom: 10px;
+    color: #1a2a6c;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+    border-bottom: 3px solid #1a2a6c;
+    padding-bottom: 0.5rem;
 }
 
-#tab-list {
-    list-style: none; /* Quita los puntos de la lista */
-    padding: 0;
-    margin: 0;
+.route-tabs {
+    list-style: none;
+    margin-bottom: 2rem;
 }
 
-.tab-item {
-    padding: 10px 15px;
-    margin-bottom: 5px;
-    background-color: #fff;
-    border-radius: 5px;
+.route-tab {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 10px;
     cursor: pointer;
-    transition: background-color 0.3s, color 0.3s;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
 }
 
-.tab-item:hover {
-    background-color: #e0e0e0;
+.route-tab:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
 }
 
-.tab-item.active {
-    background-color: #007bff; /* Color para la pestaña activa */
+.route-tab.active {
+    background: #1a2a6c;
     color: white;
-    font-weight: bold;
-}
-
-.map-container{
-    /* margin: auto; */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex-grow: 1;
-    /* padding-left: 20px; */
-}
-
-.titulo-ruta{
-    margin: 10px;
+    border-left-color: #152252;
 }
 
 #mapa{
@@ -427,7 +518,7 @@ input::-webkit-inner-spin-button {
   margin: 0;
 }
 
-/* caja de muestra de mensaje validacion */
+/* MENSAJE EXITO */
 .modal-success {
     position: fixed;
     top: 0;
@@ -533,4 +624,87 @@ input::-webkit-inner-spin-button {
     100% {
         box-shadow: inset 0px 0px 0px 30px #4CAF50;
     }
+}
+
+/* MENSAJE ERROR*/
+.modal-err{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    /* background-color: rgba(0, 0, 0, 0.9); */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; 
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-err.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-contenido-err{
+    z-index: 10;
+    position: relative;
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+/* Contenedor del Icono */
+.icono-error-contenedor {
+    margin: 20px 0;
+}
+
+/* Base del Icono (Círculo vacío) */
+.icono-error {
+    width: 80px;
+    height: 80px;
+    position: relative;
+    margin: 20px auto 10px;
+    border-radius: 50%;
+    overflow: hidden; /* Importante para que el relleno no se desborde */
+    border: 5px solid #dc3545; /* Contorno rojo de error */
+}
+
+/* Estilo para el relleno (Capa roja animada) */
+.icono-error .relleno {
+    width: 100%;
+    /* Empieza fuera de la vista y se desliza hacia arriba */
+    height: 0; 
+    background-color: #dc3545; /* Color rojo de error */
+    position: absolute;
+    bottom: 0; /* Empieza desde la parte inferior */
+    
+    /* La animación */
+    transition: height 1s ease-out forwards; /* Más rápido que el de ubicación */
+}
+
+/* 2. Definimos una clase que activa el "relleno" */
+.icono-error .relleno.activo {
+    height: 100%; /* El estado final */
+}
+
+/* Contenido del icono (La 'X' o signo de admiración) */
+.icono-error::after {
+    content: '!'; /* Puedes usar 'x' si prefieres, o un SVG */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 50px;
+    font-weight: bold;
+    color: white; /* El color de la 'X' siempre debe ser blanco o claro */
+    z-index: 2; /* Para que quede encima del relleno */
 }

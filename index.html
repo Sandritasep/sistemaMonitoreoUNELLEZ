@@ -1,23 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="style.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>modal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Transporte UNELLEZ</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
      crossorigin="">
      <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+     <link rel="icon" href="multimedia/iconoBus.ico" type="image/x-icon">   
 </head>
 <body>
 
+    <!-- Header -->
     <header>
-        <ul class="lista-enlaces">
-            <li class="item-enl"><a class="enlace" href="https://unellez.edu.ve/portal/index.php?unellez=1&mu=b">Portal Unellez</a></li>
-            <li class="item-enl"><a class="enlace" href="https://arse.unellez.edu.ve/arse/portal/login.php">Arse Dux</a></li>
-            <li class="item-enl"><a class="enlace" href="https://www.instagram.com/unellezoficial/">Instagram</a></li>
-        </ul>
+        <div class="header-content">
+            <div class="logo">
+                <h1><i class="fas fa-bus"></i> Transporte UNELLEZ</h1>
+            </div>
+            <div class="user-section">
+                <div id="headerUserInfo">
+                    <button class="btn-login" onclick="openLoginModal()">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
     </header>
 
     <!-- ventana modal inicio -->
@@ -50,15 +60,21 @@
 
         <!-- escaner QR -->
         <div class="modal-container-qr">
+            <div class="header-qr">
+                <span class="titulo-scanner">Escanee su carnet estudiantil</span>
+                <span class="cerrar-qr">&times;</span>
+            </div>
             <div id="reader"></div>
             <p id="result"></p>
         </div>
      </div>
 
-    <!-- modal sesion exitosa -->
+    <!-- modal exito -->
     <div class="modal-success" id="modal-success">
         <div class="modal-fondo-imagen"></div>
         <div class="modal-overlay-oscuro"></div>
+
+        <!-- contenido -->
         <div class="success-content">
             <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
                 <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
@@ -68,10 +84,29 @@
         </div>
     </div>
 
+    <!-- modal error -->
+    <div id="modalError" class="modal-err">
+        <div class="modal-fondo-imagen"></div>
+        <div class="modal-overlay-oscuro"></div>
+
+        <!-- contenido -->
+        <div class="modal-contenido-err">            
+            <div class="icono-error-contenedor">
+                <div class="icono-error">
+                    <div class="base"></div>
+                    <div class="relleno" id="rellenoIconoError"></div>
+                </div>
+                <h3>¡Error de Validación!</h3>
+            </div>
+        </div>
+    </div>
+
     <!-- modal rutas -->
     <div class="modal-rutas-completo">
         <div class="modal-fondo-imagen"></div>
         <div class="modal-overlay-oscuro"></div>
+
+        <!-- contenido -->
         <div class="modal-rutas-contenido">
             <!-- titulo -->
             <div class="header-rutas">
@@ -80,7 +115,7 @@
 
             <!-- inputs -->
             <div class="inputs-rutas">
-                <label for="formulario-rutas" class="label-rutas">Escoja la ruta de su preferencia</label>
+                <label class="label-rutas">Escoja la ruta de su preferencia</label>
 
                 <div class="input-group-rutas">
                     <form class="form-rutas" id="formulario-rutas" action="" method="post">
@@ -96,37 +131,57 @@
                     <div class="descripcion-rutas" id="descripcionRutas">
                     </div>
                 </div>
-                <button type="submit" class="btn-ruta" onclick='btnRutaaaa()'>Submit</button>
+                <button type="button" class="btn-ruta">Submit</button>
             </div>
         </div>
     </div>
 
-    <!-- barra lateral y mapas -->
-    <div class="contenedor-mapas">
+    <!-- Contenido Principal (oculto hasta login) -->
+    <div class="main-container" id="mainContainer">
+        <div class="content-wrapper">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="user-panel">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-info" id="userInfo">
+                        <h4 id="userName"></h4>
+                        <p id="userType"></p>
+                        <p id="userDetails"></p>
+                    </div>
+                </div>
 
-        <!-- barra lateral -->
-        <div id="sidebar">
-            <h3 class="sidebar-title">Rutas Disponibles</h3>
-            <ul id="tab-list">
-                <li class="tab-item" data-route="ruta1" data-descripcion="Ciudad Varyna-Unellez">Ruta 1</li>
-                <li class="tab-item" data-route="ruta2" data-descripcion="Raul Leoni-Unellez">Ruta 2</li>
-                <li class="tab-item" data-route="ruta3" data-descripcion="Juan Pablo-Unellez">Ruta 3</li>
-                <li class="tab-item" data-route="ruta4" data-descripcion="Redoma Industrial-Unellez">Ruta 4</li>
-                <li class="tab-item" data-route="ruta5" data-descripcion="Cuatricentenaria-Unellez">Ruta 5</li>
-            </ul>
-        </div>
+                <h3 class="sidebar-title"><i class="fas fa-map-marked-alt"></i> Rutas Disponibles</h3>
+                <ul class="route-tabs" id="routeTabs">
+                    <!-- Las rutas se cargarán dinámicamente -->
+                </ul>
 
-         <!-- mapa -->
-        <div class="map-container">
-            <!-- solo si es admin mostrar mapa de todas las rutas juntas -->
-            <h2 class="titulo-ruta">Rutas Unellez</h2>
-            <div id="mapa">
+                <!-- Panel de Transporte -->
+                <div class="transport-panel" id="transportPanel">
+                    <!-- Se cargará dinámicamente según el tipo de usuario -->
+                </div>
+            </div>
+
+            <!-- Mapa -->
+            <div class="map-section">
+                <h2 class="map-title" id="mapTitle"><i class="fas fa-map"></i> Rutas de Transporte UNELLEZ</h2>
+                <div id="mapa"></div>
+                <div class="map-controls">
+                    <button class="btn btn-primary" onclick="showAllRoutes()">
+                        <i class="fas fa-layer-group"></i> Ver Todas las Rutas
+                    </button>
+                    <button class="btn btn-secondary" onclick="centerMap()">
+                        <i class="fas fa-crosshairs"></i> Centrar Mapa
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="scanerQr.js"></script>
-    <script src="script.js"></script>
+    <!-- <script src="scanerQr.js"></script> -->
+  
+    <script src="js/script.js"></script>
 </body>
 </html>
