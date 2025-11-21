@@ -12,7 +12,6 @@ body{
     padding-top: 70px;
 }
 
-
 /* HEADER */
 header {
     background: rgba(255, 255, 255, 0.95);
@@ -47,7 +46,6 @@ header {
     align-items: center;
     gap: 1rem;
 }
-
 
 .btn-login {
     background: #1a2a6c;
@@ -94,309 +92,190 @@ header {
     background: #c82333;
 }
 
-/*  MODAL INICIO */
-.modal-completo{
+/* Modales */
+.modal {
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
     width: 100%;
     height: 100%;
-    visibility: hidden;
-    /* background-color: rgba(0, 0, 0, 0.8); */
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 2000;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
 }
 
-.modal-completo.active{
+.modal.active {
     opacity: 1;
     visibility: visible;
 }
 
-.modal-fondo-imagen {
+.modal-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1;
-    background-size: cover;
-    background-position: center;
-    filter: blur(3px); 
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
 }
 
-.modal-overlay-oscuro {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 5;
-    background-color: rgba(0, 0, 0, 0.8); 
-}
-
-.modal-contenido{
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    position: relative;
     z-index: 10;
-    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.4s ease;
+    max-width: 500px;
     width: 90%;
-    max-width: 400px;
-    max-height: 90%;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-    /* transform: translateY(-20px); */
-    transform: scale(0.8);
-    transform-origin: center;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-
-
-    padding: 30px;
-    gap: 1em;
-}
-
-.icono-ubi-contenedor{
-    margin: 20px 0;
-}
-
-.icono-ubi{
-    width: 60px;
-    height: 60px;
-    position: relative;
-    margin: 20px auto 10px;
-}
-
-.icono-ubi .base{
-    width: 100%;
-    height: 100%;
-    border: 5px solid #007bff;
-    border-radius: 50% 50% 50% 0; 
-    transform: rotate(-45deg); 
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.icono-ubi .relleno{
-    width: 100%;
-    height: 100%;
-    background-color: #007bff;
-    border-radius: 50% 50% 50% 0; 
-    transform: rotate(-45deg); 
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform-origin: center; /* El punto de origen de la transformación es abajo */
-    height: 0; /* Empieza vacío */
-    animation: rellenar-ubicacion 1s ease-out forwards;
-}
-
-/* Definición de la animación de llenado */
-@keyframes rellenar-ubicacion {
-    0% {
-        height: 0;
-        opacity: 0.5;
-    }
-    100% {
-        height: 100%;
-        opacity: 1;
-    }
-}
-
-/* MODAL SCANNER QR */
-.modal-qr{
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    visibility: hidden;
-    /* background-color: rgba(0, 0, 0, 0.8); */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.modal-qr.active{
-    opacity: 1;
-    visibility: visible;
-}
-
-.modal-container-qr{
-    z-index: 10;
-    position: relative;
-    width: 90%;
-    max-width: 400px;
-    max-height: 90%;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-    padding: 30px;
-
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
-}
-
-/* NUEVO CÓDIGO: Hace que los spans dentro de .header-qr se alineen horizontalmente */
-.header-qr {
-    display: flex;
-    justify-content: space-between; 
-    align-items: center;
-}
-
-.titulo-scanner{
-    font-size: 22px;
-    font-weight: 700;
-    margin: 0;
-}
-
-.cerrar-qr{
-    cursor: pointer;
-    font-size: 30px; /* Hago la X un poco más grande para que se vea mejor */
-    font-weight: bold;
-}
-
-#reader {
-    width: 100%;
-    height: 100%;
-}
-
-/* modal formulario rutas */
-.modal-rutas-completo{
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    visibility: hidden;
-    /* background-color: rgba(0, 0, 0, 0.8); */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.modal-rutas-completo.active{
-    opacity: 1;
-    visibility: visible;
-}
-
-.modal-rutas-contenido{
-    z-index: 10;
-    position: relative;
-    width: 90%;
-    max-width: 400px;
-    max-height: 90%;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    transform: translateY(-20px);
-    padding: 30px;
-    gap: 1em;
-}
-
-.header-rutas{
-    display: flex;
-    justify-content: center;
-    align-items: center;
     text-align: center;
-    margin-bottom: 20px;
 }
 
-.label-rutas{
-    display: block;
-    margin-bottom: 8px;
-    color: #555;
-    font-weight: 500;
+.modal-content.large {
+    max-width: 700px;
+}
+
+.modal.active .modal-content {
+    transform: scale(1);
+}
+
+/* Login Icon */
+.login-icon {
+    width: 80px;
+    height: 80px;
+    background: #1a2a6c;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+.login-icon i {
+    font-size: 2.5rem;
+    color: white;
+}
+
+.modal-title {
+    color: #1a2a6c;
+    margin-bottom: 0.5rem;
+    font-size: 1.8rem;
+}
+
+.modal-subtitle {
+    color: #666;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* Formularios */
+.login-form {
     text-align: left;
 }
 
-.inputs-rutas{
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
     display: block;
-    /* justify-content: space-between;
-    align-items: center; */
-    text-align: center;
-}
-
-.input-group-rutas {
-    display: flex; /* Asegura que el contenedor de select y descripción no sea flex horizontal */
-}
-
-.form-rutas{
-    text-align: center;
-    flex: 1;
-}
-
-.descripcion-rutas{
-    float: right;
-    border: none;
-    background: none;
-    border-radius: 10px;
-    transition: color 0.3s;
-    text-align: justify; 
-    
-    /* Propiedades adicionales comunes para justificación */
-    line-height: 1; /* Mejora la legibilidad */
-    padding: 15px;
-    border: 1px solid #ccc;
-    width: 300px;
-    margin-left: 10px;
-    margin-bottom: 30px;
-    font-size: 14px;
-}
-
-#rutas{
-    width: 100px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-right: none;
-    border-radius: 4px;
-    background-color: #f9f9f9;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-#rutas:focus{
-    border: 1px solid;
-    border-color: #2560e0;
-    outline: none;
-    box-shadow: 0 4px 20px rgba(19, 56, 243, 0.20);
-}
-
-.btn-ruta{
+    margin-bottom: 0.5rem;
+    color: #333;
     font-weight: 600;
-    width: 100%;
-    padding: 12px;
-    background-color: #2560e0;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
 }
 
-.btn-ruta:hover{
-    background-color: #437df9;
-    font-weight: 900;
-    box-shadow: 0 4px 20px rgba(19, 47, 188, 0.5);
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #1a2a6c;
+}
+
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #1a2a6c;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #152252;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(26, 42, 108, 0.4);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-block {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.1rem;
+}
+
+.login-links {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+}
+
+.login-links a {
+    color: #1a2a6c;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-links a:hover {
+    text-decoration: underline;
+}
+
+/* Main Content */
+.main-container {
+    margin-top: 80px;
+    padding: 2rem;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    display: none;
+}
+
+.main-container.active {
+    display: block;
+}
+
+.content-wrapper {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2rem;
 }
 
 /* Main Content */
@@ -516,195 +395,4 @@ input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
-}
-
-/* MENSAJE EXITO */
-.modal-success {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    /* background-color: rgba(0, 0, 0, 0.9); */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; 
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.modal-success.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-.success-content {
-    z-index: 10;
-    position: relative;
-    background-color: white;
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    transform: scale(0.8);
-    transition: transform 0.3s ease;
-}
-
-.modal-success.active .success-content {
-    transform: scale(1);
-}
-
-.success-text {
-    margin-top: 20px;
-    font-size: 1.2em;
-    color: #4CAF50; /* Color verde para el texto de éxito */
-    font-weight: bold;
-}
-
-/* Estilos para el SVG del checkmark animado */
-.checkmark {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: block;
-    stroke-width: 2;
-    stroke: #fff;
-    stroke-miterlimit: 10;
-    box-shadow: inset 0px 0px 0px #4CAF50;
-    position: relative;
-    margin: 0 auto;
-}
-
-.checkmark.animate-checkmark {
-    animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
-}
-
-.checkmark__circle {
-    stroke-dasharray: 166;
-    stroke-dashoffset: 166;
-    stroke-width: 2;
-    stroke-miterlimit: 10;
-    stroke: #4CAF50;
-    fill: none;
-}
-
-.checkmark.animate-checkmark .checkmark__circle {
-    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-}
-
-.checkmark__check {
-    transform-origin: 50% 50%;
-    stroke-dasharray: 48;
-    stroke-dashoffset: 48;
-    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-}
-
-.checkmark.animate-checkmark .checkmark__check {
-    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-}
-
-@keyframes stroke {
-    100% {
-        stroke-dashoffset: 0;
-    }
-}
-@keyframes scale {
-    0%, 100% {
-        transform: none;
-    }
-    50% {
-        transform: scale(1.1);
-    }
-}
-@keyframes fill {
-    100% {
-        box-shadow: inset 0px 0px 0px 30px #4CAF50;
-    }
-}
-
-/* MENSAJE ERROR*/
-.modal-err{
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    /* background-color: rgba(0, 0, 0, 0.9); */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; 
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.modal-err.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-.modal-contenido-err{
-    z-index: 10;
-    position: relative;
-    background-color: white;
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    transform: scale(0.8);
-    transition: transform 0.3s ease;
-}
-
-/* Contenedor del Icono */
-.icono-error-contenedor {
-    margin: 20px 0;
-}
-
-/* Base del Icono (Círculo vacío) */
-.icono-error {
-    width: 80px;
-    height: 80px;
-    position: relative;
-    margin: 20px auto 10px;
-    border-radius: 50%;
-    overflow: hidden; /* Importante para que el relleno no se desborde */
-    border: 5px solid #dc3545; /* Contorno rojo de error */
-}
-
-/* Estilo para el relleno (Capa roja animada) */
-.icono-error .relleno {
-    width: 100%;
-    /* Empieza fuera de la vista y se desliza hacia arriba */
-    height: 0; 
-    background-color: #dc3545; /* Color rojo de error */
-    position: absolute;
-    bottom: 0; /* Empieza desde la parte inferior */
-    
-    /* La animación */
-    transition: height 1s ease-out forwards; /* Más rápido que el de ubicación */
-}
-
-/* 2. Definimos una clase que activa el "relleno" */
-.icono-error .relleno.activo {
-    height: 100%; /* El estado final */
-}
-
-/* Contenido del icono (La 'X' o signo de admiración) */
-.icono-error::after {
-    content: '!'; /* Puedes usar 'x' si prefieres, o un SVG */
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 50px;
-    font-weight: bold;
-    color: white; /* El color de la 'X' siempre debe ser blanco o claro */
-    z-index: 2; /* Para que quede encima del relleno */
 }

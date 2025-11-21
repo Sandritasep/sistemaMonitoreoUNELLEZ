@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
      crossorigin="">
-     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
      <link rel="icon" href="multimedia/iconoBus.ico" type="image/x-icon">   
 </head>
@@ -30,109 +29,50 @@
         </div>
     </header>
 
-    <!-- ventana modal inicio -->
-    <div class="modal-completo" >
-
-        <!-- imagen de fondo -->
-        <div class="modal-fondo-imagen"></div>
-
-        <!-- capa oscura -->
-        <div class="modal-overlay-oscuro"></div>
-
-        <!-- contenido del modal -->
-        <div class="modal-contenido">
-
-            <div class="icono-ubi-contenedor">
-                <div class="icono-ubi">
-                    <div class="base"></div>
-                    <div class="relleno" id="rellenoIcono"></div>
+<!-- Modal Login -->
+    <div class="modal active" id="modalLogin">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="login-icon">
+                <i class="fas fa-bus"></i>
+            </div>
+            <h2 class="modal-title">Sistema de Transporte UNELLEZ</h2>
+            <p class="modal-subtitle">Ingrese sus credenciales para acceder</p>
+            
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username"><i class="fas fa-user"></i> Usuario</label>
+                    <input type="text" id="username" name="username" required placeholder="Ingrese su usuario">
                 </div>
+                
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Contraseña</label>
+                    <input type="password" id="password" name="password" required placeholder="Ingrese su contraseña">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                </button>
+            </form>
+            
+            <div class="login-links">
+                <p>¿No está registrado? <a href="register.html">Registrarse</a></p>
+                <p><a href="admin.html" target="_blank">Acceso Administrativo</a></p>
+                <br>
+                <p><a href="#" onclick="showRegistrationInfo()">Registro para Chofer</a></p>
             </div>
         </div>
     </div>
     
-    <!-- escaner QR carnet -->
-     <div class="modal-qr">
-        <!-- imagen de fondo -->
-        <div class="modal-fondo-imagen"></div>
-        <!-- capa oscura -->
-        <div class="modal-overlay-oscuro"></div>
-
-        <!-- escaner QR -->
-        <div class="modal-container-qr">
-            <div class="header-qr">
-                <span class="titulo-scanner">Escanee su carnet estudiantil</span>
-                <span class="cerrar-qr">&times;</span>
-            </div>
-            <div id="reader"></div>
-            <p id="result"></p>
-        </div>
-     </div>
-
-    <!-- modal exito -->
-    <div class="modal-success" id="modal-success">
-        <div class="modal-fondo-imagen"></div>
-        <div class="modal-overlay-oscuro"></div>
-
-        <!-- contenido -->
-        <div class="success-content">
-            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
-                <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-            </svg>
-            <p class="success-text">¡Validación Exitosa!</p>
-        </div>
-    </div>
-
-    <!-- modal error -->
-    <div id="modalError" class="modal-err">
-        <div class="modal-fondo-imagen"></div>
-        <div class="modal-overlay-oscuro"></div>
-
-        <!-- contenido -->
-        <div class="modal-contenido-err">            
-            <div class="icono-error-contenedor">
-                <div class="icono-error">
-                    <div class="base"></div>
-                    <div class="relleno" id="rellenoIconoError"></div>
-                </div>
-                <h3>¡Error de Validación!</h3>
-            </div>
-        </div>
-    </div>
-
-    <!-- modal rutas -->
-    <div class="modal-rutas-completo">
-        <div class="modal-fondo-imagen"></div>
-        <div class="modal-overlay-oscuro"></div>
-
-        <!-- contenido -->
-        <div class="modal-rutas-contenido">
-            <!-- titulo -->
-            <div class="header-rutas">
-                <h2 class="titulo-rutas">Rutas</h2>
-            </div>
-
-            <!-- inputs -->
-            <div class="inputs-rutas">
-                <label class="label-rutas">Escoja la ruta de su preferencia</label>
-
-                <div class="input-group-rutas">
-                    <form class="form-rutas" id="formulario-rutas" action="" method="post">
-                        <select name="rutas" id="rutas">
-                            <option value="" data-descripcion="Seleccione una ruta para ver su recorrido">Options</option>
-                            <option value="Ruta 1" data-descripcion="Ciudad Varyna - Unellez">Ruta 1</option>
-                            <option value="Ruta 2" data-descripcion="Redoma industrial - Unellez">Ruta 2</option>
-                            <option value="Ruta 3" data-descripcion="Raul Leoni - Unellez">Ruta 3</option>
-                            <option value="Ruta 4" data-descripcion="Juan Pablo - Unellez">Ruta 4</option>
-                            <option value="Ruta 5" data-descripcion="No se - Unellez">Ruta 5</option>
-                        </select>
-                    </form>
-                    <div class="descripcion-rutas" id="descripcionRutas">
-                    </div>
-                </div>
-                <button type="button" class="btn-ruta">Submit</button>
-            </div>
+    <!-- Modal Registro Info choferes-->
+    <div class="modal" id="modalRegistroInfo">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h2><i class="fas fa-info-circle"></i> Información de Registro</h2>
+            <p>Para obtener acceso al sistema, debe solicitar su registro a través del administrador.</p>
+            <p>El administrador generará un enlace de registro temporal que tendrá una validez de 1 hora.</p>
+            <p>Una vez registrado, podrá acceder al sistema con sus credenciales.</p>
+            <button class="btn btn-secondary" onclick="closeRegistroInfo()">Entendido</button>
         </div>
     </div>
 

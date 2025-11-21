@@ -9,7 +9,7 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
 app = Flask(__name__)
-CORS(app) 
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 DB_NAME = 'db_qr_unellez.db'
 
@@ -59,7 +59,7 @@ def analizar_qr_con_selenium(qr_content):
         try:
              # Buscamos el elemento <b> dentro del div con clase 'panel-heading'
              carrera_element = driver.find_element(By.CSS_SELECTOR, 'div.panel-heading b')
-             data['carrera'] = carrera_element.text.strip()
+             data['carrera'] = carrera_element.text.strip()[:-2]
         except:
              data['carrera'] = 'N/A'
 
@@ -72,30 +72,44 @@ def analizar_qr_con_selenium(qr_content):
         driver.quit()
         return {'estado': 'ERROR', 'motivo': str(e)}
 
-def guardar_datos(datos, ruta_elegida):
+def guardar_datos(datos):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
-    cedula_int = int(datos.get('cedula'))
+    print('datos recibidos en guardar_datos: ',datos)
     
-    cursor.execute('''
-    INSERT OR REPLACE INTO estudiantes (cedula, nombre_completo, carrera, fecha_nacimiento, ruta_elegida)
-    VALUES (?, ?, ?, ?, ?)
-    ''', (
-        cedula_int,
-        datos.get('nombres_apellidos'),
-        datos.get('carrera'),
-        datos.get('fecha_nacimiento'),
-        ruta_elegida
-    ))
-    conn.commit()
-    conn.close()
-    print(f"Datos de {cedula_int} guardados/actualizados en la base de datos.")
+    try:
+        cedula_int = int(datos.get('cedula'))
+        
+        cursor.execute('''
+        INSERT OR REPLACE INTO estudiantes (cedula, nombre_completo, carrera, fecha_nacimiento, ruta_elegida, user_name, password, email)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            cedula_int,
+            datos.get('nombres_apellidos'),
+            datos.get('carrera'),
+            datos.get('fecha_nacimiento'),
+            datos.get('ruta_elegida'),
+            datos.get('user_name'),
+            datos.get('password'),
+            datos.get('email')
+        ))
+        conn.commit()
+        print(f"Datos de {cedula_int} guardados/actualizados en la base de datos.")
+        
+    except Exception as e:
+        print(f"Error al guardar en la base de datos: {e}")
+        raise e
+    finally:
+        conn.close()
 
 
 @app.route('/scan-result', methods=['POST'])
 def handle_scan_result():
     global temp_student_data 
+
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
     
     if not request.is_json:
         return jsonify({"message": "Falta JSON en la solicitud"}), 400
@@ -113,38 +127,50 @@ def handle_scan_result():
     cedula_key = analysis_result.get('cedula')
     
     if analysis_result['estado'] == 'ACCESO PERMITIDO':
+        nombres = analysis_result.get('nombres_apellidos', 'N/A').split(' ')
         
-        cedula_key_str = str(analysis_result.get('cedula'))
+        user_data = {
+            "tipo": "estudiante", 
+            "nombres": nombres,
+            "cedula": str(cedula_key), 
+            "fechaNac": analysis_result.get('fecha_nacimiento', 'N/A'),
+            "carrera": analysis_result.get('carrera', 'N/A'),
+            "estudianteActivo": True 
+        }
+
+        temp_student_data[qr_content] = user_data
+
+        cedula_key_str = str(cedula_key)
         
         if not cedula_key_str:
-             # Esto solo pasaría si el scraping falló al extraer la cédula
              return jsonify({"success": False, "access": "ERROR", "message": "Fallo interno: Cédula no extraída del HTML."}), 500
-        
-        temp_student_data[qr_content] = analysis_result
-        
-        return jsonify({
+
+        return _corsify_actual_response(jsonify({
             "success": True, 
             "access": "GRANTED",
-            "message": "Acceso permitido. Esperando selección de ruta.",
-            "cedula": qr_content 
-        }), 200
-        
+            "message": "Acceso permitido. Datos de estudiante cargados.",
+            "cedula": qr_content, 
+            "userData": user_data 
+        })), 200
+    
     elif analysis_result['estado'] == 'ACCESO DENEGADO':
-        return jsonify({
+        return _corsify_actual_response(jsonify({
             "success": True,
             "access": "DENIED",
             "message": f"Acceso denegado: {analysis_result['motivo']}",
-        }), 200
-        
+        })), 200
     else:
-        return jsonify({
+        return _corsify_actual_response(jsonify({
             "success": False,
             "access": "ERROR",
             "message": f"Error interno de análisis: {analysis_result['motivo']}",
-        }), 500
+        })), 500
 
 @app.route('/select-route', methods=['POST'])
 def select_route_and_save():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
     global temp_student_data
     
     if not request.is_json:
@@ -152,10 +178,9 @@ def select_route_and_save():
 
     data_from_js = request.get_json()
     cedula = data_from_js.get('cedula')
-    print('cedula: ' ,cedula)
-
     ruta_elegida = data_from_js.get('ruta_elegida')
 
+    print('cedula: ' ,cedula)
     print('ruta: ', ruta_elegida)
 
     if not cedula or not ruta_elegida:
@@ -167,21 +192,92 @@ def select_route_and_save():
         return jsonify({"success": False, "message": "Datos de estudiante no encontrados. Escanee de nuevo."}), 400
 
     try:
-        guardar_datos(student_data, ruta_elegida)
+        # Guardar la ruta temporalmente
+        student_data['ruta_elegida'] = ruta_elegida
+        temp_student_data[cedula] = student_data
         
-        del temp_student_data[cedula]
+        print('Ruta elegida: ', ruta_elegida)
         
-        return jsonify({
+        return _corsify_actual_response(jsonify({
             "success": True,
-            "message": f"Ruta '{ruta_elegida}' guardada para C.I. {cedula}.",
-        }), 200
+            "message": f"Ruta '{ruta_elegida}' Selecionada para C.I. {cedula}.",
+        })), 200
         
     except Exception as e:
-        return jsonify({
+        return _corsify_actual_response(jsonify({
             "success": False,
-            "message": f"Error al guardar datos en la BD: {str(e)}",
-        }), 500
+            "message": f"Error de conexion: {str(e)}",
+        })), 500
+    
+@app.route('/complete-registration', methods=['POST'])
+def complete_registration():
+
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+
+    global temp_student_data
+    if not request.is_json:
+        return jsonify({"message": "Falta JSON en la solicitud"}), 400
+
+    data = request.get_json()
+    cedula = data.get('cedula')
+    user_name = data.get('user_name')
+    password = data.get('password')
+    email = data.get('email')
+
+    if not cedula or not user_name or not password or not email:
+        return jsonify({"success": False, "message": "Faltan datos para completar el registro."}), 400
+
+    student_data = temp_student_data.get(cedula)
+    if not student_data or 'ruta_elegida' not in student_data:
+        return jsonify({"success": False, "message": "Datos incompletos. Seleccione ruta antes de registrar."}), 400
+    
+    try:
+        # Preparar datos para guardar
+        data_to_save = {
+            'cedula': student_data['cedula'],
+            'nombres_apellidos': ' '.join(student_data.get('nombres', [])) if 'nombres' in student_data else student_data.get('nombres_apellidos'),
+            'carrera': student_data['carrera'],
+            'fecha_nacimiento': student_data['fechaNac'],
+            'ruta_elegida': student_data['ruta_elegida'],
+            'user_name': user_name,
+            'password': password,
+            'email': email
+        }
+        
+        print("Intentando guardar datos:", data_to_save)
+        guardar_datos(data_to_save)
+
+        # Limpiar datos temporales
+        if cedula in temp_student_data:
+            del temp_student_data[cedula]
+
+        return _corsify_actual_response(jsonify({
+            "success": True,
+            "message": "Registro completado y guardado.",
+            "preview": data_to_save
+        })), 200
+        
+    except Exception as e:
+        print(f"Error en complete_registration: {e}")
+        return _corsify_actual_response(jsonify({
+            "success": False,
+            "message": f"Error al guardar en la base de datos: {str(e)}"
+        })), 500
+
+# Funciones auxiliares para CORS
+def _build_cors_preflight_response():
+    response = jsonify()
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Headers", "*")
+    response.headers.add("Access-Control-Allow-Methods", "*")
+    return response
+
+def _corsify_actual_response(response):
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
 
 if __name__ == '__main__':
-    print("Iniciando servidor Flask (Dos Fases de Comunicación)...")
+    print("Iniciando servidor Flask (tres Fases de Comunicación)...")
     app.run(debug=True, port=5000)

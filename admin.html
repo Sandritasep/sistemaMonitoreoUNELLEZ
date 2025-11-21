@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo - Transporte UNELLEZ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <!-- Header Admin -->
+    <header class="admin-header">
+        <div class="header-content">
+            <div class="logo">
+                <h1><i class="fas fa-cogs"></i> Panel Administrativo</h1>
+            </div>
+            <div class="admin-nav">
+                <button class="btn-admin" onclick="showSection('users')">
+                    <i class="fas fa-users"></i> Gestionar Usuarios
+                </button>
+                <button class="btn-admin" onclick="showSection('routes')">
+                    <i class="fas fa-route"></i> Gestionar Rutas
+                </button>
+                <button class="btn-admin" onclick="logoutAdmin()">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal Admin -->
+    <div class="admin-container">
+        <!-- Sección Usuarios -->
+        <div class="admin-section active" id="usersSection">
+            <h2><i class="fas fa-users"></i> Gestión de Usuarios</h2>
+            
+            <div class="admin-actions">
+                <button class="btn btn-primary" onclick="openUserForm()">
+                    <i class="fas fa-plus"></i> Crear Nuevo Usuario
+                </button>
+                <button class="btn btn-secondary" onclick="loadUsers()">
+                    <i class="fas fa-sync"></i> Actualizar Lista
+                </button>
+            </div>
+
+            <div class="users-list" id="usersList">
+                <!-- Lista de usuarios se cargará aquí -->
+            </div>
+        </div>
+
+        <!-- Sección Rutas -->
+        <div class="admin-section" id="routesSection">
+            <h2><i class="fas fa-route"></i> Gestión de Rutas</h2>
+            
+            <div class="admin-actions">
+                <button class="btn btn-primary" onclick="openRouteForm()">
+                    <i class="fas fa-plus"></i> Nueva Ruta
+                </button>
+            </div>
+
+            <div class="routes-list" id="routesList">
+                <!-- Lista de rutas se cargará aquí -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Formulario Usuario -->
+    <div class="modal" id="modalUserForm">
+        <div class="modal-overlay"></div>
+        <div class="modal-content large">
+            <h2><i class="fas fa-user-plus"></i> Registrar Nuevo Usuario</h2>
+            
+            <form id="userForm" class="admin-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="userTipo"><i class="fas fa-users"></i> Tipo de Usuario *</label>
+                        <select id="userTipo" name="userTipo" required onchange="toggleUserFields()">
+                            <option value="">Seleccione tipo</option>
+                            <option value="estudiante">Estudiante</option>
+                            <option value="conductor">Conductor</option>
+                            <option value="obrero">Obrero</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="userNombre"><i class="fas fa-user"></i> Nombre *</label>
+                        <input type="text" id="userNombre" name="userNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userApellido"><i class="fas fa-user"></i> Apellido *</label>
+                        <input type="text" id="userApellido" name="userApellido" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="userCedula"><i class="fas fa-id-card"></i> Cédula *</label>
+                        <input type="text" id="userCedula" name="userCedula" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userFechaNac"><i class="fas fa-calendar"></i> Fecha de Nacimiento *</label>
+                        <input type="date" id="userFechaNac" name="userFechaNac" required onchange="calcularEdad()">
+                    </div>
+                    <div class="form-group">
+                        <label for="userEdad"><i class="fas fa-birthday-cake"></i> Edad</label>
+                        <input type="text" id="userEdad" name="userEdad" readonly>
+                    </div>
+                </div>
+
+                <!-- Campos para Estudiante -->
+                <div class="user-fields" id="estudianteFields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="userCarrera"><i class="fas fa-graduation-cap"></i> Carrera *</label>
+                            <select id="userCarrera" name="userCarrera">
+                                <option value="">Seleccione carrera</option>
+                                <option value="Ingeniería Informática">Ingeniería Informática</option>
+                                <option value="Ingeniería Agronómica">Ingeniería Agronómica</option>
+                                <option value="Medicina Veterinaria">Medicina Veterinaria</option>
+                                <option value="Administración">Administración</option>
+                                <option value="Contaduría Pública">Contaduría Pública</option>
+                                <option value="Educación">Educación</option>
+                                <option value="Enfermería">Enfermería</option>
+                                <option value="Derecho">Derecho</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="userActivo" name="userActivo" checked>
+                        <label for="userActivo">Estudiante Activo</label>
+                    </div>
+                </div>
+
+                <!-- Campos para Conductor -->
+                <div class="user-fields" id="conductorFields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="userRuta"><i class="fas fa-route"></i> Ruta Asignada *</label>
+                            <select id="userRuta" name="userRuta">
+                                <option value="">Seleccione ruta</option>
+                                <option value="ruta1">Ruta 1 - Ciudad Varyna</option>
+                                <option value="ruta2">Ruta 2 - Redoma Industrial</option>
+                                <option value="ruta3">Ruta 3 - Raúl Leoni</option>
+                                <option value="ruta4">Ruta 4 - Juan Pablo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeUserForm()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-link"></i> Generar Enlace de Registro
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Enlace Generado -->
+    <div class="modal" id="modalLinkGenerated">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="success-icon">
+                <i class="fas fa-link"></i>
+            </div>
+            <h2>Enlace de Registro Generado</h2>
+            <p>El enlace estará activo por 1 hora</p>
+            <div class="generated-link">
+                <input type="text" id="generatedLink" readonly>
+                <button class="btn-copy" onclick="copyLink()">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <button class="btn btn-primary" onclick="closeLinkModal()">Aceptar</button>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
