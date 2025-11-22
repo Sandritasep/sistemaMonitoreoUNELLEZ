@@ -3,21 +3,19 @@
 // ===============================================
 let temporalUserData = null;
 let tempToken = null; 
+let isFirstTime = true; 
 
 // Referencias a los modales y elementos
 const modalQR = document.getElementById('modal-qr');
 const modalSuccessQR = document.getElementById('modal-success');
 const modalRutas = document.getElementById('modal-rutas');
 const modalRegistro = document.getElementById('modal-registro');
-// Se elimina 'const modalError' para evitar conflicto.
-
 const modalErrorGeneral = document.getElementById('modal-error'); 
 const mainFooter = document.getElementById('main-footer');
 
 // Contenedores del modal QR para manejar el mensaje de espera
 const qrContainer = modalQR.querySelector('.modal-container-qr');
 const qrReaderDiv = document.getElementById('reader');
-
 const qrTitle = modalQR.querySelector('.header-qr');
 
 // ===============================================
@@ -60,7 +58,6 @@ function cerrarSuccess() {
     showModal(null); 
 }
 
-// FUNCIONES DE ERROR ÚNICAS para modal-error (SIMPLIFICADAS)
 function activarErrorGeneral() {
     if (modalErrorGeneral) {
         showModal(modalErrorGeneral);
@@ -70,7 +67,7 @@ function activarErrorGeneral() {
 function cerrarErrorGeneral() {
     showModal(null);
     setTimeout(() => {
-        iniciarScanner();
+        mostrarInformacionInicial();
     }, 5000);
 }
 
@@ -89,7 +86,183 @@ function goToLogin() {
 }
 
 // ===============================================
-// === MANEJO DEL MENSAJE DE ESPERA EN MODAL QR ===
+// ============ MOSTRAR INFORMACIÓN  =============
+// ===============================================
+
+function mostrarInformacionInicial() {
+    // Ocultar elementos normales del scanner
+    if (qrTitle) qrTitle.style.display = 'none';
+    if (qrReaderDiv) qrReaderDiv.style.display = 'none';
+    const resultElement = document.getElementById('result');
+    if (resultElement) resultElement.style.display = 'none';
+
+    // Ocultar el contenedor original del scanner temporalmente
+    const modalContainer = modalQR.querySelector('.modal-container-qr');
+    if (modalContainer) modalContainer.style.display = 'none';
+
+    // Crear y mostrar el contenido de información
+    let infoContent = document.getElementById('info-inicial');
+    if (!infoContent) {
+        infoContent = document.createElement('div');
+        infoContent.id = 'info-inicial';
+        infoContent.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+        
+        infoContent.innerHTML = `
+            <div class="info-modal-content" style="
+                background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+                padding: 50px 40px;
+                border-radius: 20px;
+                box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+                border: 1px solid #e9ecef;
+                max-width: 450px;
+                width: 90%;
+                text-align: center;
+                transform: translateY(-30px);
+                opacity: 0;
+                animation: modalAppear 0.6s ease-out forwards;
+            ">
+                <div class="info-icon" style="
+                    font-size: 5em; 
+                    color: #17a2b8; 
+                    margin-bottom: 25px;
+                    animation: pulse 2s infinite ease-in-out;
+                ">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <h2 style="
+                    color: #2c3e50; 
+                    margin-bottom: 20px;
+                    font-size: 1.8em;
+                    font-weight: 700;
+                    line-height: 1.3;
+                ">Información Importante</h2>
+                <p style="
+                    color: #555; 
+                    font-size: 1.2em; 
+                    line-height: 1.6; 
+                    margin-bottom: 35px;
+                    padding: 0 5px;
+                ">
+                    Para registrarse debe escanear su carnet proporcionado por la UNELLEZ
+                </p>
+                <button class="btn-ok" onclick="cerrarInfoYMostrarScanner()" 
+                        style="
+                            padding: 16px 40px; 
+                            font-size: 1.2em; 
+                            font-weight: 600;
+                            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                            color: white; 
+                            border: none; 
+                            border-radius: 10px; 
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 10px;
+                        "
+                        onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(40, 167, 69, 0.5)';"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 20px rgba(40, 167, 69, 0.4)';">
+                    <i class="fas fa-check"></i> Comenzar Escaneo
+                </button>
+            </div>
+            
+            <style>
+                @keyframes modalAppear {
+                    0% {
+                        transform: translateY(-30px) scale(0.9);
+                        opacity: 0;
+                    }
+                    60% {
+                        transform: translateY(10px) scale(1.02);
+                        opacity: 0.9;
+                    }
+                    100% {
+                        transform: translateY(0) scale(1);
+                        opacity: 1;
+                    }
+                }
+                
+                @keyframes pulse {
+                    0% {
+                        transform: scale(1);
+                        filter: drop-shadow(0 0 5px rgba(23, 162, 184, 0.3));
+                    }
+                    50% {
+                        transform: scale(1.08);
+                        filter: drop-shadow(0 0 15px rgba(23, 162, 184, 0.5));
+                    }
+                    100% {
+                        transform: scale(1);
+                        filter: drop-shadow(0 0 5px rgba(23, 162, 184, 0.3));
+                    }
+                }
+            </style>
+        `;
+        
+        // Agregar al body en lugar del contenedor del modal
+        document.body.appendChild(infoContent);
+    }
+    
+    infoContent.style.display = 'flex';
+}
+
+function cerrarInfoYMostrarScanner() {
+    // Ocultar el contenido de información
+    const infoContent = document.getElementById('info-inicial');
+    if (infoContent) {
+        infoContent.style.display = 'none';
+    }
+
+    // Mostrar nuevamente el contenedor del scanner
+    const modalContainer = modalQR.querySelector('.modal-container-qr');
+    if (modalContainer) modalContainer.style.display = 'block';
+
+    // Mostrar elementos normales del scanner
+    if (qrTitle) qrTitle.style.display = 'flex';
+    
+    // Iniciar el scanner
+    iniciarScanner();
+    
+    // Marcar que ya no es la primera vez
+    isFirstTime = false;
+}
+
+function cerrarInfoYMostrarScanner() {
+    // Ocultar el contenido de información
+    const infoContent = document.getElementById('info-inicial');
+    if (infoContent) {
+        infoContent.style.display = 'none';
+    }
+
+     // Restaurar estilos normales del contenedor del modal
+    qrContainer.style.display = 'block';
+    qrContainer.style.alignItems = 'normal';
+    qrContainer.style.justifyContent = 'normal';
+    qrContainer.style.minHeight = 'auto';
+
+    // Mostrar elementos normales del scanner
+    if (qrTitle) qrTitle.style.display = 'flex';
+    
+    // Iniciar el scanner
+    iniciarScanner();
+    
+    // Marcar que ya no es la primera vez
+    isFirstTime = false;
+}
+
+// ===============================================
+// === MENSAJE DE ESPERA EN MODAL QR ===
 // ===============================================
 
 function showWaitingMessage() {
@@ -421,10 +594,14 @@ function errorDeLectura(err) {
 };
 
 function iniciarScanner() {
-    // 1. Aseguramos que el mensaje de espera esté oculto
+    // 1. Aseguramos que el mensaje de información inicial esté oculto
+    const infoContent = document.getElementById('info-inicial');
+    if (infoContent) {
+        infoContent.style.display = 'none';
+    }
+
     hideWaitingMessage();
 
-    // 2. Recrear el div#reader si no existe (ya que lo removemos o lo ocultamos)
     let readerElement = document.getElementById('reader');
     if (!readerElement) {
         const qrContainer = modalQR.querySelector('.modal-container-qr');
@@ -436,12 +613,12 @@ function iniciarScanner() {
         }
     }
 
-    // 3. Mostrar el escáner y resultado
     if (readerElement) readerElement.style.display = 'block';
     const resultElement = document.getElementById('result');
     if (resultElement) resultElement.style.display = 'block';
+
+    if (qrTitle) qrTitle.style.display = 'flex';
     
-    // 4. Mostrar el modal QR e iniciar
     showModal(modalQR);
     scanner.render(exito, advertenciaDeInicializacion);
 }
@@ -502,7 +679,7 @@ function showUserPreview() {
 }
 
 // ===============================================
-// === OTRAS FUNCIONES AUXILIARES (Mantenidas) ===
+// ===  FUNCIONES PRINCIPALES  ===
 // ===============================================
 
 function redirigir(){
@@ -585,10 +762,6 @@ function showErrorGeneral(message) {
         iniciarScanner(); // Reiniciar scanner después del error
     }, 3000);
 }
-
-// ===============================================
-// === OTRAS FUNCIONES (Mantenidas del script original) ===
-// ===============================================
 
 function setupRealTimeValidation() {
     const password = document.getElementById('regPassword');
@@ -743,13 +916,14 @@ function clearInputError(input) {
 }
 
 // ===============================================
-// === INICIALIZACIÓN DEL FLUJO ===
+// === INICIALIZACIÓN DEL FLUJO DE MODALES ===
 // ===============================================
+
 document.addEventListener('DOMContentLoaded', function() {
 
     console.log('inicio del proceso de registro')
     
-    iniciarScanner();
+    mostrarInformacionInicial();
 
     document.querySelector('.cerrar-qr').addEventListener('click', () => {
         document.getElementById('modal-qr').classList.remove('active');
