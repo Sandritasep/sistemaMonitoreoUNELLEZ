@@ -3,7 +3,9 @@
 // ===============================================
 let temporalUserData = null;
 let tempToken = null; 
-let isFirstTime = true; 
+let isFirstTime = true;
+let mostrandoErrorActualmente = false;  // Flag para evitar múltiples errores
+let registroCompletado = false;  // Flag para evitar reiniciar flujo después del registro
 
 // Referencias a los modales y elementos
 const modalQR = document.getElementById('modal-qr');
@@ -11,7 +13,7 @@ const modalSuccessQR = document.getElementById('modal-success');
 const modalRutas = document.getElementById('modal-rutas');
 const modalRegistro = document.getElementById('modal-registro');
 const modalErrorGeneral = document.getElementById('modal-error'); 
-const mainFooter = document.getElementById('main-footer');
+const modalSuccessFinal = document.getElementById('modalSuccess');
 
 // Contenedores del modal QR para manejar el mensaje de espera
 const qrContainer = modalQR.querySelector('.modal-container-qr');
@@ -22,7 +24,10 @@ const qrTitle = modalQR.querySelector('.header-qr');
 // === INSTANCIA DEL ESCÁNER QR ===
 // ===============================================
 const scanner = new Html5QrcodeScanner('reader', {
-    qrbox: { width: 250, height: 250 },
+    qrbox: { 
+        width: 250, 
+        height: 250 
+    },
     fps: 20,
     rememberLastUsedCamera: false,
 });
@@ -33,6 +38,12 @@ const scanner = new Html5QrcodeScanner('reader', {
 
 /** Muestra un modal, ocultando todos los demás */
 function showModal(modalElement) {
+     // Si el registro está completado, no permitir cambiar modales excepto el de éxito
+    if (registroCompletado && modalElement && modalElement.id !== 'modalSuccess') {
+        console.log("🔒 Registro completado - bloqueando cambio de modal");
+        return;
+    }
+
     document.querySelectorAll('.modal-base').forEach(m => {
         m.classList.remove('active');
     });
@@ -50,25 +61,18 @@ function activarCheck() {
         checkmark.classList.add('animate-checkmark');
     }
 }
+
 function cerrarSuccess() { 
-    const checkmark = modalSuccessQR.querySelector('.checkmark');
-    if (checkmark) {
-        checkmark.classList.remove('animate-checkmark');
-    }
-    showModal(null); 
+     const checkmark = modalSuccessQR.querySelector('.checkmark');
+     if (checkmark) {
+         checkmark.classList.remove('animate-checkmark');
+     }
 }
 
 function activarErrorGeneral() {
     if (modalErrorGeneral) {
         showModal(modalErrorGeneral);
-    };
-};
-
-function cerrarErrorGeneral() {
-    showModal(null);
-    setTimeout(() => {
-        mostrarInformacionInicial();
-    }, 5000);
+    }
 }
 
 function activarRuta() {
@@ -78,10 +82,16 @@ function activarRuta() {
 
 // Ir al login (y finalizar el flujo de modales)
 function goToLogin() {
-    scanner.clear().catch(err => console.error("Error al limpiar escáner en goToLogin:", err));
+    console.log('🔗 Redirigiendo a login...');
+
+    // Limpiar datos temporales
+    temporalUserData = null;
+    tempToken = null;
+    registroCompletado = false;  // Resetear el flag
+
     showModal(null);
-    mainFooter.style.display = 'block';
-    document.body.style.overflow = 'auto';
+
+    // Redirigir al index.html solo cuando el usuario haga clic
     window.location.href = 'index.html';
 }
 
@@ -90,6 +100,12 @@ function goToLogin() {
 // ===============================================
 
 function mostrarInformacionInicial() {
+    // Si el registro ya está completo, no reiniciar el flujo
+    if (registroCompletado) {
+        console.log("Registro completado, no reiniciando flujo");
+        return;
+    }
+    
     // Ocultar elementos normales del scanner
     if (qrTitle) qrTitle.style.display = 'none';
     if (qrReaderDiv) qrReaderDiv.style.display = 'none';
@@ -111,6 +127,7 @@ function mostrarInformacionInicial() {
             left: 0;
             width: 100%;
             height: 100%;
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -218,6 +235,8 @@ function mostrarInformacionInicial() {
 }
 
 function cerrarInfoYMostrarScanner() {
+    console.log("Cerrando info y mostrando scanner...");
+
     // Ocultar el contenido de información
     const infoContent = document.getElementById('info-inicial');
     if (infoContent) {
@@ -230,29 +249,7 @@ function cerrarInfoYMostrarScanner() {
 
     // Mostrar elementos normales del scanner
     if (qrTitle) qrTitle.style.display = 'flex';
-    
-    // Iniciar el scanner
-    iniciarScanner();
-    
-    // Marcar que ya no es la primera vez
-    isFirstTime = false;
-}
-
-function cerrarInfoYMostrarScanner() {
-    // Ocultar el contenido de información
-    const infoContent = document.getElementById('info-inicial');
-    if (infoContent) {
-        infoContent.style.display = 'none';
-    }
-
-     // Restaurar estilos normales del contenedor del modal
-    qrContainer.style.display = 'block';
-    qrContainer.style.alignItems = 'normal';
-    qrContainer.style.justifyContent = 'normal';
-    qrContainer.style.minHeight = 'auto';
-
-    // Mostrar elementos normales del scanner
-    if (qrTitle) qrTitle.style.display = 'flex';
+    if (qrReaderDiv) qrReaderDiv.style.display = 'block';
     
     // Iniciar el scanner
     iniciarScanner();
@@ -267,38 +264,62 @@ function cerrarInfoYMostrarScanner() {
 
 function showWaitingMessage() {
     showModal(modalQR);
-    if (qrTitle) qrTitle.style.display = 'none';
 
+    // Agregar clase de espera al contenedor QR
+    if (qrContainer) {
+        qrContainer.classList.add('waiting');
+    }
+
+    if (qrTitle) qrTitle.style.display = 'none';
     if (qrReaderDiv) qrReaderDiv.style.display = 'none';
+
     const resultElement = document.getElementById('result');
     if (resultElement) resultElement.style.display = 'none';
+    
+    const instructions = document.querySelector('.scanner-instructions');
+    if (instructions) instructions.style.display = 'none';
 
-    // 3. Insertar el mensaje de espera (si no existe)
+    // También ocultar los botones del dashboard del scanner
+    const dashboardSection = document.getElementById('reader__dashboard_section');
+    if (dashboardSection) dashboardSection.style.display = 'none';
+
+    // Insertar el mensaje de espera (si no existe)
     let waitingMessage = document.getElementById('waiting-message');
     if (!waitingMessage) {
         waitingMessage = document.createElement('div');
         waitingMessage.id = 'waiting-message';
         waitingMessage.innerHTML = `
-            <div class="loading-spinner"></div>
-            <h3>Analizando carnet...</h3>
-            <p>Esto tomará unos segundos mientras consultamos el estado de su inscripción.</p>
+            <div style="text-align: center; padding: 40px;">
+                <div class="loading-spinner"></div>
+                <h3>Analizando carnet...</h3>
+                <p>Esto tomará unos segundos mientras consultamos el estado de su inscripción.</p>
+            </div>
         `;
-
-        waitingMessage.style.textAlign = 'center';
-        waitingMessage.style.padding = '30px';
-        waitingMessage.style.fontSize = '1.1em';
         
         qrContainer.appendChild(waitingMessage); 
     }
-    waitingMessage.style.display = 'block';
+    waitingMessage.style.display = 'flex';
 }
 
 function hideWaitingMessage() {
     const waitingMessage = document.getElementById('waiting-message');
     if (waitingMessage) {
         waitingMessage.style.display = 'none';
-        qrTitle.style.display = 'flex';
     }
+
+    // REMOVER la clase waiting del contenedor QR
+    if (qrContainer) {
+        qrContainer.classList.remove('waiting');
+    }
+       
+    if (qrTitle) qrTitle.style.display = 'flex';
+    if (qrReaderDiv) qrReaderDiv.style.display = 'block';
+
+    const instructions = document.querySelector('.scanner-instructions');
+    if (instructions) instructions.style.display = 'block';
+
+    const dashboardSection = document.getElementById('reader__dashboard_section');
+    if (dashboardSection) dashboardSection.style.display = 'block';
 }
 
 // ===============================================
@@ -331,7 +352,6 @@ function enviarRutaSeleccionada() {
 
     if (!cedulaToken) {
         showErrorGeneral("Error: La sesión de escaneo ha expirado o no se inició. Intente escanear de nuevo.");
-        iniciarScanner();
         return;
     }
 
@@ -342,13 +362,6 @@ function enviarRutaSeleccionada() {
         return;
     }
 
-    // *** AGREGAR ESTO PARA DEPURACIÓN ***
-    console.log("Datos a enviar al backend:", { 
-        cedula: cedulaToken,
-        ruta_elegida: rutaSeleccionada
-    });
-
-    showModal(modalQR);
     showWaitingMessage(); 
     
     fetch('http://127.0.0.1:5000/select-route', {
@@ -358,12 +371,13 @@ function enviarRutaSeleccionada() {
         },
         body: JSON.stringify({ 
             cedula: cedulaToken,
-            ruta_elegida: rutaSeleccionada
+            ruta_elegida: rutaSeleccionada,
+            tipo: temporalUserData.tipo // Enviar el tipo al servidor
         })
     })
     .then(response => {
         hideWaitingMessage(); 
-        showModal(null); 
+
         if (!response.ok) {
             throw new Error('La solicitud falló con estado: ' + response.status);
         }
@@ -378,35 +392,59 @@ function enviarRutaSeleccionada() {
             showModal(modalRegistro);
 
         } else {
-            // Se usa la función de error general
             showErrorGeneral("Error al guardar la ruta: " + data.message);
         }
     })
     .catch(error => {
         hideWaitingMessage();
-        showModal(null); 
         console.error('Error de conexión al guardar la ruta:', error);
-        // Se usa la función de error general
         showErrorGeneral('Error de conexión con el servidor al intentar guardar la ruta.');
     });
+    
 }
 
 if (btnRuta) {
     btnRuta.addEventListener('click', enviarRutaSeleccionada);
 }
 
+// ===============================================
+// ================ REGISTRO FINAL ===============
+// ===============================================
 
-function enviarRegistroFinal() {
+function enviarRegistroFinal(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
     const cedulaToken = tempToken;
     const username = document.getElementById('regUsername').value;
     const password = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('regConfirmPassword').value;
     const email = document.getElementById('regEmail').value;
+
+    console.log("📤 Enviando registro final:", { username, email, cedulaToken });
 
     // Validaciones básicas
     if (!username || !password || !email) {
         mostrarErrorEnRegistro("Por favor complete todos los campos requeridos.");
         return;
     }
+
+    // Validar formato del email
+    if (!validateEmail()) {
+        return;
+    }
+
+    if (!validatePassword()) {
+        return;
+    }
+
+    if (!validatePasswordMatch()) {
+        return;
+    }
+
+    console.log("🔄 Procesando registro final...");
 
     fetch('http://127.0.0.1:5000/complete-registration', {
         method: 'POST',
@@ -417,27 +455,44 @@ function enviarRegistroFinal() {
             cedula: cedulaToken,
             user_name: username,
             password: password,
-            email: email
+            email: email,
+            tipo: temporalUserData.tipo // Enviar el tipo al servidor
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor: ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            // Mostrar preview con data.preview
-            showUserPreview(data.preview);
-            showRegistrationSuccess()
-            goToLogin();
+            console.log("✅ Registro completado exitosamente");
+
+            if (temporalUserData) {
+                temporalUserData.username = username;
+                temporalUserData.email = email;
+                temporalUserData.rutaSeleccionada = temporalUserData.rutaSeleccionada || 'N/A';
+            }
+
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.reset();
+            }
+
+            showRegistrationSuccess();
+            
         } else {
-            mostrarErrorEnRegistro("Error al completar el registro: " + data.message);
+            mostrarErrorEnRegistro("Error al completar el registro: " + (data.message || "Error desconocido"));
         }
     })
     .catch(error => {
-        mostrarErrorEnRegistro('Error de conexión con el servidor al intentar completar el registro.', error);
+        console.error('Error en registro final:', error);
+        mostrarErrorEnRegistro('Error de conexión con el servidor al intentar completar el registro.');
     });
 }
 
 function mostrarErrorEnRegistro(message) {
-    // Crear o mostrar un elemento de error dentro del modal de registro
     let errorElement = document.getElementById('registro-error-message');
     
     if (!errorElement) {
@@ -451,12 +506,10 @@ function mostrarErrorEnRegistro(message) {
         errorElement.style.backgroundColor = '#f8d7da';
         errorElement.style.textAlign = 'center';
         
-        // Insertar el mensaje de error al inicio del formulario
         const form = document.getElementById('registerForm');
         if (form) {
             form.insertBefore(errorElement, form.firstChild);
         } else {
-            // Si no hay form, insertarlo en el modal de registro
             const modalContent = modalRegistro.querySelector('.modal-content');
             if (modalContent) {
                 modalContent.insertBefore(errorElement, modalContent.firstChild);
@@ -467,10 +520,8 @@ function mostrarErrorEnRegistro(message) {
     errorElement.textContent = message;
     errorElement.style.display = 'block';
     
-    // Mantener el modal de registro abierto
     showModal(modalRegistro);
     
-    // Opcional: auto-ocultar el mensaje después de 5 segundos
     setTimeout(() => {
         errorElement.style.display = 'none';
     }, 5000);
@@ -483,18 +534,24 @@ function limpiarErrorRegistro() {
     }
 }
 
-
 // ===============================================
 // ================ ESCÁNER QR ===================
 // ===============================================
 
 function exito(result) {
-    console.log("QR Escaneado con éxito:", result);
-    scanner.clear();
-    if (qrReaderDiv) qrReaderDiv.style.display = 'none';
+    console.log("✅ QR Escaneado con éxito:", result);
 
-    showWaitingMessage(); 
-    
+    // Detener scanner inmediatamente y MOSTRAR "ANALIZANDO CARNET" 
+    stopScanner();
+    showWaitingMessage();
+
+    // Procesar el QR directamente
+    processQRScan(result);
+}
+
+function processQRScan(result) {
+    console.log("🔄 Procesando escaneo QR...");
+
     fetch('http://127.0.0.1:5000/scan-result', {
         method: 'POST',
         headers: {
@@ -505,127 +562,301 @@ function exito(result) {
         })
     })
     .then(response => {
-        hideWaitingMessage(); 
         if (!response.ok) {
             throw new Error(`La solicitud falló con estado: ${response.status}`);
         }
         return response.json();
     })
     .then(data => {
+        hideWaitingMessage();
 
+        // CORRECCIÓN: Manejar ambos tipos de usuarios
         if (data.userData) {
-            const carrera = data.userData.carrera;
-            const esActivo = carrera && carrera !== 'N/A' && carrera.trim() !== '';
+            if (data.tipo === 'estudiante') {
+                const carrera = data.userData.carrera;
+                const esActivo = carrera && carrera !== 'N/A' && carrera.trim() !== '';
 
-            temporalUserData = {
-                ...data.userData,
-                estudianteActivo: esActivo,
-                carrera: esActivo ? data.userData.carrera : 'INACTIVO',
-                tipo: 'estudiante' 
-            };
+                temporalUserData = {
+                    ...data.userData,
+                    estudianteActivo: esActivo,
+                    carrera: esActivo ? data.userData.carrera : 'INACTIVO',
+                    tipo: data.tipo,
+                    nombres: data.userData.nombres || [],
+                    rutaSeleccionada: 'No seleccionada'
+                };
+            } else if (data.tipo === 'trabajador') {
+                temporalUserData = {
+                    ...data.userData,
+                    tipo: data.tipo,
+                    // Para trabajadores, crear un array de nombres para compatibilidad
+                    nombres: data.userData.nombre_completo ? [data.userData.nombre_completo] : ['N/A'],
+                    rutaSeleccionada: 'No seleccionada'
+                };
+            }
 
             tempToken = data.cedula; 
         }
 
+        console.log("Datos temporales:", temporalUserData);
+        console.log("Tipo de usuario:", data.tipo);
 
-        if (data.access === "GRANTED" && temporalUserData && temporalUserData.estudianteActivo) {
-            
+        if (data.access === "GRANTED" && temporalUserData) {
             activarCheck();
 
             setTimeout(() => {
-                cerrarSuccess(); 
-                activarRuta();
-            }, 2500);
-
-        } else if (data.access === "GRANTED" && temporalUserData && !temporalUserData.estudianteActivo) {
-            activarCheck(); 
-
-            setTimeout(() => {
                 cerrarSuccess();
-                activarRuta(); 
+                showModal(null);
+                setTimeout(() => {
+                    activarRuta();
+                }, 100);
             }, 2500);
 
         } else if (data.access === "DENIED") {
             showErrorGeneral(data.message || "Acceso denegado o error de validación.");
-
         } else {
-            showErrorGeneral("Error de procesamiento interno en el servidor: " + (data.message || "Respuesta incompleta."));
-
+            showErrorGeneral("Error de procesamiento interno en el servidor.");
         }
     })
     .catch((error) => {
+        // ✅ OCULTAR EL MENSAJE DE "ANALIZANDO CARNET" ANTES DE MOSTRAR EL ERROR
         hideWaitingMessage();
-
-        console.error('Error de conexión o de red:', error);
-
-        showErrorGeneral('Error de conexión con el servidor. Verifique su conexión a internet e intente nuevamente.');
         
+        let errorMessage = 'Error de conexión con el servidor. ';
+        
+        if (error.message.includes('Timeout')) {
+            errorMessage += 'El servidor no respondió en el tiempo esperado.';
+        } else if (error.message.includes('Failed to fetch')) {
+            errorMessage += 'No se pudo conectar al servidor. Verifique que esté encendido.';
+        } else {
+            errorMessage += error.message;
+        }
+        
+        showErrorGeneral(errorMessage);
     });
 }
 
 function closeErrorModal() {
     cerrarErrorGeneral();
-    iniciarScanner();
 }
 
 function errorDeLectura(err) {
     console.warn("Error de Lectura/Decodificación:", err);
     
-    scanner.clear().then(() => {
-        showModal(null); 
-        showErrorGeneral("Error al escanear el código. Intente de nuevo."); 
-
-        setTimeout(() => {
-            cerrarErrorGeneral(); 
-            setTimeout(() => {
-                iniciarScanner(); 
-            }, 500); 
-        }, 1500);
-
-    }).catch((clearErr) => {
+    scanner.clear().catch((clearErr) => {
         console.error("Error al limpiar escáner en errorDeLectura:", clearErr);
-        showModal(null);
-        showErrorGeneral("Error interno del escáner."); 
-        setTimeout(() => { 
-            cerrarErrorGeneral(); 
-            iniciarScanner(); 
-        }, 2000);
     });
-};
+}
 
 function iniciarScanner() {
-    // 1. Aseguramos que el mensaje de información inicial esté oculto
+    console.log('iniciando scanner...');
+
     const infoContent = document.getElementById('info-inicial');
     if (infoContent) {
         infoContent.style.display = 'none';
     }
 
-    hideWaitingMessage();
-
-    let readerElement = document.getElementById('reader');
-    if (!readerElement) {
-        const qrContainer = modalQR.querySelector('.modal-container-qr');
-        if (qrContainer) {
-            readerElement = document.createElement('div');
-            readerElement.id = 'reader';
-            const resultElement = document.getElementById('result'); 
-            qrContainer.insertBefore(readerElement, resultElement); 
-        }
-    }
-
-    if (readerElement) readerElement.style.display = 'block';
-    const resultElement = document.getElementById('result');
-    if (resultElement) resultElement.style.display = 'block';
-
-    if (qrTitle) qrTitle.style.display = 'flex';
-    
-    showModal(modalQR);
-    scanner.render(exito, advertenciaDeInicializacion);
+    iniciarScannerLimpio();
 }
 
+// ===============================================
+// === FUNCIONES MEJORADAS DEL SCANNER ===========
+// ===============================================
+
+function iniciarScannerLimpio() {
+    console.log('🔄 Iniciando scanner limpio...');
+    
+    stopScanner();
+    hideWaitingMessage();
+    
+    // ✅ RESTAURAR TODOS LOS ELEMENTOS DEL SCANNER
+    if (qrTitle) {
+        qrTitle.style.display = 'flex';
+        const tituloScanner = qrTitle.querySelector('.titulo-scanner');
+        if (tituloScanner) {
+            tituloScanner.textContent = 'Escanee su Carnet';
+        }
+    }
+    
+    if (qrReaderDiv) {
+        qrReaderDiv.style.display = 'block';
+        qrReaderDiv.innerHTML = ''; // Limpiar completamente
+    }
+
+    const instructions = document.querySelector('.scanner-instructions');
+    if (instructions) instructions.style.display = 'block';
+
+    const dashboardSection = document.getElementById('reader__dashboard_section');
+    if (dashboardSection) dashboardSection.style.display = 'block';
+
+    // ✅ MOSTRAR EL MODAL QR
+    showModal(modalQR);
+    
+    try {
+        scanner.clear().then(() => {
+            console.log("✅ Scanner limpiado exitosamente");
+            
+            // Pequeño delay antes de renderizar
+            setTimeout(() => {
+                try {
+                    scanner.render(exito, advertenciaDeInicializacion);
+                    console.log("✅ Scanner reiniciado correctamente");
+                } catch (renderError) {
+                    console.error('❌ Error al renderizar scanner:', renderError);
+                    showErrorGeneral('Error al iniciar la cámara. Por favor, recargue la página.');
+                }
+            }, 300);
+            
+        }).catch(clearError => {
+            console.warn("⚠️ Error al limpiar scanner anterior:", clearError);
+            // Intentar de todos modos
+            setTimeout(() => {
+                try {
+                    scanner.render(exito, advertenciaDeInicializacion);
+                    console.log("✅ Scanner reiniciado después de error");
+                } catch (renderError) {
+                    console.error('❌ Error crítico:', renderError);
+                    showErrorGeneral('Error crítico con la cámara. Recargue la página.');
+                }
+            }, 300);
+        });
+    } catch (error) {
+        console.error('❌ Error crítico al reiniciar:', error);
+        showErrorGeneral('Error crítico. Recargue la página por favor.');
+    }
+}
+
+function stopScanner() {
+    console.log("Deteniendo scanner...");
+    try {
+        scanner.clear().then(() => {
+            console.log("Scanner limpiado exitosamente");
+        }).catch(err => {
+            console.warn("Advertencia al limpiar scanner:", err);
+        });
+    } catch (error) {
+        console.error("Error al detener scanner:", error);
+    }
+    
+    if (qrReaderDiv) {
+        qrReaderDiv.style.display = 'none';
+    }
+
+    hideWaitingMessage();
+}
 
 // ===============================================
-// === USER PREVIEW (Muestra solo 'carrera' si es estudiante) ===
+// === MANEJO DE ERRORES MEJORADO ================
+// ===============================================
+
+function showErrorGeneral(message) {
+     // Si el registro está completado, ignorar errores
+    if (registroCompletado) {
+        console.log("🔒 Registro completado - ignorando error:", message);
+        return;
+    }
+
+     console.log('🔴 Mostrando error general:', message);
+     
+     // Marcar que estamos mostrando un error
+     mostrandoErrorActualmente = true;
+     
+     // ✅ ASEGURARSE DE OCULTAR EL MENSAJE DE ESPERA
+     hideWaitingMessage();
+     stopScanner();
+
+     if (!modalErrorGeneral) {
+         alert(message);
+         mostrandoErrorActualmente = false;
+         reiniciarScannerDesdeCero();
+         return;
+     }
+
+     const errorMessageElement = document.getElementById('errorMessageGeneral');
+     if (errorMessageElement) {
+         errorMessageElement.textContent = message; 
+     } 
+
+     activarErrorGeneral();
+
+      // SOLO programar regreso si el registro NO está completado
+    if (!registroCompletado) {
+        console.log("⏰ Programando regreso al escáner en 3 segundos...");
+        setTimeout(() => {
+            console.log("🔄 Regresando automáticamente al escáner...");
+            mostrandoErrorActualmente = false;
+            cerrarErrorGeneralYReiniciar();
+        }, 3000);
+    }
+}
+
+function cerrarErrorGeneralYReiniciar() {
+     console.log('🔄 CERRANDO ERROR Y REINICIANDO SCANNER...');
+     
+     // Detener scanner primero
+     try {
+         scanner.clear().catch(err => {});
+     } catch(e) {}
+     
+     // Ocultar TODOS los modales
+     document.querySelectorAll('.modal-base').forEach(m => m.classList.remove('active'));
+     
+     // Limpiar estado de espera COMPLETAMENTE
+     hideWaitingMessage();
+     
+     // REMOVER la clase waiting y el elemento waiting-message del DOM
+     if (qrContainer) {
+         qrContainer.classList.remove('waiting');
+         const waitingMsg = qrContainer.querySelector('#waiting-message');
+         if (waitingMsg) {
+             waitingMsg.remove();
+         }
+     }
+     
+     // Restaurar elementos del scanner sin llamar showModal
+     if (qrTitle) qrTitle.style.display = 'flex';
+     if (qrReaderDiv) {
+         qrReaderDiv.style.display = 'block';
+         qrReaderDiv.innerHTML = '';
+     }
+     
+     const resultElement = document.getElementById('result');
+     if (resultElement) {
+         resultElement.style.display = 'none';
+         resultElement.textContent = '';
+     }
+     
+     const instructions = document.querySelector('.scanner-instructions');
+     if (instructions) instructions.style.display = 'block';
+     
+     const dashboardSection = document.getElementById('reader__dashboard_section');
+     if (dashboardSection) dashboardSection.style.display = 'block';
+     
+     // Mostrar el modal QR nuevamente
+     if (modalQR) {
+         modalQR.classList.add('active');
+     }
+     
+     // Reiniciar el scanner
+     setTimeout(() => {
+         try {
+             scanner.render(exito, advertenciaDeInicializacion);
+             console.log('✅ Scanner reiniciado');
+         } catch (error) {
+             console.error('Error:', error);
+         }
+     }, 500);
+}
+
+function cerrarErrorGeneral() {
+     cerrarErrorGeneralYReiniciar();
+}
+
+// ===============================================
+// === USER PREVIEW ==============================
+// ===============================================
+
+// ===============================================
+// === USER PREVIEW ==============================
 // ===============================================
 
 function showUserPreview() {
@@ -634,37 +865,58 @@ function showUserPreview() {
         previewContent.innerHTML = '<p>Datos temporales no cargados.</p>';
         return;
     }
-    
+
+    // CORRECCIÓN: Manejar nombres de forma segura para ambos tipos
+    let nombreCompleto = 'N/A';
+    if (temporalUserData.tipo === 'estudiante' && temporalUserData.nombres) {
+        nombreCompleto = Array.isArray(temporalUserData.nombres) 
+            ? temporalUserData.nombres.join(' ').toUpperCase()
+            : String(temporalUserData.nombres).toUpperCase();
+    } else if (temporalUserData.tipo === 'trabajador' && temporalUserData.nombre_completo) {
+        nombreCompleto = temporalUserData.nombre_completo.toUpperCase();
+    }
+
+    // Determinar el color según el tipo de usuario
+    const userTypeColor = temporalUserData.tipo === 'trabajador' ? '#ff9800' : '#2196f3';
+    const userTypeClass = temporalUserData.tipo === 'trabajador' ? 'user-type-trabajador' : 'user-type-estudiante';
+
     let previewHTML = `
         <div class="user-info-item">
             <span class="user-info-label">Tipo de Usuario:</span>
-            <span class="user-info-value">
+            <span class="user-info-value ${userTypeClass}">
                 <strong>${getUserTypeDisplay(temporalUserData.tipo)}</strong>
             </span>
         </div>
         <div class="user-info-item">
             <span class="user-info-label">Nombre Completo:</span>
-            <span class="user-info-value">${temporalUserData.nombres}</span>
+            <span class="user-info-value">${nombreCompleto}</span>
         </div>
         <div class="user-info-item">
             <span class="user-info-label">Cédula:</span>
-            <span class="user-info-value">${temporalUserData.cedula}</span>
-        </div>
-        <div class="user-info-item">
-            <span class="user-info-label">Fecha de Nacimiento:</span>
-            <span class="user-info-value">${formatDate(temporalUserData.fechaNac)}</span>
-        </div>
-        <div class="user-info-item">
-            <span class="user-info-label">Edad:</span>
-            <span class="user-info-value">${calcularEdad(temporalUserData.fechaNac)}</span>
+            <span class="user-info-value">${temporalUserData.cedula || 'N/A'}</span>
         </div>
     `;
     
+    // Mostrar fecha de nacimiento y edad solo para estudiantes
+    if (temporalUserData.tipo === 'estudiante') {
+        previewHTML += `
+            <div class="user-info-item">
+                <span class="user-info-label">Fecha de Nacimiento:</span>
+                <span class="user-info-value">${formatDate(temporalUserData.fechaNac)}</span>
+            </div>
+            <div class="user-info-item">
+                <span class="user-info-label">Edad:</span>
+                <span class="user-info-value">${calcularEdad(temporalUserData.fechaNac)}</span>
+            </div>
+        `;
+    }
+    
+    // Información específica por tipo de usuario
     if (temporalUserData.tipo === 'estudiante') {
         previewHTML += `
             <div class="user-info-item">
                 <span class="user-info-label">Carrera:</span>
-                <span class="user-info-value">${temporalUserData.carrera}</span>
+                <span class="user-info-value">${temporalUserData.carrera || 'N/A'}</span>
             </div>
             <div class="user-info-item">
                 <span class="user-info-label">Estado:</span>
@@ -673,14 +925,94 @@ function showUserPreview() {
                 </span>
             </div>
         `;
-    } 
+    } else if (temporalUserData.tipo === 'trabajador') {
+        previewHTML += `
+            <div class="user-info-item">
+                <span class="user-info-label">Condición:</span>
+                <span class="user-info-value">${temporalUserData.condicion || 'N/A'}</span>
+            </div>
+            <div class="user-info-item">
+                <span class="user-info-label">Cargo:</span>
+                <span class="user-info-value">${temporalUserData.cargo || 'N/A'}</span>
+            </div>
+        `;
+    }
     
     previewContent.innerHTML = previewHTML;
+    
+    // Aplicar estilos CSS para los colores
+    const style = document.createElement('style');
+    style.textContent = `
+        .user-type-trabajador {
+            color: #ff9800 !important;
+            font-weight: bold;
+        }
+        .user-type-estudiante {
+            color: #2196f3 !important;
+            font-weight: bold;
+        }
+    `;
+    if (!document.querySelector('#user-type-styles')) {
+        style.id = 'user-type-styles';
+        document.head.appendChild(style);
+    }
 }
 
 // ===============================================
 // ===  FUNCIONES PRINCIPALES  ===
 // ===============================================
+
+function showRegistrationSuccess() {
+    console.log("🔵 MOSTRANDO MODAL DE ÉXITO - Datos completos:", temporalUserData);
+
+    const modalSuccessFinal = document.getElementById('modalSuccess');
+    if (!modalSuccessFinal) {
+        console.error('❌ Modal de éxito no encontrado');
+        return;
+    }
+
+    registroCompletado = true;
+
+    stopScanner();
+    
+    // Cerrar todos los otros modales PRIMERO
+    document.querySelectorAll('.modal-base').forEach(m => {
+        if (m.id !== 'modalSuccess') {
+            m.classList.remove('active');
+        }
+    });
+    
+    const userSummary = document.getElementById('userSummary');
+    
+    if (!temporalUserData) {
+        console.error('❌ temporalUserData no definido');
+        userSummary.innerHTML = '<p>Error al cargar los datos del usuario.</p>';
+        return;
+    }
+
+    // CORRECCIÓN: Manejar nombres de forma segura
+    let nombreCompleto = 'N/A';
+    if (temporalUserData.tipo === 'estudiante' && temporalUserData.nombres) {
+        nombreCompleto = Array.isArray(temporalUserData.nombres) 
+            ? temporalUserData.nombres.join(' ').toUpperCase()
+            : String(temporalUserData.nombres).toUpperCase();
+    } else if (temporalUserData.tipo === 'trabajador' && temporalUserData.nombre_completo) {
+        nombreCompleto = temporalUserData.nombre_completo.toUpperCase();
+    }
+    
+    userSummary.innerHTML = `
+        <h4>Resumen de su cuenta:</h4>
+        <p><strong>Usuario:</strong> ${temporalUserData.username || 'No definido'}</p>
+        <p><strong>Email:</strong> ${temporalUserData.email || 'No definido'}</p>
+        <p><strong>Nombre:</strong> ${nombreCompleto}</p>
+        <p><strong>Tipo:</strong> ${getUserTypeDisplay(temporalUserData.tipo)}</p>
+        <p><strong>Ruta Seleccionada:</strong> ${temporalUserData.rutaSeleccionada || 'No seleccionada'}</p>
+        <p><strong>Fecha de registro:</strong> ${new Date().toLocaleDateString()}</p>
+    `;
+
+    modalSuccessFinal.classList.add('active');
+    console.log("✅ Modal de éxito MOSTRADO - clase 'active' agregada");
+}
 
 function redirigir(){
     window.location.href = "index.html";   
@@ -688,10 +1020,24 @@ function redirigir(){
 
 function advertenciaDeInicializacion(err) {
     console.warn("Fallo en la inicialización del QR: ", err);
+    
+    // Manejar errores específicos de cámara
+    if (err && err.includes('NotAllowedError')) {
+        showErrorGeneral('Permiso de cámara denegado. Por favor, permita el acceso a la cámara en su navegador.');
+    } else if (err && err.includes('NotFoundError')) {
+        showErrorGeneral('No se encontró cámara disponible en este dispositivo.');
+    } else {
+        showErrorGeneral('Error al acceder a la cámara: ' + err);
+    }
 }
 
 function getUserTypeDisplay(tipo) {
-    const types = { 'estudiante': 'Estudiante', 'conductor': 'Conductor', 'obrero': 'Obrero/Personal' };
+    const types = { 
+        'estudiante': 'Estudiante', 
+        'trabajador': 'Trabajador',
+        'conductor': 'Conductor', 
+        'obrero': 'Obrero/Personal' 
+    };
     return types[tipo] || tipo;
 }
 
@@ -736,49 +1082,51 @@ function calcularEdad(fechaNac) {
     return edad + ' años';
 }
 
-function showErrorGeneral(message) {
-
-    if (!modalErrorGeneral) {
-        console.error('Modal de error no encontrado en el DOM');
-        alert(message); // Fallback si el modal no existe
-        return;
-    }
-
-    const errorMessageElement = document.getElementById('errorMessageGeneral');
-    const errorIcon = modalErrorGeneral.querySelector('.error-icon i');
-
-    if (errorIcon) {
-        errorIcon.style.color = '#dc3545';
-        errorIcon.style.fontSize = '4em';
-    }
-
-    if (errorMessageElement) {
-        errorMessageElement.textContent = message; 
-    } 
-    activarErrorGeneral();
-
-    setTimeout(() => {
-        cerrarErrorGeneral();
-        iniciarScanner(); // Reiniciar scanner después del error
-    }, 3000);
-}
-
 function setupRealTimeValidation() {
     const password = document.getElementById('regPassword');
     const confirmPassword = document.getElementById('regConfirmPassword');
     const email = document.getElementById('regEmail');
     const username = document.getElementById('regUsername');
 
-    // Limpiar errores cuando el usuario empiece a escribir
     const inputs = [password, confirmPassword, email, username];
     inputs.forEach(input => {
         if (input) {
+            // Validación en tiempo real mientras escribe
             input.addEventListener('input', () => {
                 limpiarErrorRegistro();
-                // Las validaciones existentes...
                 if (input === password) validatePassword();
                 if (input === confirmPassword) validatePasswordMatch();
                 if (input === email) validateEmail();
+            });
+
+            // Validación al presionar Enter
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (input === email) validateEmail();
+                    if (input === password) validatePassword();
+                    if (input === confirmPassword) validatePasswordMatch();
+                    
+                    // Mover al siguiente campo o enviar formulario
+                    const form = input.closest('form');
+                    const inputs = Array.from(form.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]'));
+                    const index = inputs.indexOf(input);
+                    if (index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    } else {
+                        enviarRegistroFinal(e);
+                    }
+                }
+            });
+
+            // Mostrar ayuda al enfocar (focus)
+            input.addEventListener('focus', () => {
+                showInputHelp(input);
+            });
+
+            // Ocultar ayuda al perder foco (blur)
+            input.addEventListener('blur', () => {
+                hideInputHelp(input);
             });
         }
     });
@@ -791,22 +1139,41 @@ function setupRealTimeValidation() {
 function validateEmail() {
     const email = document.getElementById('regEmail');
     if (!email) return true;
-    const value = email.value;
+    const value = email.value.trim();
+    
+    // Validación más estricta del email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(value)) {
-        showInputError(email, 'El formato del correo es inválido');
+    
+    if (!value) {
+        showInputError(email, 'El correo electrónico es requerido');
         return false;
-    } else {
-        clearInputError(email);
-        return true;
     }
+    
+    if (!emailRegex.test(value)) {
+        showInputError(email, 'El formato del correo es inválido. Debe incluir @ y un dominio válido (ej: usuario@dominio.com)');
+        return false;
+    }
+    
+    // Validar que tenga algo después del @ y un dominio
+    const parts = value.split('@');
+    if (parts.length !== 2 || !parts[0] || !parts[1] || !parts[1].includes('.') || parts[1].split('.')[1].length < 2) {
+        showInputError(email, 'El formato del correo es inválido. Debe incluir @ y un dominio válido (ej: usuario@dominio.com)');
+        return false;
+    }
+    
+    clearInputError(email);
+    return true;
 }
 
 function validatePassword() {
     const password = document.getElementById('regPassword');
     if (!password) return true;
     const value = password.value;
+
+    if (!value) {
+        showInputError(password, 'La contraseña es requerida');
+        return false;
+    }
 
     if (value.length < 6) {
         showInputError(password, 'La contraseña debe tener al menos 6 caracteres');
@@ -822,7 +1189,12 @@ function validatePasswordMatch() {
     const confirmPassword = document.getElementById('regConfirmPassword');
     if (!password || !confirmPassword) return true;
 
-    if (confirmPassword.value && password.value !== confirmPassword.value) {
+    if (!confirmPassword.value) {
+        showInputError(confirmPassword, 'Por favor confirme su contraseña');
+        return false;
+    }
+
+    if (password.value !== confirmPassword.value) {
         showInputError(confirmPassword, 'Las contraseñas no coinciden');
         return false;
     } else {
@@ -833,7 +1205,6 @@ function validatePasswordMatch() {
 
 function validateForm(username, password, confirmPassword, email) {
     let isValid = true;
-    // Las validaciones del formulario de registro se mantienen, usando showErrorGeneral si es necesario
     return isValid;
 }
 
@@ -866,52 +1237,74 @@ function completeRegistration() {
     showRegistrationSuccess();
 }
 
-function showRegistrationSuccess() {
-    // Asumiendo que tienes un modal con ID modalSuccess
-    const modalSuccessFinal = document.getElementById('modalSuccess');
-    if (!modalSuccessFinal) {
-        alert("¡Registro Exitoso! (Falta modalSuccess en el HTML)");
-        goToLogin();
-        return;
-    }
-    showModal(modalSuccessFinal);
-
-    const userSummary = document.getElementById('userSummary');
-    userSummary.innerHTML = `
-        <h4>Resumen de su cuenta:</h4>
-        <p><strong>Usuario:</strong> ${temporalUserData.username}</p>
-        <p><strong>Email:</strong> ${temporalUserData.email}</p>
-        <p><strong>Nombre:</strong> ${temporalUserData.nombreCompleto}</p>
-        <p><strong>Tipo:</strong> ${getUserTypeDisplay(temporalUserData.tipo)}</p>
-        <p><strong>Ruta Seleccionada:</strong> ${temporalUserData.rutaSeleccionada || 'N/A'}</p>
-        <p><strong>Fecha de registro:</strong> ${new Date().toLocaleDateString()}</p>
-    `;
-
-    mainFooter.style.display = 'block';
-}
-
 function cancelRegistration() {
     if (confirm('¿Está seguro de que desea cancelar el registro? Perderá el progreso.')) {
+        registroCompletado = false;
         goToLogin();
     }
 }
 
 function showInputError(input, message) {
     input.classList.add('input-error');
+    
+    // Crear o actualizar elemento de error debajo del input
     let errorElement = input.parentNode.querySelector('.error-message');
     if (!errorElement) {
         errorElement = document.createElement('span');
         errorElement.className = 'error-message';
+        errorElement.style.cssText = `
+            display: block;
+            color: #dc3545;
+            font-size: 0.85em;
+            margin-top: 5px;
+            padding: 2px 5px;
+        `;
         input.parentNode.appendChild(errorElement);
     }
     errorElement.textContent = message;
+    errorElement.style.display = 'block';
 }
 
 function clearInputError(input) {
     input.classList.remove('input-error');
     const errorElement = input.parentNode.querySelector('.error-message');
     if (errorElement) {
-        errorElement.remove();
+        errorElement.style.display = 'none';
+    }
+}
+
+function showInputHelp(input) {
+    let helpElement = input.parentNode.querySelector('.help-message');
+    if (!helpElement) {
+        helpElement = document.createElement('span');
+        helpElement.className = 'help-message';
+        helpElement.style.cssText = `
+            display: block;
+            color: #6c757d;
+            font-size: 0.8em;
+            margin-top: 3px;
+            padding: 2px 5px;
+            font-style: italic;
+        `;
+        input.parentNode.appendChild(helpElement);
+    }
+    
+    // Mensajes de ayuda específicos para cada campo
+    const helpMessages = {
+        'regEmail': 'Ejemplo: usuario@ejemplo.com',
+        'regPassword': 'Mínimo 6 caracteres',
+        'regConfirmPassword': 'Repita la misma contraseña',
+        'regUsername': 'Elija un nombre de usuario único'
+    };
+    
+    helpElement.textContent = helpMessages[input.id] || 'Complete este campo';
+    helpElement.style.display = 'block';
+}
+
+function hideInputHelp(input) {
+    const helpElement = input.parentNode.querySelector('.help-message');
+    if (helpElement) {
+        helpElement.style.display = 'none';
     }
 }
 
@@ -920,8 +1313,7 @@ function clearInputError(input) {
 // ===============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-
-    console.log('inicio del proceso de registro')
+    console.log('🚀 INICIO DEL PROCESO DE REGISTRO - VERSIÓN CORREGIDA');
     
     mostrarInformacionInicial();
 
@@ -929,9 +1321,14 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('modal-qr').classList.remove('active');
     });
 
-    document.getElementById('registerForm')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        completeRegistration();
+    document.querySelectorAll('.modal-base').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                if (this.id !== 'modalSuccess') {
+                    showModal(null);
+                }
+            }
+        });
     });
 
     setupRealTimeValidation();

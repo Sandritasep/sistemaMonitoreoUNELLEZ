@@ -27,16 +27,21 @@
     </header>
 
     <!-- escaner QR carnet -->
-     <div class="modal-base modal-qr active" id="modal-qr">
+    <div class="modal-base modal-qr" id="modal-qr">
         <div class="modal-container modal-container-qr">
             <div class="header-qr">
-                <span class="titulo-scanner">Escanee su carnet</span>
+                <span class="titulo-scanner">Escanee su Carnet</span>
                 <span class="cerrar-qr">&times;</span>
             </div>
-            <div id="reader"></div>
-            <p id="result"></p>
+            
+            <div class="scanner-container">
+                <div id="reader" class="scanner-active"></div>
+                <div class="scanner-instructions">
+                    <p>Puede usar la camara para escanear el QR de su carnet, o subir una imagen de su carnet con el QR</p>
+                </div>
+            </div>
         </div>
-     </div>
+    </div>
 
     <!-- modal exito -->
     <div class="modal-base modal-success" id="modal-success">
@@ -147,7 +152,7 @@
                         <button type="button" class="btn btn-secondary" onclick="cancelRegistration()">
                             <i class="fas fa-times"></i> Cancelar
                         </button>
-                        <button type="submit" class="btn btn-primary" onclick="enviarRegistroFinal()">
+                        <button type="submit" class="btn btn-primary" onclick="enviarRegistroFinal(event)">
                             <i class="fas fa-check"></i> Completar Registro
                         </button>
                     </div>
@@ -156,7 +161,7 @@
         </div>
     </div>
 
-    <!-- Modal de Éxito -->
+    <!-- Modal de registro exitoso -->
     <div class="modal-base modal-final" id="modalSuccess">
         <div class="modal-container modal-content">
             <div class="success-icon">

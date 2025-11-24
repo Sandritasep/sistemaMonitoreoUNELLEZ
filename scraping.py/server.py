@@ -14,6 +14,85 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 DB_NAME = 'db_qr_unellez.db'
 
 temp_student_data = {}
+temp_worker_data = {}
+
+def detectar_tipo_url(url):
+    print(f"Analizando URL: {url}")
+
+    if "/portal/index.php?qr" in url.lower():
+        return "estudiante"
+    elif "/consulta_estudiantes.php?" in url.lower():
+        return "estudiante"
+    
+    elif "car_familiar.php" in url.lower():
+        return "trabajador"
+    else:
+        print(f"URl no reconocida: {url}")
+        return "desconocido"
+    
+def scraping_estudiante(driver):
+    """Scraping para estudiantes (código existente)"""
+    data = {}
+    
+    success_divs = driver.find_elements(By.CLASS_NAME, 'panel-success')
+    
+    if not success_divs:
+        data['estado'] = 'ACCESO DENEGADO'
+        data['motivo'] = 'Estudiante no inscrito o credenciales no válidas (alert-danger o no encontrado).'
+        return data
+
+    data['estado'] = 'ACCESO PERMITIDO'
+    data['tipo'] = 'estudiante'
+    dd_elements = driver.find_elements(By.TAG_NAME, 'dd')
+    
+    cedula_str = dd_elements[0].text.strip() if len(dd_elements) > 0 else None
+    
+    if not cedula_str or not cedula_str.isdigit():
+         data['estado'] = 'ERROR'
+         data['motivo'] = 'No se pudo extraer una cédula válida del HTML.'
+         return data
+
+    data['cedula'] = int(cedula_str)
+    data['nombres_apellidos'] = dd_elements[1].text.strip() if len(dd_elements) > 1 else 'N/A'
+    data['fecha_nacimiento'] = dd_elements[2].text.strip() if len(dd_elements) > 2 else 'N/A'
+
+    # Carrera (Dentro de .panel-heading > b)
+    try:
+         carrera_element = driver.find_element(By.CSS_SELECTOR, 'div.panel-heading b')
+         data['carrera'] = carrera_element.text.strip()[:-2]
+    except:
+         data['carrera'] = 'N/A'
+
+    print('Datos estudiante: ', data['cedula'], data['nombres_apellidos'], data['carrera'], data['fecha_nacimiento'])
+    return data
+
+def scraping_trabajador(driver):
+    """Scraping para trabajadores"""
+    data = {}
+    
+    try:
+        # Buscar el div con style='text-align: center'
+        center_div = driver.find_element(By.CSS_SELECTOR, "div[style='text-align: center']")
+        
+        # Buscar todos los elementos h4 dentro del div
+        h4_elements = center_div.find_elements(By.TAG_NAME, 'h4')
+
+        # Extraer información de los h4
+        data['estado'] = 'ACCESO PERMITIDO'
+        data['tipo'] = 'trabajador'
+        data['nombre_completo'] = h4_elements[0].text.strip() if h4_elements[0].text else 'N/A'
+        data['cedula'] = h4_elements[1].text[5:-1] if h4_elements[1].text else 'N/A'
+        data['condicion'] = h4_elements[2].text[17:] if h4_elements[2].text else 'N/A'
+        data['cargo'] = h4_elements[3].text[8:] if h4_elements[3].text else 'N/A'
+
+        print(data['cedula'])
+        print(data['nombre_completo'],',',data['condicion'],',',data['cargo'])
+        return data
+
+    except Exception as e:
+        data['estado'] = 'ERROR'
+        data['motivo'] = f'Error en scraping de trabajador: {str(e)}'
+        return data
 
 def analizar_qr_con_selenium(qr_content):
     
@@ -32,38 +111,18 @@ def analizar_qr_con_selenium(qr_content):
     try:
         driver.get(url)
         time.sleep(1.5)
-        success_divs = driver.find_elements(By.CLASS_NAME, 'panel-success')
-        
-        if not success_divs:
-            data['estado'] = 'ACCESO DENEGADO'
-            data['motivo'] = 'Estudiante no inscrito o credenciales no válidas (alert-danger o no encontrado).'
-            driver.quit()
-            return data
 
-        data['estado'] = 'ACCESO PERMITIDO'
-        dd_elements = driver.find_elements(By.TAG_NAME, 'dd')
-        
-        cedula_str = dd_elements[0].text.strip() if len(dd_elements) > 0 else None
-        
-        if not cedula_str or not cedula_str.isdigit():
-             data['estado'] = 'ERROR'
-             data['motivo'] = 'No se pudo extraer una cédula válida del HTML.'
-             driver.quit()
-             return data
-        
-        data['cedula'] = int(cedula_str)
-        data['nombres_apellidos'] = dd_elements[1].text.strip() if len(dd_elements) > 1 else 'N/A'
-        data['fecha_nacimiento'] = dd_elements[2].text.strip() if len(dd_elements) > 2 else 'N/A'
+        tipo = detectar_tipo_url(url)
+        print(f"Tipo detectado: {tipo}")
 
-        # 4. Carrera (Dentro de .panel-heading > b)
-        try:
-             # Buscamos el elemento <b> dentro del div con clase 'panel-heading'
-             carrera_element = driver.find_element(By.CSS_SELECTOR, 'div.panel-heading b')
-             data['carrera'] = carrera_element.text.strip()[:-2]
-        except:
-             data['carrera'] = 'N/A'
-
-        print('datos: ',data['cedula'], data['nombres_apellidos'], data['carrera'], data['fecha_nacimiento'])
+        if tipo == "estudiante":
+            data = scraping_estudiante(driver)
+        elif tipo == "trabajador":
+            data = scraping_trabajador(driver)
+        else:
+            data['estado'] = 'ERROR'
+            data['motivo'] = 'Tipo de URL no reconocido'
+        
         driver.quit()
         return data
 
@@ -72,11 +131,11 @@ def analizar_qr_con_selenium(qr_content):
         driver.quit()
         return {'estado': 'ERROR', 'motivo': str(e)}
 
-def guardar_datos(datos):
+def guardar_datos_estudiante(datos):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
-    print('datos recibidos en guardar_datos: ',datos)
+    print('datos etudiante recibidos en guardar_datos: ',datos)
     
     try:
         cedula_int = int(datos.get('cedula'))
@@ -95,7 +154,7 @@ def guardar_datos(datos):
             datos.get('email')
         ))
         conn.commit()
-        print(f"Datos de {cedula_int} guardados/actualizados en la base de datos.")
+        print(f"Datos de estudiante {cedula_int} guardados/actualizados en la base de datos.")
         
     except Exception as e:
         print(f"Error al guardar en la base de datos: {e}")
@@ -103,10 +162,40 @@ def guardar_datos(datos):
     finally:
         conn.close()
 
+def guardar_datos_trabajador(datos):
+    """Guardar datos de trabajador en la base de datos"""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    print('Datos trabajador recibidos en guardar_datos: ', datos)
+    
+    try:
+        cedula_int = int(datos.get('cedula'))      
+        cursor.execute('''
+        INSERT OR REPLACE INTO profesores_trabajadores (cedula, nombre_completo, condicion, cargo, user_name, password, ruta_elegida, email)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            cedula_int,
+            datos.get('nombre_completo'),
+            datos.get('condicion'),
+            datos.get('cargo'),
+            datos.get('user_name'),
+            datos.get('password'),
+            datos.get('ruta_elegida'),
+            datos.get('email')
+        ))
+        conn.commit()
+        print(f"Datos de trabajador {datos.get('cedula')} guardados/actualizados en la base de datos.")
+        
+    except Exception as e:
+        print(f"Error al guardar trabajador en la base de datos: {e}")
+        raise e
+    finally:
+        conn.close()
 
 @app.route('/scan-result', methods=['POST'])
 def handle_scan_result():
-    global temp_student_data 
+    global temp_student_data, temp_worker_data
 
     if request.method == 'OPTIONS':
         return _build_cors_preflight_response()
@@ -120,38 +209,62 @@ def handle_scan_result():
     if not qr_content:
         return jsonify({"success": False, "message": "Falta el contenido del QR ('qr_result')"}), 400
         
-    print(f"QR (Cédula) recibido: {qr_content}. Analizando inscripción...")
+    print(f"QR recibido: {qr_content}. Analizando...")
     
     analysis_result = analizar_qr_con_selenium(qr_content)
 
-    cedula_key = analysis_result.get('cedula')
-    
     if analysis_result['estado'] == 'ACCESO PERMITIDO':
-        nombres = analysis_result.get('nombres_apellidos', 'N/A').split(' ')
+        tipo = analysis_result.get('tipo', 'estudiante')
+        cedula_key = analysis_result.get('cedula')
         
-        user_data = {
-            "tipo": "estudiante", 
-            "nombres": nombres,
-            "cedula": str(cedula_key), 
-            "fechaNac": analysis_result.get('fecha_nacimiento', 'N/A'),
-            "carrera": analysis_result.get('carrera', 'N/A'),
-            "estudianteActivo": True 
-        }
+        if tipo == 'estudiante':
+            nombres = analysis_result.get('nombres_apellidos', 'N/A').split(' ')
+            
+            user_data = {
+                "tipo": "estudiante", 
+                "nombres": nombres,
+                "cedula": str(cedula_key), 
+                "fechaNac": analysis_result.get('fecha_nacimiento', 'N/A'),
+                "carrera": analysis_result.get('carrera', 'N/A'),
+                "estudianteActivo": True 
+            }
 
-        temp_student_data[qr_content] = user_data
+            temp_student_data[qr_content] = user_data
 
-        cedula_key_str = str(cedula_key)
-        
-        if not cedula_key_str:
-             return jsonify({"success": False, "access": "ERROR", "message": "Fallo interno: Cédula no extraída del HTML."}), 500
+            cedula_key_str = str(cedula_key)
+            
+            if not cedula_key_str:
+                 return jsonify({"success": False, "access": "ERROR", "message": "Fallo interno: Cédula no extraída del HTML."}), 500
 
-        return _corsify_actual_response(jsonify({
-            "success": True, 
-            "access": "GRANTED",
-            "message": "Acceso permitido. Datos de estudiante cargados.",
-            "cedula": qr_content, 
-            "userData": user_data 
-        })), 200
+            return _corsify_actual_response(jsonify({
+                "success": True, 
+                "access": "GRANTED",
+                "tipo": "estudiante",
+                "message": "Acceso permitido. Datos de estudiante cargados.",
+                "cedula": qr_content, 
+                "userData": user_data 
+            })), 200
+            
+        elif tipo == 'trabajador':
+            # Preparar datos para trabajador
+            user_data = {
+                "tipo": "trabajador",
+                "nombre_completo": analysis_result.get('nombre_completo'),
+                "cedula": analysis_result.get('cedula'),
+                "condicion": analysis_result.get('condicion', 'N/A'),
+                "cargo": analysis_result.get('cargo', 'N/A')
+            }
+
+            temp_worker_data[qr_content] = user_data
+
+            return _corsify_actual_response(jsonify({
+                "success": True, 
+                "access": "GRANTED",
+                "tipo": "trabajador",
+                "message": "Acceso permitido. Datos de trabajador cargados.",
+                "cedula": qr_content, 
+                "userData": user_data 
+            })), 200
     
     elif analysis_result['estado'] == 'ACCESO DENEGADO':
         return _corsify_actual_response(jsonify({
@@ -166,12 +279,13 @@ def handle_scan_result():
             "message": f"Error interno de análisis: {analysis_result['motivo']}",
         })), 500
 
+
 @app.route('/select-route', methods=['POST'])
 def select_route_and_save():
     if request.method == 'OPTIONS':
         return _build_cors_preflight_response()
     
-    global temp_student_data
+    global temp_student_data, temp_worker_data
     
     if not request.is_json:
         return jsonify({"message": "Falta JSON en la solicitud"}), 400
@@ -179,35 +293,39 @@ def select_route_and_save():
     data_from_js = request.get_json()
     cedula = data_from_js.get('cedula')
     ruta_elegida = data_from_js.get('ruta_elegida')
+    tipo = data_from_js.get('tipo', 'estudiante')
 
     print('cedula: ' ,cedula)
     print('ruta: ', ruta_elegida)
+    print('tipo: ', tipo)
 
-    if not cedula or not ruta_elegida:
-        return jsonify({"success": False, "message": "Faltan cédula o ruta elegida."}), 400
-        
-    student_data = temp_student_data.get(cedula)
-    
-    if not student_data:
-        return jsonify({"success": False, "message": "Datos de estudiante no encontrados. Escanee de nuevo."}), 400
+    if tipo == 'estudiante':
+        student_data = temp_student_data.get(cedula)
+        if not student_data:
+            return jsonify({"success": False, "message": "Datos de estudiante no encontrados. Escanee de nuevo."}), 400
 
-    try:
         # Guardar la ruta temporalmente
         student_data['ruta_elegida'] = ruta_elegida
         temp_student_data[cedula] = student_data
         
-        print('Ruta elegida: ', ruta_elegida)
+    elif tipo == 'trabajador':
+        worker_data = temp_worker_data.get(cedula)
+        if not worker_data:
+            return jsonify({"success": False, "message": "Datos de trabajador no encontrados. Escanee de nuevo."}), 400
+
+        # Guardar la ruta temporalmente
+        worker_data['ruta_elegida'] = ruta_elegida
+        temp_worker_data[cedula] = worker_data
         
-        return _corsify_actual_response(jsonify({
-            "success": True,
-            "message": f"Ruta '{ruta_elegida}' Selecionada para C.I. {cedula}.",
-        })), 200
-        
-    except Exception as e:
-        return _corsify_actual_response(jsonify({
-            "success": False,
-            "message": f"Error de conexion: {str(e)}",
-        })), 500
+    else:
+        return jsonify({"success": False, "message": "Tipo de usuario no válido."}), 400
+
+    print('Ruta elegida: ', ruta_elegida)
+    
+    return _corsify_actual_response(jsonify({
+        "success": True,
+        "message": f"Ruta '{ruta_elegida}' Seleccionada para C.I. {cedula}.",
+    })), 200
     
 @app.route('/complete-registration', methods=['POST'])
 def complete_registration():
@@ -216,7 +334,7 @@ def complete_registration():
         return _build_cors_preflight_response()
     
 
-    global temp_student_data
+    global temp_student_data, temp_worker_data
     if not request.is_json:
         return jsonify({"message": "Falta JSON en la solicitud"}), 400
 
@@ -225,33 +343,61 @@ def complete_registration():
     user_name = data.get('user_name')
     password = data.get('password')
     email = data.get('email')
+    tipo = data.get('tipo', 'estudiante')
 
     if not cedula or not user_name or not password or not email:
         return jsonify({"success": False, "message": "Faltan datos para completar el registro."}), 400
 
-    student_data = temp_student_data.get(cedula)
-    if not student_data or 'ruta_elegida' not in student_data:
-        return jsonify({"success": False, "message": "Datos incompletos. Seleccione ruta antes de registrar."}), 400
-    
     try:
-        # Preparar datos para guardar
-        data_to_save = {
-            'cedula': student_data['cedula'],
-            'nombres_apellidos': ' '.join(student_data.get('nombres', [])) if 'nombres' in student_data else student_data.get('nombres_apellidos'),
-            'carrera': student_data['carrera'],
-            'fecha_nacimiento': student_data['fechaNac'],
-            'ruta_elegida': student_data['ruta_elegida'],
-            'user_name': user_name,
-            'password': password,
-            'email': email
-        }
-        
-        print("Intentando guardar datos:", data_to_save)
-        guardar_datos(data_to_save)
+        if tipo == 'estudiante':
+            student_data = temp_student_data.get(cedula)
+            if not student_data or 'ruta_elegida' not in student_data:
+                return jsonify({"success": False, "message": "Datos incompletos. Seleccione ruta antes de registrar."}), 400
+            
+            # Preparar datos para guardar
+            data_to_save = {
+                'cedula': student_data['cedula'],
+                'nombres_apellidos': ' '.join(student_data.get('nombres', [])) if 'nombres' in student_data else student_data.get('nombres_apellidos'),
+                'carrera': student_data['carrera'],
+                'fecha_nacimiento': student_data['fechaNac'],
+                'ruta_elegida': student_data['ruta_elegida'],
+                'user_name': user_name,
+                'password': password,
+                'email': email
+            }
+            
+            print("Intentando guardar datos de estudiante:", data_to_save)
+            guardar_datos_estudiante(data_to_save)
 
-        # Limpiar datos temporales
-        if cedula in temp_student_data:
-            del temp_student_data[cedula]
+            # Limpiar datos temporales
+            if cedula in temp_student_data:
+                del temp_student_data[cedula]
+                
+        elif tipo == 'trabajador':
+            worker_data = temp_worker_data.get(cedula)
+            if not worker_data or 'ruta_elegida' not in worker_data:
+                return jsonify({"success": False, "message": "Datos incompletos. Seleccione ruta antes de registrar."}), 400
+            
+            # Preparar datos para guardar
+            data_to_save = {
+                'cedula': worker_data['cedula'],
+                'nombre_completo': worker_data['nombre_completo'],
+                'condicion': worker_data['condicion'],
+                'cargo': worker_data['cargo'],
+                'ruta_elegida': worker_data['ruta_elegida'],
+                'user_name': user_name,
+                'password': password,
+                'email': email
+            }
+            
+            print("Intentando guardar datos de trabajador:", data_to_save)
+            guardar_datos_trabajador(data_to_save)
+
+            # Limpiar datos temporales
+            if cedula in temp_worker_data:
+                del temp_worker_data[cedula]
+        else:
+            return jsonify({"success": False, "message": "Tipo de usuario no válido."}), 400
 
         return _corsify_actual_response(jsonify({
             "success": True,
@@ -264,7 +410,8 @@ def complete_registration():
         return _corsify_actual_response(jsonify({
             "success": False,
             "message": f"Error al guardar en la base de datos: {str(e)}"
-        })), 500
+        })), 5000
+
 
 # Funciones auxiliares para CORS
 def _build_cors_preflight_response():
