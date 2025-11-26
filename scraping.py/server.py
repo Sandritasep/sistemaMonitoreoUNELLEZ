@@ -410,7 +410,7 @@ def complete_registration():
         return _corsify_actual_response(jsonify({
             "success": False,
             "message": f"Error al guardar en la base de datos: {str(e)}"
-        })), 5000
+        })), 500
 
 
 # Funciones auxiliares para CORS

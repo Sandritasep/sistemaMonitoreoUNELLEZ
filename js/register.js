@@ -1,11 +1,70 @@
+// =======REGISTER.JS========================================
+// === GESTOR DE ESTADO CENTRALIZADO (REEMPLAZA GLOBALES CREO QUE ESTA BIEN) ===
 // ===============================================
-// === VARIABLES GLOBALES ===
+const registrationState = {
+    // 🚌 Datos del usuario validados y normalizados
+    userData: null,
+    // 🔑 La cédula/token de sesión temporal
+    tempToken: null,
+    // Flag: ¿el registro ya terminó?
+    isCompleted: false,
+    // Flag: para manejar errores de forma centralizada
+    isShowingError: false,
+    
+    /** * Método 1: Asigna datos después del escaneo QR, normalizando el nombre.
+     * Esto corrige la inconsistencia de datos entre estudiantes y trabajadores.
+     */
+    setUserData(data) {
+        this.tempToken = data.cedula;
+        let nombreCompletoFinal = 'N/A';
+
+        if (data.tipo === 'estudiante') {
+            // Estudiantes: nombres es un array. Los unimos y ponemos en mayúsculas.
+            nombreCompletoFinal = data.userData.nombres ? data.userData.nombres.join(' ').toUpperCase() : 'N/A';
+        } else if (data.tipo === 'trabajador') {
+            // Trabajadores: nombre_completo es un string. Lo usamos directamente y ponemos en mayúsculas.
+            nombreCompletoFinal = data.userData.nombre_completo ? data.userData.nombre_completo.toUpperCase() : 'N/A';
+        }
+
+        // Crear el objeto de datos limpio y normalizado
+        this.userData = {
+            ...data.userData,
+            tipo: data.tipo,
+            // Campo ÚNICO Y LIMPIO para usar en toda la aplicación:
+            nombreCompletoFinal: nombreCompletoFinal, 
+            rutaSeleccionada: null // Inicializar limpio
+        };
+    },
+
+    /** * Método 2: Actualiza la ruta seleccionada de forma inmutable.
+     */
+    setRoute(routeId) {
+        if (this.userData) {
+            // Creamos una copia y solo actualizamos la ruta
+            this.userData = {
+                ...this.userData,
+                rutaSeleccionada: routeId
+            };
+        }
+    },
+    
+    /** * Método 3: Controla el flag de completado.
+     */
+    setCompleted(status) {
+        this.isCompleted = status;
+    },
+    
+    /** * Método 4: Controla el flag de error.
+     */
+    setShowingError(status) {
+        this.isShowingError = status;
+    }
+};
+
 // ===============================================
-let temporalUserData = null;
-let tempToken = null; 
-let isFirstTime = true;
-let mostrandoErrorActualmente = false;  // Flag para evitar múltiples errores
-let registroCompletado = false;  // Flag para evitar reiniciar flujo después del registro
+// === VARIABLES GLOBALES (REDUCIDAS) ===
+// ===============================================
+let isFirstTime = true; // Se mantiene, solo es un flag de inicialización
 
 // Referencias a los modales y elementos
 const modalQR = document.getElementById('modal-qr');
@@ -38,8 +97,8 @@ const scanner = new Html5QrcodeScanner('reader', {
 
 /** Muestra un modal, ocultando todos los demás */
 function showModal(modalElement) {
-     // Si el registro está completado, no permitir cambiar modales excepto el de éxito
-    if (registroCompletado && modalElement && modalElement.id !== 'modalSuccess') {
+     // 🔑 Usa el estado centralizado
+    if (registrationState.isCompleted && modalElement && modalElement.id !== 'modalSuccess') {
         console.log("🔒 Registro completado - bloqueando cambio de modal");
         return;
     }
@@ -84,10 +143,10 @@ function activarRuta() {
 function goToLogin() {
     console.log('🔗 Redirigiendo a login...');
 
-    // Limpiar datos temporales
-    temporalUserData = null;
-    tempToken = null;
-    registroCompletado = false;  // Resetear el flag
+    // 🔑 Limpiar datos temporales usando el objeto de estado
+    registrationState.userData = null;
+    registrationState.tempToken = null;
+    registrationState.setCompleted(false);
 
     showModal(null);
 
@@ -100,8 +159,8 @@ function goToLogin() {
 // ===============================================
 
 function mostrarInformacionInicial() {
-    // Si el registro ya está completo, no reiniciar el flujo
-    if (registroCompletado) {
+    // 🔑 Si el registro ya está completo, no reiniciar el flujo
+    if (registrationState.isCompleted) {
         console.log("Registro completado, no reiniciando flujo");
         return;
     }
@@ -347,11 +406,18 @@ if (selectorRutas && divDescripcion) {
     });
 }
 
+/** REFACTORIZADO: Usa el estado centralizado para leer el token y actualizar la ruta */
 function enviarRutaSeleccionada() {
-    const cedulaToken = tempToken; 
+    const cedulaToken = registrationState.tempToken; // 🔑 Lee del estado centralizado
 
     if (!cedulaToken) {
         showErrorGeneral("Error: La sesión de escaneo ha expirado o no se inició. Intente escanear de nuevo.");
+        return;
+    }
+    
+    const userData = registrationState.userData;
+    if (!userData) {
+        showErrorGeneral("Error: Datos de usuario incompletos. Intente escanear de nuevo.");
         return;
     }
 
@@ -372,7 +438,7 @@ function enviarRutaSeleccionada() {
         body: JSON.stringify({ 
             cedula: cedulaToken,
             ruta_elegida: rutaSeleccionada,
-            tipo: temporalUserData.tipo // Enviar el tipo al servidor
+            tipo: userData.tipo // 🚌 Lee el tipo desde el estado centralizado
         })
     })
     .then(response => {
@@ -385,9 +451,8 @@ function enviarRutaSeleccionada() {
     })
     .then(data => {
         if (data.success) {
-            if (temporalUserData){
-                temporalUserData.rutaSeleccionada = rutaSeleccionada;
-            }
+            // 🚌 Usa el método setRoute del gestor de estado para actualizar la ruta
+            registrationState.setRoute(rutaSeleccionada);
         
             showModal(modalRegistro);
 
@@ -411,16 +476,24 @@ if (btnRuta) {
 // ================ REGISTRO FINAL ===============
 // ===============================================
 
+/** REFACTORIZADO: Lee el estado centralizado para obtener cédula, tipo y ruta */
 function enviarRegistroFinal(e) {
     if (e) {
         e.preventDefault();
         e.stopPropagation();
     }
 
-    const cedulaToken = tempToken;
+    const userData = registrationState.userData;
+    const cedulaToken = registrationState.tempToken;
+
+    // Validación de seguridad de flujo (datos deben existir)
+    if (!userData || !cedulaToken || !userData.rutaSeleccionada) {
+        mostrarErrorEnRegistro("Error de flujo: Datos de sesión incompletos. Intente escanear de nuevo.");
+        return;
+    }
+
     const username = document.getElementById('regUsername').value;
     const password = document.getElementById('regPassword').value;
-    const confirmPassword = document.getElementById('regConfirmPassword').value;
     const email = document.getElementById('regEmail').value;
 
     console.log("📤 Enviando registro final:", { username, email, cedulaToken });
@@ -456,7 +529,7 @@ function enviarRegistroFinal(e) {
             user_name: username,
             password: password,
             email: email,
-            tipo: temporalUserData.tipo // Enviar el tipo al servidor
+            tipo: userData.tipo // 🚌 Lee el tipo desde el estado centralizado
         })
     })
     .then(response => {
@@ -469,10 +542,10 @@ function enviarRegistroFinal(e) {
         if (data.success) {
             console.log("✅ Registro completado exitosamente");
 
-            if (temporalUserData) {
-                temporalUserData.username = username;
-                temporalUserData.email = email;
-                temporalUserData.rutaSeleccionada = temporalUserData.rutaSeleccionada || 'N/A';
+            // 💾 Actualizar el estado centralizado con los datos finales de la cuenta
+            if (userData) {
+                userData.username = username;
+                userData.email = email;
             }
 
             const registerForm = document.getElementById('registerForm');
@@ -549,6 +622,7 @@ function exito(result) {
     processQRScan(result);
 }
 
+/** REFACTORIZADO: Usa el método registrationState.setUserData() para normalizar datos */
 function processQRScan(result) {
     console.log("🔄 Procesando escaneo QR...");
 
@@ -570,37 +644,27 @@ function processQRScan(result) {
     .then(data => {
         hideWaitingMessage();
 
-        // CORRECCIÓN: Manejar ambos tipos de usuarios
+        // 🔑 Si hay datos, inicializar el estado (esto incluye la normalización)
         if (data.userData) {
+            registrationState.setUserData(data); 
+
+            // Lógica específica del estudiante (se mantiene localmente si es necesario)
             if (data.tipo === 'estudiante') {
                 const carrera = data.userData.carrera;
                 const esActivo = carrera && carrera !== 'N/A' && carrera.trim() !== '';
-
-                temporalUserData = {
-                    ...data.userData,
-                    estudianteActivo: esActivo,
-                    carrera: esActivo ? data.userData.carrera : 'INACTIVO',
-                    tipo: data.tipo,
-                    nombres: data.userData.nombres || [],
-                    rutaSeleccionada: 'No seleccionada'
-                };
-            } else if (data.tipo === 'trabajador') {
-                temporalUserData = {
-                    ...data.userData,
-                    tipo: data.tipo,
-                    // Para trabajadores, crear un array de nombres para compatibilidad
-                    nombres: data.userData.nombre_completo ? [data.userData.nombre_completo] : ['N/A'],
-                    rutaSeleccionada: 'No seleccionada'
-                };
+                
+                // Actualizar las propiedades específicas del estudiante en el estado
+                if (registrationState.userData) {
+                    registrationState.userData.estudianteActivo = esActivo;
+                    registrationState.userData.carrera = esActivo ? data.userData.carrera : 'INACTIVO';
+                }
             }
-
-            tempToken = data.cedula; 
         }
 
-        console.log("Datos temporales:", temporalUserData);
+        console.log("Datos temporales (Estado):", registrationState.userData);
         console.log("Tipo de usuario:", data.tipo);
 
-        if (data.access === "GRANTED" && temporalUserData) {
+        if (data.access === "GRANTED" && registrationState.userData) {
             activarCheck();
 
             setTimeout(() => {
@@ -748,17 +812,18 @@ function stopScanner() {
 // === MANEJO DE ERRORES MEJORADO ================
 // ===============================================
 
+/** REFACTORIZADO: Usa el estado centralizado para evitar errores post-registro */
 function showErrorGeneral(message) {
-     // Si el registro está completado, ignorar errores
-    if (registroCompletado) {
+     // 🔑 Si el registro está completado, ignorar errores
+    if (registrationState.isCompleted) {
         console.log("🔒 Registro completado - ignorando error:", message);
         return;
     }
 
      console.log('🔴 Mostrando error general:', message);
      
-     // Marcar que estamos mostrando un error
-     mostrandoErrorActualmente = true;
+     // 🔑 Marcar que estamos mostrando un error
+     registrationState.setShowingError(true);
      
      // ✅ ASEGURARSE DE OCULTAR EL MENSAJE DE ESPERA
      hideWaitingMessage();
@@ -766,8 +831,8 @@ function showErrorGeneral(message) {
 
      if (!modalErrorGeneral) {
          alert(message);
-         mostrandoErrorActualmente = false;
-         reiniciarScannerDesdeCero();
+         registrationState.setShowingError(false);
+         reiniciarScannerDesdeCero(); // Asumo que esta función llama a cerrarErrorGeneralYReiniciar
          return;
      }
 
@@ -779,11 +844,11 @@ function showErrorGeneral(message) {
      activarErrorGeneral();
 
       // SOLO programar regreso si el registro NO está completado
-    if (!registroCompletado) {
+    if (!registrationState.isCompleted) {
         console.log("⏰ Programando regreso al escáner en 3 segundos...");
         setTimeout(() => {
             console.log("🔄 Regresando automáticamente al escáner...");
-            mostrandoErrorActualmente = false;
+            registrationState.setShowingError(false);
             cerrarErrorGeneralYReiniciar();
         }, 3000);
     }
@@ -855,36 +920,28 @@ function cerrarErrorGeneral() {
 // === USER PREVIEW ==============================
 // ===============================================
 
-// ===============================================
-// === USER PREVIEW ==============================
-// ===============================================
-
+/** REFACTORIZADO: Usa el campo normalizado nombreCompletoFinal, eliminando el if/else */
 function showUserPreview() {
+    // 🔑 Obtener los datos del estado centralizado
+    const userData = registrationState.userData; 
     const previewContent = document.getElementById('previewContent');
-    if (!temporalUserData) {
+
+    if (!userData) {
         previewContent.innerHTML = '<p>Datos temporales no cargados.</p>';
         return;
     }
 
-    // CORRECCIÓN: Manejar nombres de forma segura para ambos tipos
-    let nombreCompleto = 'N/A';
-    if (temporalUserData.tipo === 'estudiante' && temporalUserData.nombres) {
-        nombreCompleto = Array.isArray(temporalUserData.nombres) 
-            ? temporalUserData.nombres.join(' ').toUpperCase()
-            : String(temporalUserData.nombres).toUpperCase();
-    } else if (temporalUserData.tipo === 'trabajador' && temporalUserData.nombre_completo) {
-        nombreCompleto = temporalUserData.nombre_completo.toUpperCase();
-    }
+    // 2. Usar el campo limpio y normalizado (¡Simplificación clave!)
+    const nombreCompleto = userData.nombreCompletoFinal; 
 
     // Determinar el color según el tipo de usuario
-    const userTypeColor = temporalUserData.tipo === 'trabajador' ? '#ff9800' : '#2196f3';
-    const userTypeClass = temporalUserData.tipo === 'trabajador' ? 'user-type-trabajador' : 'user-type-estudiante';
+    const userTypeClass = userData.tipo === 'trabajador' ? 'user-type-trabajador' : 'user-type-estudiante';
 
     let previewHTML = `
         <div class="user-info-item">
             <span class="user-info-label">Tipo de Usuario:</span>
             <span class="user-info-value ${userTypeClass}">
-                <strong>${getUserTypeDisplay(temporalUserData.tipo)}</strong>
+                <strong>${getUserTypeDisplay(userData.tipo)}</strong>
             </span>
         </div>
         <div class="user-info-item">
@@ -893,54 +950,48 @@ function showUserPreview() {
         </div>
         <div class="user-info-item">
             <span class="user-info-label">Cédula:</span>
-            <span class="user-info-value">${temporalUserData.cedula || 'N/A'}</span>
+            <span class="user-info-value">${userData.cedula || 'N/A'}</span>
         </div>
     `;
     
-    // Mostrar fecha de nacimiento y edad solo para estudiantes
-    if (temporalUserData.tipo === 'estudiante') {
+    // Mostrar información específica (usando userData)
+    if (userData.tipo === 'estudiante') {
         previewHTML += `
             <div class="user-info-item">
                 <span class="user-info-label">Fecha de Nacimiento:</span>
-                <span class="user-info-value">${formatDate(temporalUserData.fechaNac)}</span>
+                <span class="user-info-value">${formatDate(userData.fechaNac)}</span>
             </div>
             <div class="user-info-item">
                 <span class="user-info-label">Edad:</span>
-                <span class="user-info-value">${calcularEdad(temporalUserData.fechaNac)}</span>
+                <span class="user-info-value">${calcularEdad(userData.fechaNac)}</span>
             </div>
-        `;
-    }
-    
-    // Información específica por tipo de usuario
-    if (temporalUserData.tipo === 'estudiante') {
-        previewHTML += `
             <div class="user-info-item">
                 <span class="user-info-label">Carrera:</span>
-                <span class="user-info-value">${temporalUserData.carrera || 'N/A'}</span>
+                <span class="user-info-value">${userData.carrera || 'N/A'}</span>
             </div>
             <div class="user-info-item">
                 <span class="user-info-label">Estado:</span>
-                <span class="user-info-value" style="color: ${temporalUserData.estudianteActivo ? '#28a745' : '#dc3545'}; font-weight: bold;">
-                    ${temporalUserData.estudianteActivo ? 'ACTIVO' : 'INACTIVO'}
+                <span class="user-info-value" style="color: ${userData.estudianteActivo ? '#28a745' : '#dc3545'}; font-weight: bold;">
+                    ${userData.estudianteActivo ? 'ACTIVO' : 'INACTIVO'}
                 </span>
             </div>
         `;
-    } else if (temporalUserData.tipo === 'trabajador') {
+    } else if (userData.tipo === 'trabajador') {
         previewHTML += `
             <div class="user-info-item">
                 <span class="user-info-label">Condición:</span>
-                <span class="user-info-value">${temporalUserData.condicion || 'N/A'}</span>
+                <span class="user-info-value">${userData.condicion || 'N/A'}</span>
             </div>
             <div class="user-info-item">
                 <span class="user-info-label">Cargo:</span>
-                <span class="user-info-value">${temporalUserData.cargo || 'N/A'}</span>
+                <span class="user-info-value">${userData.cargo || 'N/A'}</span>
             </div>
         `;
     }
     
     previewContent.innerHTML = previewHTML;
     
-    // Aplicar estilos CSS para los colores
+    // Aplicar estilos CSS (se mantiene el código de estilos)
     const style = document.createElement('style');
     style.textContent = `
         .user-type-trabajador {
@@ -962,8 +1013,9 @@ function showUserPreview() {
 // ===  FUNCIONES PRINCIPALES  ===
 // ===============================================
 
+/** REFACTORIZADO: Usa el estado centralizado para obtener datos y marcar completado */
 function showRegistrationSuccess() {
-    console.log("🔵 MOSTRANDO MODAL DE ÉXITO - Datos completos:", temporalUserData);
+    console.log("🔵 MOSTRANDO MODAL DE ÉXITO - Datos completos:", registrationState.userData);
 
     const modalSuccessFinal = document.getElementById('modalSuccess');
     if (!modalSuccessFinal) {
@@ -971,7 +1023,8 @@ function showRegistrationSuccess() {
         return;
     }
 
-    registroCompletado = true;
+    // 🔑 Marcar el registro como completado en el estado
+    registrationState.setCompleted(true);
 
     stopScanner();
     
@@ -983,30 +1036,24 @@ function showRegistrationSuccess() {
     });
     
     const userSummary = document.getElementById('userSummary');
+    const userData = registrationState.userData; // Obtener del estado
     
-    if (!temporalUserData) {
-        console.error('❌ temporalUserData no definido');
+    if (!userData) {
+        console.error('❌ userData no definido en el estado');
         userSummary.innerHTML = '<p>Error al cargar los datos del usuario.</p>';
         return;
     }
 
-    // CORRECCIÓN: Manejar nombres de forma segura
-    let nombreCompleto = 'N/A';
-    if (temporalUserData.tipo === 'estudiante' && temporalUserData.nombres) {
-        nombreCompleto = Array.isArray(temporalUserData.nombres) 
-            ? temporalUserData.nombres.join(' ').toUpperCase()
-            : String(temporalUserData.nombres).toUpperCase();
-    } else if (temporalUserData.tipo === 'trabajador' && temporalUserData.nombre_completo) {
-        nombreCompleto = temporalUserData.nombre_completo.toUpperCase();
-    }
+    // 🔑 Usar el campo de nombre normalizado
+    const nombreCompleto = userData.nombreCompletoFinal;
     
     userSummary.innerHTML = `
         <h4>Resumen de su cuenta:</h4>
-        <p><strong>Usuario:</strong> ${temporalUserData.username || 'No definido'}</p>
-        <p><strong>Email:</strong> ${temporalUserData.email || 'No definido'}</p>
+        <p><strong>Usuario:</strong> ${userData.username || 'No definido'}</p>
+        <p><strong>Email:</strong> ${userData.email || 'No definido'}</p>
         <p><strong>Nombre:</strong> ${nombreCompleto}</p>
-        <p><strong>Tipo:</strong> ${getUserTypeDisplay(temporalUserData.tipo)}</p>
-        <p><strong>Ruta Seleccionada:</strong> ${temporalUserData.rutaSeleccionada || 'No seleccionada'}</p>
+        <p><strong>Tipo:</strong> ${getUserTypeDisplay(userData.tipo)}</p>
+        <p><strong>Ruta Seleccionada:</strong> ${userData.rutaSeleccionada || 'No seleccionada'}</p>
         <p><strong>Fecha de registro:</strong> ${new Date().toLocaleDateString()}</p>
     `;
 
@@ -1218,20 +1265,28 @@ function completeRegistration() {
         return;
     }
 
+    // 🔑 Usar el estado centralizado
+    const userData = registrationState.userData;
+    if (!userData) {
+        showErrorGeneral('Error: Datos de registro no encontrados.');
+        return;
+    }
+
     const usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
-    const userKey = `${temporalUserData.tipo}_${username}`;
+    const userKey = `${userData.tipo}_${username}`;
 
     if (usersDB[userKey]) {
         showErrorGeneral('El nombre de usuario ya está en uso. Por favor elija otro.');
         return;
     }
 
-    temporalUserData.password = password;
-    temporalUserData.username = username;
-    temporalUserData.email = email;
-    temporalUserData.fechaRegistro = new Date().toISOString();
+    // 🔑 Actualizar las propiedades en el estado antes de guardar
+    userData.password = password;
+    userData.username = username;
+    userData.email = email;
+    userData.fechaRegistro = new Date().toISOString();
 
-    usersDB[userKey] = temporalUserData;
+    usersDB[userKey] = userData;
     localStorage.setItem('unellez_users', JSON.stringify(usersDB));
 
     showRegistrationSuccess();
@@ -1239,7 +1294,8 @@ function completeRegistration() {
 
 function cancelRegistration() {
     if (confirm('¿Está seguro de que desea cancelar el registro? Perderá el progreso.')) {
-        registroCompletado = false;
+        // 🔑 Usar el setter
+        registrationState.setCompleted(false);
         goToLogin();
     }
 }
@@ -1313,7 +1369,7 @@ function hideInputHelp(input) {
 // ===============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 INICIO DEL PROCESO DE REGISTRO - VERSIÓN CORREGIDA');
+    console.log('🚀 INICIO DEL PROCESO DE REGISTRO - VERSIÓN REFACTORIZADA');
     
     mostrarInformacionInicial();
 
