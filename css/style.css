@@ -441,23 +441,30 @@ body.modal-open {
     }
 }
 
-/* Scroll personalizado para el modal */
+/* Scroll personalizado para el modal - MENOS LLAMATIVO */
 .modal-content::-webkit-scrollbar {
     width: 6px;
 }
 
 .modal-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: #f8f9fa;
     border-radius: 10px;
 }
 
 .modal-content::-webkit-scrollbar-thumb {
-    background: var(--primary-blue);
+    background: #ced4da; /* Color más suave */
     border-radius: 10px;
+    border: 1px solid #f8f9fa;
 }
 
 .modal-content::-webkit-scrollbar-thumb:hover {
-    background: #152252;
+    background: #adb5bd; /* Color hover más suave */
+}
+
+/* Scrollbar para Firefox */
+.modal-content {
+    scrollbar-width: thin;
+    scrollbar-color: #ced4da #f8f9fa;
 }
 
 /* UTILITIES */
