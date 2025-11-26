@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Datos - Transporte UNELLEZ</title>
+    <link rel="stylesheet" href="css/recuperarDatos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="multimedia/iconoBus.ico" type="image/x-icon">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <h1><i class="fas fa-bus"></i> Transporte UNELLEZ</h1>
+            </div>
+            <div class="user-section">
+                <a href="index.html" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al Login
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="recovery-container">
+        <div class="recovery-card">
+            <!-- Paso 1: Selección de método (inicial) -->
+            <div id="step1" class="recovery-step">
+                <div class="recovery-header">
+                    <div class="recovery-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <h2>Recuperar Datos de Ingreso</h2>
+                    <p>Le enviaremos un enlace de recuperación a su correo electrónico registrado</p>
+                </div>
+
+                <div class="recovery-progress">
+                    <div class="progress-steps">
+                        <div class="step active">
+                            <div class="step-number">1</div>
+                            <span>Inicio</span>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <span>Verificación</span>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <span>Completado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recovery-option">
+                    <div class="option-card" onclick="showEmailForm()">
+                        <div class="option-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="option-content">
+                            <h3>Recuperar por Email</h3>
+                            <p>Enviaremos un enlace de recuperación a su correo electrónico registrado</p>
+                        </div>
+                        <i class="fas fa-chevron-right option-arrow"></i>
+                    </div>
+                </div>
+
+                <div class="contact-info">
+                    <div class="contact-header">
+                        <i class="fas fa-life-ring"></i>
+                        <h4>¿Necesita ayuda adicional?</h4>
+                    </div>
+                    <div class="contact-options">
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>soporte@transporteunellez.edu.ve</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>+58 123-456-7890</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 2: Formulario de Email -->
+            <div id="step2" class="recovery-step hidden">
+                <div class="form-header">
+                    <button type="button" class="btn-back" onclick="showStep1()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h3>Ingrese su Correo Electrónico</h3>
+                </div>
+                
+                <div class="recovery-progress">
+                    <div class="progress-steps">
+                        <div class="step completed">
+                            <div class="step-number"><i class="fas fa-check"></i></div>
+                            <span>Inicio</span>
+                        </div>
+                        <div class="step active">
+                            <div class="step-number">2</div>
+                            <span>Verificación</span>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <span>Completado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="emailForm" class="recovery-form" onsubmit="handleEmailSubmit(event)">
+                    <div class="form-group">
+                        <label for="userEmail">Correo Electrónico Registrado</label>
+                        <div class="input-container">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" id="userEmail" class="modern-input" 
+                                   placeholder="ejemplo@unellez.edu.ve" required>
+                        </div>
+                        <p class="form-help">
+                            Ingrese el correo electrónico que utilizó al registrar su cuenta. 
+                            Le enviaremos un enlace para restablecer sus datos de acceso.
+                        </p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
+                        <i class="fas fa-paper-plane"></i> Enviar Enlace de Recuperación
+                    </button>
+                </form>
+
+                <div class="security-notice">
+                    <div class="security-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <p>Por seguridad, el enlace de recuperación expirará en 1 hora.</p>
+                </div>
+            </div>
+
+            <!-- Paso 3: Confirmación de Envío -->
+            <div id="step3" class="recovery-step hidden">
+                <div class="success-message">
+                    <div class="success-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>¡Correo Enviado Exitosamente!</h3>
+                    <p id="successText">
+                        Hemos enviado un enlace de recuperación a: <br>
+                        <strong id="userEmailText"></strong>
+                    </p>
+                    
+                    <div class="instructions">
+                        <h4>¿Qué hacer ahora?</h4>
+                        <ul>
+                            <li>Revise su bandeja de entrada</li>
+                            <li>Busque el correo de "Recuperación de Datos - Transporte UNELLEZ"</li>
+                            <li>Haga clic en el enlace de recuperación</li>
+                            <li>Siga las instrucciones para restablecer sus datos</li>
+                        </ul>
+                    </div>
+
+                    <div class="email-tips">
+                        <div class="tip">
+                            <i class="fas fa-envelope-open"></i>
+                            <span>¿No encuentra el correo? Revise la carpeta de spam</span>
+                        </div>
+                        <div class="tip">
+                            <i class="fas fa-clock"></i>
+                            <span>El enlace expirará en 1 hora por seguridad</span>
+                        </div>
+                    </div>
+
+                    <div class="success-actions">
+                        <a href="index.html" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Volver al Login
+                        </a>
+                        <button class="btn btn-secondary" onclick="showStep2()">
+                            <i class="fas fa-redo"></i> Reenviar Correo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 4: Error (opcional) -->
+            <div id="stepError" class="recovery-step hidden">
+                <div class="error-message">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <h3>Correo No Encontrado</h3>
+                    <p>El correo electrónico <strong id="errorEmailText"></strong> no está registrado en nuestro sistema.</p>
+                    
+                    <div class="error-suggestions">
+                        <p>Por favor, verifique:</p>
+                        <ul>
+                            <li>Que el correo esté escrito correctamente</li>
+                            <li>Que sea el correo que utilizó al registrarse</li>
+                            <li>O contacte con soporte técnico</li>
+                        </ul>
+                    </div>
+
+                    <div class="error-actions">
+                        <button class="btn btn-primary" onclick="showStep2()">
+                            <i class="fas fa-edit"></i> Intentar con otro correo
+                        </button>
+                        <a href="index.html" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/recuperarDatos.js"></script>
+</body>
+</html>

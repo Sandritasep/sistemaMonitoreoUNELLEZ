@@ -169,7 +169,7 @@ header {
     gap: 12px;
 }
 
-.titulo-scanner::before {
+/* .titulo-scanner::before {
     content: "";
     display: inline-block;
     width: 24px;
@@ -179,7 +179,7 @@ header {
     background-size: 8px 8px;
     background-position: 0 0, 4px 4px;
     border: 2px solid white;
-}
+} */
 
 .cerrar-qr {
     cursor: pointer;

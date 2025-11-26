@@ -1,18 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css">
     <title>Transporte UNELLEZ</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-     crossorigin="">
-     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-     <link rel="icon" href="multimedia/iconoBus.ico" type="image/x-icon">   
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="multimedia/iconoBus.ico" type="image/x-icon">
 </head>
 <body>
-
     <!-- Header -->
     <header>
         <div class="header-content">
@@ -29,25 +25,42 @@
         </div>
     </header>
 
-<!-- Modal Login -->
+    <!-- Modal Login -->
     <div class="modal active" id="modalLogin">
         <div class="modal-overlay"></div>
         <div class="modal-content">
-            <div class="login-icon">
-                <i class="fas fa-bus"></i>
+            <div class="login-header">
+                <div class="login-icon">
+                    <i class="fas fa-bus"></i>
+                </div>
+                <h2 class="modal-title">Sistema de Transporte UNELLEZ</h2>
+                <p class="modal-subtitle">Ingrese sus credenciales para acceder</p>
             </div>
-            <h2 class="modal-title">Sistema de Transporte UNELLEZ</h2>
-            <p class="modal-subtitle">Ingrese sus credenciales para acceder</p>
             
             <form id="loginForm" class="login-form">
                 <div class="form-group">
-                    <label for="username"><i class="fas fa-user"></i> Usuario</label>
-                    <input type="text" id="username" name="username" required placeholder="Ingrese su usuario">
+                    <div class="input-container">
+                        <i class="fas fa-users input-icon"></i>
+                        <select class="modern-input" required>
+                            <option value="">Seleccione tipo de usuario</option>
+                            <option value="Estudiante">Estudiante</option>
+                            <option value="Trabajador">Profesor/trabajador</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="password"><i class="fas fa-lock"></i> Contraseña</label>
-                    <input type="password" id="password" name="password" required placeholder="Ingrese su contraseña">
+                    <div class="input-container">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" class="modern-input" placeholder="Nombre de usuario" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="input-container">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" class="modern-input" placeholder="Contraseña" required>
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-block">
@@ -55,73 +68,36 @@
                 </button>
             </form>
             
-            <div class="login-links">
-                <p>¿No está registrado? <a href="register.html">Registrarse</a></p>
-                <p><a href="admin.html" target="_blank">Acceso Administrativo</a></p>
-                <br>
-                <p><a href="#" onclick="showRegistrationInfo()">Registro para Chofer</a></p>
+            <div class="login-footer">
+                <div class="login-links">
+                    <a href="register.html" class="link">¿No está registrado?</a>
+                    <a href="recuperarDatos.html" class="link">¿Olvidó sus datos?</a>
+                </div>
+                <div class="admin-links">
+                    <a href="#" onclick="showRegistrationInfo()" class="link admin">Registro para Chofer</a>
+                    <a href="admin.html" class="link admin">Acceso Administrativo</a>
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- Modal Registro Info choferes-->
+
+    <!-- Modal Registro Info choferes -->
     <div class="modal" id="modalRegistroInfo">
         <div class="modal-overlay"></div>
         <div class="modal-content">
-            <h2><i class="fas fa-info-circle"></i> Información de Registro</h2>
-            <p>Para obtener acceso al sistema, debe solicitar su registro a través del administrador.</p>
-            <p>El administrador generará un enlace de registro temporal que tendrá una validez de 1 hora.</p>
-            <p>Una vez registrado, podrá acceder al sistema con sus credenciales.</p>
-            <button class="btn btn-secondary" onclick="closeRegistroInfo()">Entendido</button>
+            <div class="modal-header">
+                <i class="fas fa-info-circle modal-info-icon"></i>
+                <h2>Información de Registro</h2>
+            </div>
+            <div class="modal-body">
+                <p>Para obtener acceso al sistema, debe solicitar su registro a través del administrador.</p>
+                <p>El administrador generará un enlace de registro temporal que tendrá una validez de 1 hora.</p>
+                <p>Una vez registrado, podrá acceder al sistema con sus credenciales.</p>
+            </div>
+            <button class="btn btn-secondary btn-block" onclick="closeRegistroInfo()">Entendido</button>
         </div>
     </div>
 
-    <!-- Contenido Principal (oculto hasta login) -->
-    <div class="main-container" id="mainContainer">
-        <div class="content-wrapper">
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <div class="user-panel">
-                    <div class="user-avatar">
-                        <i class="fas fa-user-circle"></i>
-                    </div>
-                    <div class="user-info" id="userInfo">
-                        <h4 id="userName"></h4>
-                        <p id="userType"></p>
-                        <p id="userDetails"></p>
-                    </div>
-                </div>
-
-                <h3 class="sidebar-title"><i class="fas fa-map-marked-alt"></i> Rutas Disponibles</h3>
-                <ul class="route-tabs" id="routeTabs">
-                    <!-- Las rutas se cargarán dinámicamente -->
-                </ul>
-
-                <!-- Panel de Transporte -->
-                <div class="transport-panel" id="transportPanel">
-                    <!-- Se cargará dinámicamente según el tipo de usuario -->
-                </div>
-            </div>
-
-            <!-- Mapa -->
-            <div class="map-section">
-                <h2 class="map-title" id="mapTitle"><i class="fas fa-map"></i> Rutas de Transporte UNELLEZ</h2>
-                <div id="mapa"></div>
-                <div class="map-controls">
-                    <button class="btn btn-primary" onclick="showAllRoutes()">
-                        <i class="fas fa-layer-group"></i> Ver Todas las Rutas
-                    </button>
-                    <button class="btn btn-secondary" onclick="centerMap()">
-                        <i class="fas fa-crosshairs"></i> Centrar Mapa
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <!-- <script src="scanerQr.js"></script> -->
-  
     <script src="js/script.js"></script>
 </body>
 </html>
