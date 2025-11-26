@@ -93,6 +93,28 @@ def scraping_trabajador(driver):
         data['estado'] = 'ERROR'
         data['motivo'] = f'Error en scraping de trabajador: {str(e)}'
         return data
+    
+def verificar_usuario_registrado(cedula, tipo):
+    """Verifica si la cédula ya existe en la tabla correspondiente"""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    existe = False
+    try:
+        if tipo == 'estudiante':
+            cursor.execute('SELECT 1 FROM estudiantes WHERE cedula = ?', (cedula,))
+        elif tipo == 'trabajador':
+            cursor.execute('SELECT 1 FROM profesores_trabajadores WHERE cedula = ?', (cedula,))
+            
+        if cursor.fetchone():
+            existe = True
+            print("usuario ",cedula, " ya esta registrado ", tipo)
+    except Exception as e:
+        print(f"Error verificando registro: {e}")
+    finally:
+        conn.close()
+        
+    return existe
 
 def analizar_qr_con_selenium(qr_content):
     
@@ -216,6 +238,20 @@ def handle_scan_result():
     if analysis_result['estado'] == 'ACCESO PERMITIDO':
         tipo = analysis_result.get('tipo', 'estudiante')
         cedula_key = analysis_result.get('cedula')
+
+        ya_registrado = verificar_usuario_registrado(cedula_key, tipo)
+        
+        # Si ya está registrado, devolvemos un flag especial pero NO error
+        if ya_registrado:
+             print("enviando usuario ya registrado", cedula_key)
+             return _corsify_actual_response(jsonify({
+                "success": True,
+                "access": "GRANTED",
+                "isRegistered": True,  # <--- ESTA ES LA CLAVE
+                "tipo": tipo,
+                "cedula": cedula_key,
+                "message": "El usuario ya se encuentra registrado en el sistema."
+            })), 200
         
         if tipo == 'estudiante':
             nombres = analysis_result.get('nombres_apellidos', 'N/A').split(' ')

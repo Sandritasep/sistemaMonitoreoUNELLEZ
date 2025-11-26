@@ -381,6 +381,84 @@ function hideWaitingMessage() {
     if (dashboardSection) dashboardSection.style.display = 'block';
 }
 
+function mostrarModalUsuarioYaRegistrado(cedula, tipo) {
+    // 1. Reutilizamos el modal-qr
+    const modalContainer = document.querySelector('.modal-container-qr');
+    
+    // Ocultar elementos del escáner para limpiar la vista
+    const reader = document.getElementById('reader');
+    if (reader) reader.style.display = 'none';
+    
+    const headerQr = document.querySelector('.header-qr');
+    if (headerQr) headerQr.style.display = 'none';
+    
+    // 2. Crear el mensaje con estilos CLAROS para fondo oscuro
+    const aviso = document.createElement('div');
+    aviso.className = 'aviso-ya-registrado';
+    
+    // Nota los cambios en 'color' para que resalten sobre el fondo azul oscuro
+    aviso.innerHTML = `
+        <div style="text-align: center; padding: 30px 20px; background-color: #FFFFFF;">
+            <div style="font-size: 4rem; 
+                        color: #ffc107; 
+                        margin-bottom: 20px;">
+                <i class="fas fa-exclamation-circle" style="box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></i>
+            </div>
+            
+            <h2 style="color: #000000ff; margin-bottom: 15px; font-weight: 600;">
+                ¡Usuario ya registrado!
+            </h2>
+            
+            <p style="font-size: 1.1em; color: #000000ff; margin-bottom: 30px; line-height: 1.5;">
+                La cédula <strong style="color: #0004ffff; border-bottom: 1px solid rgba(255,255,255,0.3);">${cedula}</strong> 
+                (${tipo}) ya posee una cuenta activa en el sistema.
+            </p>
+            
+            <button onclick="window.location.href='index.html'" class="btn btn-primary" style="
+                background: #007bff; 
+                color: white; 
+                padding: 12px 30px; 
+                border: none; 
+                border-radius: 5px; 
+                font-size: 1.1em; 
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                transition: transform 0.2s;
+            " onmouseover="this.style.transform='scale(1.05)'" 
+              onmouseout="this.style.transform='scale(1)'">
+                <i class="fas fa-sign-in-alt"></i> Ir al Inicio de Sesión
+            </button>
+            
+            <br>
+
+            <button onclick="cerrarErrorGeneralYReiniciar()" style="
+                background: transparent;
+                border: none;
+                color: #adb5bd; /* Gris claro */
+                margin-top: 25px;
+                text-decoration: underline;
+                cursor: pointer;
+                font-size: 0.9em;
+                transition: color 0.3s;
+            " onmouseover="this.style.color='#000000ff'" 
+              onmouseout="this.style.color='#adb5bd'">
+                Escanear otro carnet
+            </button>
+        </div>
+    `;
+
+    // Limpiar el contenedor y mostrar el aviso
+    modalContainer.innerHTML = ''; 
+    modalContainer.appendChild(aviso);
+    
+    // Asegurar que el modal esté visible
+    showModal(modalQR);
+}
+
 // ===============================================
 // ================ RUTAS ========================
 // ===============================================
@@ -478,16 +556,11 @@ if (btnRuta) {
 
 /** REFACTORIZADO: Lee el estado centralizado para obtener cédula, tipo y ruta */
 function enviarRegistroFinal(e) {
-    if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
     const userData = registrationState.userData;
     const cedulaToken = registrationState.tempToken;
 
     // Validación de seguridad de flujo (datos deben existir)
-    if (!userData || !cedulaToken || !userData.rutaSeleccionada) {
+    if (!userData || !cedulaToken) {
         mostrarErrorEnRegistro("Error de flujo: Datos de sesión incompletos. Intente escanear de nuevo.");
         return;
     }
@@ -505,19 +578,17 @@ function enviarRegistroFinal(e) {
     }
 
     // Validar formato del email
-    if (!validateEmail()) {
-        return;
-    }
-
-    if (!validatePassword()) {
-        return;
-    }
-
-    if (!validatePasswordMatch()) {
-        return;
-    }
+    if (!validateEmail()) return;
+    if (!validatePassword()) return;
+    if (!validatePasswordMatch()) return;
 
     console.log("🔄 Procesando registro final...");
+
+    // Indicador visual de carga (Opcional pero recomendado)
+    const btn = document.querySelector('.register-form .btn-primary');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    btn.disabled = true;
 
     fetch('http://127.0.0.1:5000/complete-registration', {
         method: 'POST',
@@ -529,7 +600,7 @@ function enviarRegistroFinal(e) {
             user_name: username,
             password: password,
             email: email,
-            tipo: userData.tipo // 🚌 Lee el tipo desde el estado centralizado
+            tipo: userData.tipo 
         })
     })
     .then(response => {
@@ -542,16 +613,17 @@ function enviarRegistroFinal(e) {
         if (data.success) {
             console.log("✅ Registro completado exitosamente");
 
+            // Restaurar botón
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+
             // 💾 Actualizar el estado centralizado con los datos finales de la cuenta
             if (userData) {
                 userData.username = username;
                 userData.email = email;
             }
 
-            const registerForm = document.getElementById('registerForm');
-            if (registerForm) {
-                registerForm.reset();
-            }
+            document.getElementById('registerForm').reset();
 
             showRegistrationSuccess();
             
@@ -560,8 +632,10 @@ function enviarRegistroFinal(e) {
         }
     })
     .catch(error => {
-        console.error('Error en registro final:', error);
-        mostrarErrorEnRegistro('Error de conexión con el servidor al intentar completar el registro.');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        console.error('Error:', error);
+        mostrarErrorEnRegistro('Error de conexión con el servidor.');
     });
 }
 
@@ -643,6 +717,12 @@ function processQRScan(result) {
     })
     .then(data => {
         hideWaitingMessage();
+
+        // CASO 1: EL USUARIO YA ESTÁ REGISTRADO (Nueva Lógica)
+        if (data.isRegistered) {
+            mostrarModalUsuarioYaRegistrado(data.cedula, data.tipo);
+            return; // Detenemos el flujo aquí
+        }
 
         // 🔑 Si hay datos, inicializar el estado (esto incluye la normalización)
         if (data.userData) {
@@ -1048,7 +1128,7 @@ function showRegistrationSuccess() {
     const nombreCompleto = userData.nombreCompletoFinal;
     
     userSummary.innerHTML = `
-        <h4>Resumen de su cuenta:</h4>
+        <h4>Resumen de su cuenta</h4>
         <p><strong>Usuario:</strong> ${userData.username || 'No definido'}</p>
         <p><strong>Email:</strong> ${userData.email || 'No definido'}</p>
         <p><strong>Nombre:</strong> ${nombreCompleto}</p>
@@ -1183,71 +1263,49 @@ function setupRealTimeValidation() {
     if(email) email.addEventListener('input', validateEmail);
 }
 
+// Validaciones usando la API nativa del navegador
 function validateEmail() {
-    const email = document.getElementById('regEmail');
-    if (!email) return true;
-    const value = email.value.trim();
-    
-    // Validación más estricta del email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (!value) {
-        showInputError(email, 'El correo electrónico es requerido');
-        return false;
+    const emailInput = document.getElementById('regEmail');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/; // Requiere @ y .dominio
+
+    if (!emailInput.value) {
+        emailInput.setCustomValidity('El correo electrónico es obligatorio.');
+    } else if (!emailRegex.test(emailInput.value)) {
+        emailInput.setCustomValidity('Incluye un "@" y un dominio válido (ej. .com) en la dirección de correo.');
+    } else {
+        emailInput.setCustomValidity(''); // Válido
+        return true;
     }
-    
-    if (!emailRegex.test(value)) {
-        showInputError(email, 'El formato del correo es inválido. Debe incluir @ y un dominio válido (ej: usuario@dominio.com)');
-        return false;
-    }
-    
-    // Validar que tenga algo después del @ y un dominio
-    const parts = value.split('@');
-    if (parts.length !== 2 || !parts[0] || !parts[1] || !parts[1].includes('.') || parts[1].split('.')[1].length < 2) {
-        showInputError(email, 'El formato del correo es inválido. Debe incluir @ y un dominio válido (ej: usuario@dominio.com)');
-        return false;
-    }
-    
-    clearInputError(email);
-    return true;
+    // Dispara el mensaje nativo
+    emailInput.reportValidity();
+    return false;
 }
 
 function validatePassword() {
-    const password = document.getElementById('regPassword');
-    if (!password) return true;
-    const value = password.value;
-
-    if (!value) {
-        showInputError(password, 'La contraseña es requerida');
-        return false;
-    }
-
-    if (value.length < 6) {
-        showInputError(password, 'La contraseña debe tener al menos 6 caracteres');
-        return false;
+    const passInput = document.getElementById('regPassword');
+    
+    if (!passInput.value || passInput.value.length < 6) {
+        passInput.setCustomValidity('La contraseña debe tener al menos 6 caracteres.');
     } else {
-        clearInputError(password);
+        passInput.setCustomValidity('');
         return true;
     }
+    passInput.reportValidity();
+    return false;
 }
 
 function validatePasswordMatch() {
-    const password = document.getElementById('regPassword');
-    const confirmPassword = document.getElementById('regConfirmPassword');
-    if (!password || !confirmPassword) return true;
+    const pass1 = document.getElementById('regPassword');
+    const pass2 = document.getElementById('regConfirmPassword');
 
-    if (!confirmPassword.value) {
-        showInputError(confirmPassword, 'Por favor confirme su contraseña');
-        return false;
-    }
-
-    if (password.value !== confirmPassword.value) {
-        showInputError(confirmPassword, 'Las contraseñas no coinciden');
-        return false;
+    if (pass1.value !== pass2.value) {
+        pass2.setCustomValidity('Las contraseñas no coinciden.');
     } else {
-        clearInputError(confirmPassword);
+        pass2.setCustomValidity('');
         return true;
     }
+    pass2.reportValidity();
+    return false;
 }
 
 function validateForm(username, password, confirmPassword, email) {
