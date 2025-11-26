@@ -61,22 +61,47 @@ def setup_database():
     print("Base de datos 'db_qr_unellez.db' creada/verificada con éxito.")
     print("Tablas 'admin', 'choferes', 'prof/trabajadores' y 'rutas' creadas con exito.")
 
+def eliminar_varios_usuarios():
+    # Conectar a la base de datos
+    conn = sqlite3.connect('db_qr_unellez.db')
+    cursor = conn.cursor()
+
+    # Lista de cédulas a eliminar
+    cedulas_a_eliminar = [30918547, 30645854, 30609726, 30609669, 30409460, 30141442, 30099767, 30052584, 29747051, 29639466, 28487362]
+
+    try:
+        # Ejecutar DELETE para cada cédula en la lista
+        for cedula in cedulas_a_eliminar:
+            cursor.execute("DELETE FROM estudiantes WHERE cedula = ?", (cedula,))
+        
+        # Guardar los cambios
+        conn.commit()
+        print(f"Se eliminaron {len(cedulas_a_eliminar)} registros correctamente.")
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"Error al eliminar registros: {e}")
+        
+    finally:
+        # Cerrar la conexión
+        conn.close()  
+
 def eliminar_user():
     # Conectar a la base de datos
     conn = sqlite3.connect('db_qr_unellez.db')
     cursor = conn.cursor()
 
     # ID del estudiante a eliminar
-    id_a_eliminar = 2709247
+    id_a_eliminar = 28164209
 
     # Ejecutar la sentencia DELETE
-    cursor.execute("DELETE FROM profesores_trabajadores WHERE cedula = ?", (id_a_eliminar,))
+    cursor.execute("DELETE FROM estudiantes WHERE cedula = ?", (id_a_eliminar,))
 
     # Guardar los cambios y cerrar la conexión
     conn.commit()
     conn.close()
 
-    print("Registro eliminado correctamente.", id_a_eliminar)   
+    print("Registro eliminado correctamente.", id_a_eliminar)
 
 def agregar_tabla():
     conn = sqlite3.connect('db_qr_unellez.db')  # reemplaza con el nombre de tu BD

@@ -392,70 +392,92 @@ function mostrarModalUsuarioYaRegistrado(cedula, tipo) {
     const headerQr = document.querySelector('.header-qr');
     if (headerQr) headerQr.style.display = 'none';
     
-    // 2. Crear el mensaje con estilos CLAROS para fondo oscuro
+    // 2. Crear el mensaje con fondo blanco uniforme - FORZANDO ESTILOS
     const aviso = document.createElement('div');
     aviso.className = 'aviso-ya-registrado';
     
-    // Nota los cambios en 'color' para que resalten sobre el fondo azul oscuro
+    // Fondo blanco uniforme en TODO el modal
     aviso.innerHTML = `
-        <div style="text-align: center; padding: 30px 20px; background-color: #FFFFFF;">
-            <div style="font-size: 4rem; 
+        <div style="
+            text-align: center; 
+            padding: 50px 40px; 
+            background: #FFFFFF !important; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        ">
+            <div style="font-size: 5rem; 
                         color: #ffc107; 
-                        margin-bottom: 20px;">
-                <i class="fas fa-exclamation-circle" style="
-                    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
-                    border-radius: 50%;"></i>
+                        margin-bottom: 25px;">
+                <i class="fas fa-exclamation-circle"></i>
             </div>
             
-            <h2 style="color: #000000ff; margin-bottom: 15px; font-weight: 600;">
+            <h2 style="color: #2c3e50; margin-bottom: 20px; font-weight: 700; font-size: 1.8em;">
                 ¡Usuario ya registrado!
             </h2>
             
-            <p style="font-size: 1.1em; color: #000000ff; margin-bottom: 30px; line-height: 1.5;">
-                La cédula <strong style="color: #0004ffff; border-bottom: 1px solid rgba(255,255,255,0.3);">${cedula}</strong> 
+            <p style="font-size: 1.2em; color: #555; margin-bottom: 40px; line-height: 1.6; max-width: 400px;">
+                La cédula <strong style="color: #1a2a6c; background-color: #f8f9fa; padding: 4px 10px; border-radius: 6px; font-size: 1.1em;">${cedula}</strong> 
                 (${tipo}) ya posee una cuenta activa en el sistema.
             </p>
             
             <button onclick="window.location.href='index.html'" class="btn btn-primary" style="
-                background: #1a2a6c; 
+                background: linear-gradient(135deg, #1a2a6c 0%, #2a4abe 100%); 
                 color: white; 
-                padding: 12px 30px; 
+                padding: 16px 45px; 
                 border: none; 
-                border-radius: 15px; 
-                font-size: 1.1em; 
+                border-radius: 12px; 
+                font-size: 1.2em; 
                 cursor: pointer;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                gap: 10px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-                transition: transform 0.2s;
-            " onmouseover="this.style.transform='scale(1.05)'" 
-              onmouseout="this.style.transform='scale(1)'">
+                gap: 12px;
+                box-shadow: 0 8px 25px rgba(26, 42, 108, 0.4);
+                transition: all 0.3s ease;
+                font-weight: 600;
+                min-width: 220px;
+            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 30px rgba(26, 42, 108, 0.5)';" 
+              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 25px rgba(26, 42, 108, 0.4)';">
                 <i class="fas fa-sign-in-alt"></i> Ir al Inicio de Sesión
-            </button>
-            
-            <br>
-
-            <button onclick="cerrarErrorGeneralYReiniciar()" style="
-                background: transparent;
-                border: none;
-                color: #adb5bd; /* Gris claro */
-                margin-top: 25px;
-                text-decoration: underline;
-                cursor: pointer;
-                font-size: 0.9em;
-                transition: color 0.3s;
-            " onmouseover="this.style.color='#000000ff'" 
-              onmouseout="this.style.color='#adb5bd'">
-                Escanear otro carnet
             </button>
         </div>
     `;
 
-    // Limpiar el contenedor y mostrar el aviso
+    // LIMPIAR COMPLETAMENTE el contenedor y aplicar estilos forzados
     modalContainer.innerHTML = ''; 
+    
+    // FORZAR estilos en el contenedor principal para eliminar cualquier fondo dividido
+    modalContainer.style.cssText = `
+        background: #FFFFFF !important;
+        border-radius: 20px !important;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+    `;
+    
     modalContainer.appendChild(aviso);
+    
+    // También forzar estilos en el modal base si es necesario
+    if (modalQR) {
+        const modalContent = modalQR.querySelector('.modal-content-qr');
+        if (modalContent) {
+            modalContent.style.cssText = `
+                background: transparent !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            `;
+        }
+    }
     
     // Asegurar que el modal esté visible
     showModal(modalQR);
