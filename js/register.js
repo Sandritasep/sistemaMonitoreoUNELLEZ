@@ -402,7 +402,9 @@ function mostrarModalUsuarioYaRegistrado(cedula, tipo) {
             <div style="font-size: 4rem; 
                         color: #ffc107; 
                         margin-bottom: 20px;">
-                <i class="fas fa-exclamation-circle" style="box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></i>
+                <i class="fas fa-exclamation-circle" style="
+                    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+                    border-radius: 50%;"></i>
             </div>
             
             <h2 style="color: #000000ff; margin-bottom: 15px; font-weight: 600;">
@@ -415,11 +417,11 @@ function mostrarModalUsuarioYaRegistrado(cedula, tipo) {
             </p>
             
             <button onclick="window.location.href='index.html'" class="btn btn-primary" style="
-                background: #007bff; 
+                background: #1a2a6c; 
                 color: white; 
                 padding: 12px 30px; 
                 border: none; 
-                border-radius: 5px; 
+                border-radius: 15px; 
                 font-size: 1.1em; 
                 cursor: pointer;
                 display: inline-flex;
@@ -1435,15 +1437,15 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('modal-qr').classList.remove('active');
     });
 
-    document.querySelectorAll('.modal-base').forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                if (this.id !== 'modalSuccess') {
-                    showModal(null);
-                }
-            }
-        });
-    });
+    // document.querySelectorAll('.modal-base').forEach(modal => {
+    //     modal.addEventListener('click', function(e) {
+    //         if (e.target === this) {
+    //             if (this.id !== 'modalSuccess') {
+    //                 showModal(null);
+    //             }
+    //         }
+    //     });
+    // });
 
     setupRealTimeValidation();
 });

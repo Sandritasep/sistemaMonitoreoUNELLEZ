@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
 import time
+import bcrypt
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -15,6 +16,23 @@ DB_NAME = 'db_qr_unellez.db'
 
 temp_student_data = {}
 temp_worker_data = {}
+
+# ==============================
+# FUNCIONES DE SEGURIDAD PARA CONTRASEÑAS
+# ==============================
+def hash_password(password):
+    """Convierte una contraseña de texto plano a hash seguro"""
+    # Genera un salt y hashea la contraseña
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed
+
+def verify_password(plain_password, hashed_password):
+    """Verifica si una contraseña en texto plano coincide con el hash"""
+    if isinstance(hashed_password, str):
+        hashed_password = hashed_password.encode('utf-8')
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password)
+
 
 def detectar_tipo_url(url):
     print(f"Analizando URL: {url}")
@@ -162,8 +180,12 @@ def guardar_datos_estudiante(datos):
     try:
         cedula_int = int(datos.get('cedula'))
         
+        # Hashear la contraseña antes de guardarla
+        password_plain = datos.get('password')
+        password_hashed = hash_password(password_plain)
+
         cursor.execute('''
-        INSERT OR REPLACE INTO estudiantes (cedula, nombre_completo, carrera, fecha_nacimiento, ruta_elegida, user_name, password, email)
+        INSERT INTO estudiantes (cedula, nombre_completo, carrera, fecha_nacimiento, ruta_elegida, user_name, password, email)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             cedula_int,
@@ -172,7 +194,7 @@ def guardar_datos_estudiante(datos):
             datos.get('fecha_nacimiento'),
             datos.get('ruta_elegida'),
             datos.get('user_name'),
-            datos.get('password'),
+            password_hashed,
             datos.get('email')
         ))
         conn.commit()
@@ -192,9 +214,14 @@ def guardar_datos_trabajador(datos):
     print('Datos trabajador recibidos en guardar_datos: ', datos)
     
     try:
-        cedula_int = int(datos.get('cedula'))      
+        cedula_int = int(datos.get('cedula'))  
+
+        # Hashear la contraseña antes de guardarla
+        password_plain = datos.get('password')
+        password_hashed = hash_password(password_plain)
+
         cursor.execute('''
-        INSERT OR REPLACE INTO profesores_trabajadores (cedula, nombre_completo, condicion, cargo, user_name, password, ruta_elegida, email)
+        INSERT INTO profesores_trabajadores (cedula, nombre_completo, condicion, cargo, user_name, password, ruta_elegida, email)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             cedula_int,
@@ -202,7 +229,7 @@ def guardar_datos_trabajador(datos):
             datos.get('condicion'),
             datos.get('cargo'),
             datos.get('user_name'),
-            datos.get('password'),
+            password_hashed,
             datos.get('ruta_elegida'),
             datos.get('email')
         ))
