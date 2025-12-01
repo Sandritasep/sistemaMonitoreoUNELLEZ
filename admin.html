@@ -8,63 +8,204 @@
     <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
-    <!-- Header Admin -->
-    <header class="admin-header">
+    <!-- Header General (siempre visible) -->
+    <header class="main-header">
         <div class="header-content">
             <div class="logo">
-                <h1><i class="fas fa-cogs"></i> Panel Administrativo</h1>
+                <h1><i class="fas fa-bus"></i> Transporte UNELLEZ</h1>
             </div>
-            <div class="admin-nav">
-                <button class="btn-admin" onclick="showSection('users')">
-                    <i class="fas fa-users"></i> Gestionar Usuarios
-                </button>
-                <button class="btn-admin" onclick="showSection('routes')">
-                    <i class="fas fa-route"></i> Gestionar Rutas
-                </button>
-                <button class="btn-admin" onclick="logoutAdmin()">
-                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                </button>
+            <div class="user-section">
+                <div id="headerUserInfo">
+                    <button class="btn-login" onclick="window.location.href='index.html'">
+                        <i class="fas fa-home"></i> Volver al Sistema
+                    </button>
+                </div>
             </div>
         </div>
     </header>
-
-    <!-- Contenido Principal Admin -->
-    <div class="admin-container">
-        <!-- Sección Usuarios -->
-        <div class="admin-section active" id="usersSection">
-            <h2><i class="fas fa-users"></i> Gestión de Usuarios</h2>
-            
-            <div class="admin-actions">
-                <button class="btn btn-primary" onclick="openUserForm()">
-                    <i class="fas fa-plus"></i> Crear Nuevo Usuario
-                </button>
-                <button class="btn btn-secondary" onclick="loadUsers()">
-                    <i class="fas fa-sync"></i> Actualizar Lista
-                </button>
+    
+    <!-- Modal de Login (se muestra primero) -->
+    <div class="login-modal active" id="loginModal">
+        <div class="login-overlay"></div>
+        <div class="login-container">
+            <div class="login-header">
+                <div class="logo">
+                    <h1><i class="fas fa-bus"></i> Transporte UNELLEZ</h1>
+                    <p>Sistema Administrativo</p>
+                </div>
             </div>
-
-            <div class="users-list" id="usersList">
-                <!-- Lista de usuarios se cargará aquí -->
+            
+            <div class="login-body">
+                <div class="login-card">
+                    <div class="login-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h2 class="login-title">Acceso Administrativo</h2>
+                    <p class="login-subtitle">Ingrese sus credenciales para acceder al panel</p>
+                    
+                    <form class="login-form" id="loginForm" onsubmit="event.preventDefault(); adminLogin();">
+                        <div class="form-group">
+                            <label for="adminUsername"><i class="fas fa-user"></i> Usuario Administrador</label>
+                            <input type="text" id="adminUsername" required placeholder="Ingrese usuario">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="adminPassword"><i class="fas fa-lock"></i> Contraseña</label>
+                            <div class="password-input">
+                                <input type="password" id="adminPassword" required placeholder="Ingrese contraseña">
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility()">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="login-actions">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-sign-in-alt"></i> Ingresar al Panel
+                            </button>
+                            <a href="index.html" class="btn btn-secondary btn-block">
+                                <i class="fas fa-arrow-left"></i> Volver al Sistema
+                            </a>
+                        </div>
+                    </form>
+                    
+                    <div class="login-footer">
+                        <div class="demo-credentials">
+                            <p><strong>Credenciales de prueba:</strong></p>
+                            <p><i class="fas fa-user"></i> Usuario: <code>admin</code></p>
+                            <p><i class="fas fa-key"></i> Contraseña: <code>admin123</code></p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
+    
+    <!-- Contenido del Panel Administrativo (oculto inicialmente) -->
+    <div class="admin-content" id="adminContent" style="display: none;">
+        <!-- Header Admin (solo visible después del login) -->
+        <header class="admin-header">
+            <div class="header-content">
+                <div class="logo">
+                    <h1><i class="fas fa-cogs"></i> Panel Administrativo</h1>
+                    <p class="admin-welcome">Bienvenido, <span id="adminName">Administrador</span></p>
+                </div>
+                <div class="admin-nav">
+                    <button class="btn-admin" onclick="showSection('users')">
+                        <i class="fas fa-users"></i> Gestionar Usuarios
+                    </button>
+                    <button class="btn-admin" onclick="showSection('routes')">
+                        <i class="fas fa-route"></i> Gestionar Rutas
+                    </button>
+                    <button class="btn-admin" onclick="logoutAdmin()">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </header>
 
-        <!-- Sección Rutas -->
-        <div class="admin-section" id="routesSection">
-            <h2><i class="fas fa-route"></i> Gestión de Rutas</h2>
-            
-            <div class="admin-actions">
-                <button class="btn btn-primary" onclick="openRouteForm()">
-                    <i class="fas fa-plus"></i> Nueva Ruta
-                </button>
+        <!-- Contenido Principal Admin -->
+        <div class="admin-container">
+            <!-- Sección Usuarios -->
+            <div class="admin-section active" id="usersSection">
+                <h2><i class="fas fa-users"></i> Gestión de Usuarios</h2>
+                
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalUsers">0</h3>
+                            <p>Usuarios Totales</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="estudiantesCount">0</h3>
+                            <p>Estudiantes</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="conductoresCount">0</h3>
+                            <p>Conductores</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-hard-hat"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="obrerosCount">0</h3>
+                            <p>Obreros</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="admin-actions">
+                    <button class="btn btn-primary" onclick="openUserForm()">
+                        <i class="fas fa-plus"></i> Crear Nuevo Usuario
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadUsers()">
+                        <i class="fas fa-sync"></i> Actualizar Lista
+                    </button>
+                </div>
+
+                <div class="users-list" id="usersList">
+                    <div class="loading-message">
+                        <i class="fas fa-spinner fa-spin"></i> Cargando usuarios...
+                    </div>
+                </div>
             </div>
 
-            <div class="routes-list" id="routesList">
-                <!-- Lista de rutas se cargará aquí -->
+            <!-- Sección Rutas -->
+            <div class="admin-section" id="routesSection">
+                <h2><i class="fas fa-route"></i> Gestión de Rutas</h2>
+                
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-route"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalRoutes">4</h3>
+                            <p>Rutas Activas</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-bus"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalCapacity">150</h3>
+                            <p>Capacidad Total</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="admin-actions">
+                    <button class="btn btn-primary" onclick="openRouteForm()">
+                        <i class="fas fa-plus"></i> Nueva Ruta
+                    </button>
+                </div>
+
+                <div class="routes-list" id="routesList">
+                    <div class="loading-message">
+                        <i class="fas fa-spinner fa-spin"></i> Cargando rutas...
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Formulario Usuario -->
+    <!-- Modal Formulario Usuario (oculto por defecto) -->
     <div class="modal" id="modalUserForm">
         <div class="modal-overlay"></div>
         <div class="modal-content large">
@@ -159,7 +300,7 @@
         </div>
     </div>
 
-    <!-- Modal Enlace Generado -->
+    <!-- Modal Enlace Generado (oculto por defecto) -->
     <div class="modal" id="modalLinkGenerated">
         <div class="modal-overlay"></div>
         <div class="modal-content">

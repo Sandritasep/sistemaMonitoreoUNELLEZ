@@ -616,22 +616,38 @@ header {
 
 /* modal rutas */
 .modal-rutas-contenido{
-    max-width: 550px; /* Permite un poco más de espacio para la descripción */
+    max-width: 500px;
     display: flex;
     flex-direction: column;
     gap: 1em;
+    padding: 0 0.5rem;
 }
 
 .header-rutas{
-    text-align: center;
-    margin-bottom: 10px;
+    padding: 1.5rem 2rem;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: -2.5rem -2.5rem 2rem -2.5rem;
+}
+
+.modal-rutas .header-rutas h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .label-rutas{
     display: block;
-    margin-bottom: 8px;
-    color: #555;
     font-weight: 500;
+    margin-bottom: 0.75rem;
+    color: var(--gray-dark);
+    font-weight: 600;
+    font-size: 1rem;
     text-align: left;
 }
 
@@ -642,13 +658,17 @@ header {
 }
 
 .input-group-rutas {
-    display: flex; 
     gap: 10px;
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .form-rutas{
-    flex: 1; /* Permite que el select ocupe su espacio */
+    flex: 1; 
     min-width: 100px;
+    margin-bottom: 1.5rem;
+    text-align: left;
 }
 
 #rutas{
@@ -668,14 +688,15 @@ header {
 }
 
 .descripcion-rutas{
-    flex: 2;
-    padding: 15px;
-    border: 1px solid #ccc;
+    background: var(--gray-light);
+    padding: 1rem;
     border-radius: 10px;
-    font-size: 14px;
+    margin-top: 1rem;
+    border: 1px solid #e9ecef;
+    font-size: 0.9rem;
     line-height: 1.4;
-    text-align: justify;
-    background-color: #fcfcfc;
+    color: var(--gray-dark);
+    text-align: left;
 }
 
 .btn-ruta{
