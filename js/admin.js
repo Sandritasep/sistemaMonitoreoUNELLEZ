@@ -4,11 +4,16 @@ let adminSession = JSON.parse(localStorage.getItem('admin_session')) || null;
 
 // Verificar sesión al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM cargado, verificando sesión...');
+    console.log('Sesión actual:', adminSession);
+    
     // Si hay sesión activa, mostrar contenido admin
     if (adminSession && adminSession.loggedIn) {
+        console.log('Sesión activa encontrada, mostrando panel...');
         showAdminContent();
         initializeAdminPanel();
     } else {
+        console.log('No hay sesión activa, mostrando login...');
         // Mostrar login modal
         showLoginModal();
     }
@@ -16,16 +21,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Mostrar modal de login
 function showLoginModal() {
+    console.log('Mostrando modal de login...');
     document.getElementById('loginModal').classList.add('active');
-    document.getElementById('adminContent').style.display = 'none';
+    document.body.classList.remove('admin-logged-in');
     document.getElementById('loginForm').reset();
+    
+    // Poner foco en el campo de usuario
+    setTimeout(() => {
+        document.getElementById('adminUsername').focus();
+    }, 300);
 }
 
 // Mostrar contenido admin
-// Mostrar contenido admin
 function showAdminContent() {
+    console.log('Mostrando contenido admin...');
+    
+    // Ocultar login modal
     document.getElementById('loginModal').classList.remove('active');
-    document.getElementById('adminContent').style.display = 'block';
+    
+    // Añadir clase al body para mostrar admin
+    document.body.classList.add('admin-logged-in');
     
     // Mostrar nombre del admin
     if (adminSession && adminSession.username) {
@@ -33,13 +48,12 @@ function showAdminContent() {
     }
     
     // Cargar datos iniciales
-    loadUsers();
-    loadRoutes();
-    updateStats();
+    initializeAdminPanel();
 }
 
 // Función de login
 function adminLogin() {
+    console.log('Intentando login...');
     const username = document.getElementById('adminUsername').value.trim();
     const password = document.getElementById('adminPassword').value.trim();
     
@@ -50,6 +64,7 @@ function adminLogin() {
     };
     
     if (username === adminCredentials.username && password === adminCredentials.password) {
+        console.log('Credenciales correctas, creando sesión...');
         // Crear sesión
         adminSession = {
             loggedIn: true,
@@ -62,7 +77,7 @@ function adminLogin() {
         // Mostrar notificación de éxito
         showNotification('¡Inicio de sesión exitoso!', 'success');
         
-        // Esperar un momento antes de mostrar el contenido
+        // Mostrar contenido admin
         setTimeout(() => {
             showAdminContent();
         }, 500);
@@ -92,6 +107,8 @@ function togglePasswordVisibility() {
 
 // Inicializar panel admin
 function initializeAdminPanel() {
+    console.log('Inicializando panel admin...');
+    
     // Configurar formulario de usuario
     const userForm = document.getElementById('userForm');
     if (userForm) {
@@ -110,13 +127,20 @@ function initializeAdminPanel() {
         });
     }
     
+    // Cargar datos
+    loadUsers();
+    loadRoutes();
+    updateStats();
+    
     // Verificar y limpiar enlaces expirados cada minuto
     setInterval(cleanExpiredLinks, 60000);
     
     // Configurar autofocus en login
     setTimeout(() => {
         const adminUsername = document.getElementById('adminUsername');
-        if (adminUsername) adminUsername.focus();
+        if (adminUsername && !adminSession) {
+            adminUsername.focus();
+        }
     }, 100);
 }
 
@@ -136,15 +160,33 @@ function showSection(section) {
 
 // Cargar usuarios y actualizar estadísticas
 function loadUsers() {
-    const usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+    console.log('Cargando usuarios...');
+    
+    // Intentar obtener usuarios del localStorage
+    let usersDB;
+    try {
+        usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+        console.log('Usuarios encontrados:', Object.keys(usersDB).length);
+    } catch (error) {
+        console.error('Error al cargar usuarios:', error);
+        usersDB = {};
+    }
+    
     const usersList = document.getElementById('usersList');
     
+    // Mostrar loading
     usersList.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando usuarios...</div>';
     
+    // Usar timeout para simular carga y evitar bloqueo
     setTimeout(() => {
-        if (Object.keys(usersDB).length === 0) {
-            usersList.innerHTML = '<div class="user-item"><p>No hay usuarios registrados</p></div>';
-            updateStats();
+        if (!usersDB || Object.keys(usersDB).length === 0) {
+            usersList.innerHTML = `
+                <div class="user-item" style="text-align: center; padding: 2rem;">
+                    <p style="color: #666;">No hay usuarios registrados</p>
+                    <p style="font-size: 0.9rem; color: #888; margin-top: 0.5rem;">Crea un nuevo usuario usando el botón "Crear Nuevo Usuario"</p>
+                </div>
+            `;
+            updateStats(usersDB);
             return;
         }
         
@@ -166,7 +208,6 @@ function loadUsers() {
                     <h4><i class="${tipoIcon}"></i> ${user.nombre} ${user.apellido}</h4>
                     <div class="user-details">
                         <p><strong>Cédula:</strong> ${user.cedula} | <strong>Tipo:</strong> ${user.tipo}</p>
-                        <p><strong>Detalles:</strong> ${user.detalles}</p>
                         <p><strong>Usuario:</strong> ${user.username || 'No registrado'}</p>
                     </div>
                 </div>
@@ -181,13 +222,24 @@ function loadUsers() {
             usersList.appendChild(userItem);
         });
         
-        updateStats();
+        updateStats(usersDB);
     }, 500);
 }
 
 // Actualizar estadísticas
-function updateStats() {
-    const usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+function updateStats(usersDB) {
+    console.log('Actualizando estadísticas...');
+    
+    // Si no se pasa usersDB, cargarlo
+    if (!usersDB) {
+        try {
+            usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+        } catch (error) {
+            console.error('Error al cargar usuarios para estadísticas:', error);
+            usersDB = {};
+        }
+    }
+    
     const users = Object.values(usersDB);
     
     // Contar por tipo
@@ -195,24 +247,42 @@ function updateStats() {
     const conductores = users.filter(u => u.tipo === 'conductor').length;
     const obreros = users.filter(u => u.tipo === 'obrero').length;
     
+    console.log('Estadísticas:', { total: users.length, estudiantes, conductores, obreros });
+    
     // Actualizar contadores
     document.getElementById('totalUsers').textContent = users.length;
     document.getElementById('estudiantesCount').textContent = estudiantes;
     document.getElementById('conductoresCount').textContent = conductores;
-    document.getElementById('obrerosCount').textContent = obreros;
 }
 
 // Cargar rutas
 function loadRoutes() {
-    const routesDB = JSON.parse(localStorage.getItem('unellez_routes')) || {
-        ruta1: { nombre: "Ciudad Varyna", activa: true, capacidad: 40 },
-        ruta2: { nombre: "Redoma Industrial", activa: true, capacidad: 35 },
-        ruta3: { nombre: "Raúl Leoni", activa: true, capacidad: 45 },
-        ruta4: { nombre: "Juan Pablo", activa: true, capacidad: 30 }
-    };
+    console.log('Cargando rutas...');
     
-    // Guardar rutas si no existen
-    localStorage.setItem('unellez_routes', JSON.stringify(routesDB));
+    let routesDB;
+    try {
+        routesDB = JSON.parse(localStorage.getItem('unellez_routes')) || {
+            ruta1: { nombre: "Ciudad Varyna", activa: true, capacidad: 40 },
+            ruta2: { nombre: "Redoma Industrial", activa: true, capacidad: 35 },
+            ruta3: { nombre: "Raúl Leoni", activa: true, capacidad: 45 },
+            ruta4: { nombre: "Juan Pablo", activa: true, capacidad: 30 }
+        };
+    } catch (error) {
+        console.error('Error al cargar rutas:', error);
+        routesDB = {
+            ruta1: { nombre: "Ciudad Varyna", activa: true, capacidad: 40 },
+            ruta2: { nombre: "Redoma Industrial", activa: true, capacidad: 35 },
+            ruta3: { nombre: "Raúl Leoni", activa: true, capacidad: 45 },
+            ruta4: { nombre: "Juan Pablo", activa: true, capacidad: 30 }
+        };
+    }
+    
+    // Guardar rutas si no existen o hubo error
+    try {
+        localStorage.setItem('unellez_routes', JSON.stringify(routesDB));
+    } catch (error) {
+        console.error('Error al guardar rutas:', error);
+    }
     
     const routesList = document.getElementById('routesList');
     routesList.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando rutas...</div>';
@@ -222,19 +292,21 @@ function loadRoutes() {
         
         // Calcular capacidad total
         let totalCapacity = 0;
+        let activeRoutes = 0;
         
         Object.keys(routesDB).forEach(routeKey => {
             const route = routesDB[routeKey];
             totalCapacity += route.capacidad || 0;
+            if (route.activa) activeRoutes++;
             
             const routeItem = document.createElement('div');
             routeItem.className = 'route-item';
             
             routeItem.innerHTML = `
                 <div class="route-info">
-                    <h4><i class="fas fa-route"></i> ${routeKey.toUpperCase()} - ${route.nombre}</h4>
-                    <p><strong>Capacidad:</strong> ${route.capacidad} pasajeros</p>
-                    <p><strong>Estado:</strong> ${route.activa ? 'Activa' : 'Inactiva'}</p>
+                    <h4 style="color: #1a2a6c;"><i class="fas fa-route" style="color: #1a2a6c;"></i> ${routeKey.toUpperCase()} - ${route.nombre}</h4>
+                    <p style="color:#666;"><strong>unidad:</strong> ${route.capacidad} pasajeros</p>
+                    <p style="color:#666;"><strong>Estado:</strong> ${route.activa ? 'Activa' : 'Inactiva'}</p>
                 </div>
                 <div class="route-actions">
                     <button class="btn btn-small" onclick="editRoute('${routeKey}')">
@@ -247,7 +319,7 @@ function loadRoutes() {
         });
         
         // Actualizar estadísticas de rutas
-        document.getElementById('totalRoutes').textContent = Object.keys(routesDB).length;
+        document.getElementById('totalRoutes').textContent = activeRoutes;
         document.getElementById('totalCapacity').textContent = totalCapacity;
     }, 500);
 }
@@ -294,8 +366,16 @@ function toggleUserFields() {
 
 // Cargar opciones de ruta para conductores
 function loadRouteOptions() {
-    const routesDB = JSON.parse(localStorage.getItem('unellez_routes')) || {};
+    let routesDB;
+    try {
+        routesDB = JSON.parse(localStorage.getItem('unellez_routes')) || {};
+    } catch (error) {
+        routesDB = {};
+    }
+    
     const routeSelect = document.getElementById('userRuta');
+    if (!routeSelect) return;
+    
     routeSelect.innerHTML = '<option value="">Seleccione ruta</option>';
     
     Object.keys(routesDB).forEach(routeKey => {
@@ -311,6 +391,8 @@ function loadRouteOptions() {
 // Calcular edad
 function calcularEdad() {
     const fechaNac = new Date(document.getElementById('userFechaNac').value);
+    if (isNaN(fechaNac.getTime())) return;
+    
     const hoy = new Date();
     let edad = hoy.getFullYear() - fechaNac.getFullYear();
     const mes = hoy.getMonth() - fechaNac.getMonth();
@@ -333,8 +415,8 @@ function generateRegistrationLink() {
         fechaNac: formData.get('userFechaNac'),
         edad: document.getElementById('userEdad').value,
         activo: true,
-        password: null, // Se establecerá en el registro
-        username: null  // Se establecerá en el registro
+        password: null,
+        username: null
     };
     
     // Validaciones básicas
@@ -366,7 +448,13 @@ function generateRegistrationLink() {
     }
     
     // Verificar si la cédula ya existe
-    const usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+    let usersDB;
+    try {
+        usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+    } catch (error) {
+        usersDB = {};
+    }
+    
     const existingUser = Object.values(usersDB).find(user => user.cedula === userData.cedula);
     
     if (existingUser) {
@@ -385,7 +473,12 @@ function generateRegistrationLink() {
     };
     
     // Guardar en localStorage
-    localStorage.setItem('unellez_temporal_links', JSON.stringify(temporalLinks));
+    try {
+        localStorage.setItem('unellez_temporal_links', JSON.stringify(temporalLinks));
+    } catch (error) {
+        showNotification('Error al guardar el enlace temporal', 'error');
+        return;
+    }
     
     // Generar URL de registro
     const registrationUrl = `${window.location.origin}${window.location.pathname.replace('admin.html', 'register.html')}?token=${linkId}`;
@@ -400,7 +493,7 @@ function generateRegistrationLink() {
 function copyLink() {
     const linkInput = document.getElementById('generatedLink');
     linkInput.select();
-    linkInput.setSelectionRange(0, 99999); // Para dispositivos móviles
+    linkInput.setSelectionRange(0, 99999);
     
     try {
         document.execCommand('copy');
@@ -430,7 +523,11 @@ function cleanExpiredLinks() {
     });
     
     if (updated) {
-        localStorage.setItem('unellez_temporal_links', JSON.stringify(temporalLinks));
+        try {
+            localStorage.setItem('unellez_temporal_links', JSON.stringify(temporalLinks));
+        } catch (error) {
+            console.error('Error al limpiar enlaces expirados:', error);
+        }
     }
 }
 
@@ -438,6 +535,7 @@ function cleanExpiredLinks() {
 function logoutAdmin() {
     if (confirm('¿Está seguro que desea cerrar sesión?')) {
         localStorage.removeItem('admin_session');
+        adminSession = null;
         showNotification('Sesión cerrada exitosamente', 'success');
         
         setTimeout(() => {
@@ -448,8 +546,13 @@ function logoutAdmin() {
 
 // Mostrar notificación
 function showNotification(message, type) {
+    // Remover notificaciones anteriores
+    const existingNotifications = document.querySelectorAll('.custom-notification');
+    existingNotifications.forEach(notification => notification.remove());
+    
     // Crear notificación visual
     const notification = document.createElement('div');
+    notification.className = 'custom-notification';
     notification.style.cssText = `
         position: fixed;
         top: 20px;
@@ -464,6 +567,7 @@ function showNotification(message, type) {
         animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
         animation-fill-mode: forwards;
         min-width: 300px;
+        max-width: 400px;
     `;
     
     // Añadir icono según tipo
@@ -486,27 +590,35 @@ function showNotification(message, type) {
     }, 3000);
 }
 
-// Añadir estilos CSS para animaciones
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
+// Añadir estilos CSS para animaciones si no existen
+if (!document.querySelector('#notification-styles')) {
+    const style = document.createElement('style');
+    style.id = 'notification-styles';
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
-        to {
-            transform: translateX(0);
-            opacity: 1;
+        
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
         }
-    }
-    
-    @keyframes fadeOut {
-        from {
-            opacity: 1;
-        }
-        to {
-            opacity: 0;
-        }
-    }
-`;
-document.head.appendChild(style);
+    `;
+    document.head.appendChild(style);
+}
+
+// Función para editar ruta (placeholder)
+function editRoute(routeKey) {
+    showNotification(`Editar ruta ${routeKey} - Funcionalidad en desarrollo`, 'info');
+}
