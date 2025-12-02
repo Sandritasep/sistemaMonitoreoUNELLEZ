@@ -324,6 +324,7 @@ body.admin-logged-in .admin-content {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
+    cursor: pointer;
 }
 
 .stat-card {
@@ -424,65 +425,211 @@ body.admin-logged-in .admin-content {
     gap: 1rem;
 }
 
-/* Lista de Usuarios */
-.users-list, .routes-list {
+/* ===== ESTILOS PARA TABLA DE USUARIOS ===== */
+.table-container {
     background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     overflow: hidden;
+    margin-top: 20px;
 }
 
-.user-item, .route-item {
-    padding: 1.5rem;
-    border-bottom: 1px solid #eee;
+.table-header {
+    padding: 20px;
+    border-bottom: 1px solid #eef2f7;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: background-color 0.3s ease;
+    background: #f8fafc;
 }
 
-.user-item:hover, .route-item:hover {
-    background-color: #f8f9fa;
-}
-
-.user-item:last-child, .route-item:last-child {
-    border-bottom: none;
-}
-
-.user-info h4 {
-    color: #1a2a6c;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.user-details {
-    color: #666;
-    font-size: 0.9rem;
-}
-
-.user-status {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.status-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
+.table-title {
+    font-size: 18px;
     font-weight: 600;
+    color: #2c3e50;
+}
+
+.table-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Tabla responsive */
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table thead {
+    background: linear-gradient(135deg, #1a2a6c 0%, #152252 100%);
+}
+
+.users-table th {
+    color: white;
+    font-weight: 600;
+    padding: 16px 12px;
+    text-align: center;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+}
+
+/* Filtros de columna */
+.column-filter {
+    width: calc(100% - 24px);
+    margin: 8px 12px 0;
+    padding: 8px 10px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 13px;
+}
+
+.column-filter::placeholder {
+    color: rgba(255,255,255,0.7);
+}
+
+.column-filter:focus {
+    outline: none;
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.5);
+}
+
+.users-table tbody tr {
+    border-bottom: 1px solid #eef2f7;
+    transition: all 0.2s ease;
+}
+
+.users-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.users-table td {
+    padding: 16px 12px;
+    color: #4a5568;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+/* Estilos para tipo de usuario */
+.user-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.type-estudiante {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.type-conductor {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.type-obrero {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+/* Estado del usuario */
+.user-status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 80px;
+    text-align: center;
 }
 
 .status-active {
-    background: #d4edda;
-    color: #155724;
+    background: #d4f7e2;
+    color: #0d8b3e;
 }
 
 .status-inactive {
-    background: #f8d7da;
-    color: #721c24;
+    background: #ffeaea;
+    color: #d93025;
+}
+
+/* Botón eliminar */
+.btn-delete {
+    background: #ffeaea;
+    color: #d93025;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-delete:hover {
+    background: #ffd1d1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(217, 48, 37, 0.2);
+}
+
+/* Mensaje cuando no hay usuarios */
+.no-users {
+    text-align: center;
+    padding: 40px 20px;
+    color: #718096;
+}
+
+.no-users i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: #cbd5e0;
+}
+
+/* Contador de resultados */
+.results-count {
+    padding: 12px 20px;
+    background: #f8fafc;
+    border-top: 1px solid #eef2f7;
+    color: #718096;
+    font-size: 14px;
+}
+
+.results-count strong {
+    color: #2c3e50;
+}
+
+/* Responsive para tabla */
+@media (max-width: 1024px) {
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    .users-table {
+        min-width: 800px;
+    }
+}
+
+@media (max-width: 768px) {
+    .table-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .table-actions {
+        flex-wrap: wrap;
+    }
 }
 
 /* MODALES GENERALES */

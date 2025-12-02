@@ -159,100 +159,297 @@ function showSection(section) {
 }
 
 // Cargar usuarios y actualizar estadísticas
+// Variables para la tabla
+let allUsers = [];
+let currentFilter = 'all';
+let columnFilters = ['', '', '', ''];
+
+// Modificar la función loadUsers para usar la tabla
 function loadUsers() {
-    console.log('Cargando usuarios...');
+    console.log('Cargando usuarios para tabla...');
     
-    // Intentar obtener usuarios del localStorage
-    let usersDB;
     try {
-        usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
-        console.log('Usuarios encontrados:', Object.keys(usersDB).length);
+        const usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+        allUsers = Object.values(usersDB).map(user => ({
+            ...user,
+            id: user.cedula // Usar cédula como ID único
+        }));
+        
+        console.log(`Se cargaron ${allUsers.length} usuarios`);
+        
+        // Actualizar estadísticas
+        updateStats();
+        
+        // Renderizar tabla
+        renderUsersTable(allUsers);
+        
     } catch (error) {
         console.error('Error al cargar usuarios:', error);
-        usersDB = {};
+        allUsers = [];
+        renderUsersTable([]);
     }
-    
-    const usersList = document.getElementById('usersList');
-    
-    // Mostrar loading
-    usersList.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando usuarios...</div>';
-    
-    // Usar timeout para simular carga y evitar bloqueo
-    setTimeout(() => {
-        if (!usersDB || Object.keys(usersDB).length === 0) {
-            usersList.innerHTML = `
-                <div class="user-item" style="text-align: center; padding: 2rem;">
-                    <p style="color: #666;">No hay usuarios registrados</p>
-                    <p style="font-size: 0.9rem; color: #888; margin-top: 0.5rem;">Crea un nuevo usuario usando el botón "Crear Nuevo Usuario"</p>
-                </div>
-            `;
-            updateStats(usersDB);
-            return;
-        }
-        
-        usersList.innerHTML = '';
-        
-        Object.keys(usersDB).forEach(userKey => {
-            const user = usersDB[userKey];
-            const userItem = document.createElement('div');
-            userItem.className = 'user-item';
-            
-            // Determinar icono según tipo
-            let tipoIcon = 'fas fa-user';
-            if (user.tipo === 'estudiante') tipoIcon = 'fas fa-user-graduate';
-            if (user.tipo === 'conductor') tipoIcon = 'fas fa-user-tie';
-            if (user.tipo === 'obrero') tipoIcon = 'fas fa-hard-hat';
-            
-            userItem.innerHTML = `
-                <div class="user-info">
-                    <h4><i class="${tipoIcon}"></i> ${user.nombre} ${user.apellido}</h4>
-                    <div class="user-details">
-                        <p><strong>Cédula:</strong> ${user.cedula} | <strong>Tipo:</strong> ${user.tipo}</p>
-                        <p><strong>Usuario:</strong> ${user.username || 'No registrado'}</p>
-                    </div>
-                </div>
-                <div class="user-status">
-                    <span class="status-badge ${user.activo ? 'status-active' : 'status-inactive'}">
-                        ${user.activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                    ${user.username ? '<span class="status-badge status-active">Registrado</span>' : '<span class="status-badge status-inactive">Pendiente</span>'}
-                </div>
-            `;
-            
-            usersList.appendChild(userItem);
-        });
-        
-        updateStats(usersDB);
-    }, 500);
 }
 
-// Actualizar estadísticas
-function updateStats(usersDB) {
-    console.log('Actualizando estadísticas...');
+// Función para renderizar la tabla
+function renderUsersTable(users) {
+    const tbody = document.getElementById('usersTableBody');
+    const resultsCount = document.getElementById('resultsCount');
     
-    // Si no se pasa usersDB, cargarlo
-    if (!usersDB) {
-        try {
-            usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
-        } catch (error) {
-            console.error('Error al cargar usuarios para estadísticas:', error);
-            usersDB = {};
+    if (!tbody) return;
+    
+    if (users.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="no-users">
+                    <i class="fas fa-user-slash"></i>
+                    <h3>No hay usuarios registrados</h3>
+                    <p>Crea un nuevo usuario usando el botón "Crear Nuevo Usuario"</p>
+                </td>
+            </tr>
+        `;
+        resultsCount.innerHTML = `Mostrando <strong>0</strong> de <strong>0</strong> usuarios`;
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    users.forEach(user => {
+        const row = document.createElement('tr');
+        
+        // Icono según tipo
+        let tipoIcon = 'fas fa-user';
+        if (user.tipo === 'estudiante') tipoIcon = 'fas fa-user-graduate';
+        if (user.tipo === 'conductor') tipoIcon = 'fas fa-user-tie';
+        if (user.tipo === 'obrero') tipoIcon = 'fas fa-hard-hat';
+        
+        // Clase para el tipo
+        const tipoClass = `type-${user.tipo}`;
+        
+        // Estado
+        const estado = user.activo ? 'Activo' : 'Inactivo';
+        const estadoClass = user.activo ? 'status-active' : 'status-inactive';
+        
+        row.innerHTML = `
+            <td>
+                <span class="user-type ${tipoClass}">
+                    <i class="${tipoIcon}"></i>
+                    ${user.tipo}
+                </span>
+            </td>
+            <td>${user.cedula}</td>
+            <td>
+                <strong>${user.nombre} ${user.apellido}</strong>
+                ${user.detalles ? `<br><small style="color: #666; font-size: 12px;">${user.detalles}</small>` : ''}
+            </td>
+            <td>
+                <span class="user-status ${estadoClass}">${estado}</span>
+            </td>
+            <td>
+                <button class="btn-delete" onclick="deleteUser('${user.cedula}')">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+    
+    resultsCount.innerHTML = `Mostrando <strong>${users.length}</strong> de <strong>${allUsers.length}</strong> usuarios`;
+}
+
+// Filtrar usuarios por tipo (al hacer clic en los stats)
+function filterUsersByType(tipo) {
+    currentFilter = tipo;
+    
+    // Resaltar el stat seleccionado
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
+    });
+    
+    if (tipo !== 'all') {
+        const selectedCard = document.querySelector(`.stat-card[onclick*="${tipo}"]`);
+        if (selectedCard) {
+            selectedCard.style.boxShadow = '0 0 0 3px rgba(26, 42, 108, 0.2)';
+        }
+    } else {
+        const totalCard = document.getElementById('total-users');
+        if (totalCard) {
+            totalCard.style.boxShadow = '0 0 0 3px rgba(26, 42, 108, 0.2)';
         }
     }
     
-    const users = Object.values(usersDB);
+    let filteredUsers = allUsers;
     
-    // Contar por tipo
-    const estudiantes = users.filter(u => u.tipo === 'estudiante').length;
-    const conductores = users.filter(u => u.tipo === 'conductor').length;
-    const obreros = users.filter(u => u.tipo === 'obrero').length;
+    if (tipo !== 'all') {
+        filteredUsers = allUsers.filter(user => user.tipo === tipo);
+    }
     
-    console.log('Estadísticas:', { total: users.length, estudiantes, conductores, obreros });
+    // Aplicar filtros de columna si existen
+    filteredUsers = applyColumnFilters(filteredUsers);
     
-    // Actualizar contadores
-    document.getElementById('totalUsers').textContent = users.length;
+    renderUsersTable(filteredUsers);
+}
+
+// Filtrar por columna
+function filterColumn(input) {
+    const columnIndex = parseInt(input.dataset.column);
+    const value = input.value.toLowerCase();
+    
+    columnFilters[columnIndex] = value;
+    
+    // Aplicar todos los filtros
+    applyAllFilters();
+}
+
+// Aplicar filtros de columna
+function applyColumnFilters(users) {
+    let filtered = [...users];
+    
+    columnFilters.forEach((filter, index) => {
+        if (filter.trim() === '') return;
+        
+        filtered = filtered.filter(user => {
+            switch(index) {
+                case 0: // Tipo
+                    return user.tipo.toLowerCase().includes(filter);
+                case 1: // Cédula
+                    return user.cedula.toLowerCase().includes(filter);
+                case 2: // Nombre
+                    const fullName = `${user.nombre} ${user.apellido}`.toLowerCase();
+                    return fullName.includes(filter) || 
+                           user.nombre.toLowerCase().includes(filter) || 
+                           user.apellido.toLowerCase().includes(filter);
+                case 3: // Estado
+                    const estado = user.activo ? 'activo' : 'inactivo';
+                    return estado.includes(filter);
+                default:
+                    return true;
+            }
+        });
+    });
+    
+    return filtered;
+}
+
+// Aplicar todos los filtros (tipo + columnas)
+function applyAllFilters() {
+    let filteredUsers = allUsers;
+    
+    // Filtro por tipo
+    if (currentFilter !== 'all') {
+        filteredUsers = filteredUsers.filter(user => user.tipo === currentFilter);
+    }
+    
+    // Filtros por columna
+    filteredUsers = applyColumnFilters(filteredUsers);
+    
+    renderUsersTable(filteredUsers);
+}
+
+// Busqueda global
+function filterTable() {
+    const searchTerm = document.getElementById('globalSearch').value.toLowerCase();
+    
+    if (searchTerm.trim() === '') {
+        applyAllFilters();
+        return;
+    }
+    
+    let filteredUsers = allUsers.filter(user => {
+        return (
+            user.tipo.toLowerCase().includes(searchTerm) ||
+            user.cedula.toLowerCase().includes(searchTerm) ||
+            user.nombre.toLowerCase().includes(searchTerm) ||
+            user.apellido.toLowerCase().includes(searchTerm) ||
+            `${user.nombre} ${user.apellido}`.toLowerCase().includes(searchTerm) ||
+            (user.detalles && user.detalles.toLowerCase().includes(searchTerm)) ||
+            (user.activo ? 'activo' : 'inactivo').includes(searchTerm)
+        );
+    });
+    
+    renderUsersTable(filteredUsers);
+}
+
+// Limpiar todos los filtros
+function clearFilters() {
+    currentFilter = 'all';
+    columnFilters = ['', '', '', ''];
+    
+    // Limpiar inputs
+    document.querySelectorAll('.column-filter').forEach(input => {
+        if (input.tagName === 'INPUT') {
+            input.value = '';
+        } else if (input.tagName === 'SELECT') {
+            input.value = '';
+        }
+    });
+    
+    document.getElementById('globalSearch').value = '';
+    
+    // Quitar resaltado de stats
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
+    });
+    
+    renderUsersTable(allUsers);
+}
+
+// Actualizar estadísticas (modificada)
+function updateStats() {
+    if (allUsers.length === 0) {
+        try {
+            const usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+            allUsers = Object.values(usersDB);
+        } catch (error) {
+            allUsers = [];
+        }
+    }
+    
+    const estudiantes = allUsers.filter(u => u.tipo === 'estudiante').length;
+    const conductores = allUsers.filter(u => u.tipo === 'conductor').length;
+    const obreros = allUsers.filter(u => u.tipo === 'obrero').length;
+    const total = allUsers.length;
+    
     document.getElementById('estudiantesCount').textContent = estudiantes;
     document.getElementById('conductoresCount').textContent = conductores;
+    document.getElementById('obrerosCount').textContent = obreros; // Necesitas agregar este elemento en el HTML
+    document.getElementById('totalUsers').textContent = total;
+}
+
+// Función para eliminar usuario
+function deleteUser(cedula) {
+    if (!confirm(`¿Está seguro de eliminar al usuario con cédula ${cedula}?`)) {
+        return;
+    }
+    
+    try {
+        const usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+        let deleted = false;
+        
+        // Buscar y eliminar usuario por cédula
+        Object.keys(usersDB).forEach(key => {
+            if (usersDB[key].cedula === cedula) {
+                delete usersDB[key];
+                deleted = true;
+            }
+        });
+        
+        if (deleted) {
+            localStorage.setItem('unellez_users', JSON.stringify(usersDB));
+            showNotification('Usuario eliminado correctamente', 'success');
+            
+            // Recargar la tabla
+            setTimeout(() => {
+                loadUsers();
+            }, 500);
+        } else {
+            showNotification('No se encontró el usuario', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error al eliminar usuario:', error);
+        showNotification('Error al eliminar el usuario', 'error');
+    }
 }
 
 // Cargar rutas
