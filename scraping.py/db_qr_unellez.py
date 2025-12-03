@@ -92,7 +92,7 @@ def eliminar_user():
     cursor = conn.cursor()
 
     # ID del estudiante a eliminar
-    id_a_eliminar = 28164209
+    id_a_eliminar = 30141442
 
     # Ejecutar la sentencia DELETE
     cursor.execute("DELETE FROM estudiantes WHERE cedula = ?", (id_a_eliminar,))

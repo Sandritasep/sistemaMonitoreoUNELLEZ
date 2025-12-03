@@ -6,6 +6,7 @@
     <title>Panel Administrativo - Transporte UNELLEZ</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
     <!-- Header Principal (visible siempre) -->
@@ -24,7 +25,7 @@
         </div>
     </header>
     
-    <!-- Modal de Login (se muestra al inicio) -->
+    <!-- Modal de Login -->
     <div class="login-modal active" id="loginModal">
         <div class="login-overlay"></div>
         <div class="login-container">
@@ -116,7 +117,7 @@
                             <i class="fas fa-briefcase"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 id="trbajadoresCount">0</h3>
+                            <h3 id="obrerosCount">0</h3>
                             <p>Profesores/trabajadores</p>
                         </div>
                     </div>
@@ -141,14 +142,11 @@
                 </div>
                 
                 <div class="admin-actions">
-                    <button class="btn btn-primary" onclick="openUserForm()">
+                    <button class="btn btn-primary" onclick="openDirectConductorModal()">
                         <i class="fas fa-plus"></i> Nuevo Conductor
                     </button>
                     <button class="btn btn-secondary" onclick="loadUsers()">
                         <i class="fas fa-sync"></i> Actualizar Lista
-                    </button>
-                    <button class="btn btn-secondary" onclick="clearFilters()">
-                        <i class="fas fa-filter"></i> Limpiar Filtros
                     </button>
                 </div>
 
@@ -158,6 +156,9 @@
                         <div class="table-title">
                             <i class="fas fa-list"></i> Lista de Usuarios Registrados
                         </div>
+                        <button class="btn btn-secondary" onclick="clearFilters()">
+                            <i class="fas fa-filter"></i> Limpiar Filtros
+                        </button>
                     </div>
                     
                     <table class="users-table" id="usersTable">
@@ -241,54 +242,104 @@
             </div>
         </div>
 
-    <!-- Modal Formulario nuevo CONDUCTOR -->
-    <div class="modal" id="modalUserForm">
+    <!-- Modal Registro Conductor Directo -->
+    <div class="modal" id="modalDirectConductor">
         <div class="modal-overlay"></div>
-        <div class="modal-content large">
-            <h2><i class="fas fa-user-plus"></i> Registrar Nuevo Usuario</h2>
+        <div class="modal-content large">   
+            <!-- Botón cerrar modal -->
+            <button class="modal-close-btn" onclick="closeDirectConductorModal()">
+                <i class="fas fa-times"></i>
+            </button>
             
-            <form id="userForm" class="admin-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="userTipo"><i class="fas fa-users"></i> Tipo de Usuario: <strong>Conductor</strong></label>
-                    </div>
+            <!-- SCANNER QR -->
+            <div id="stepScanQR" class="modal-step active">
+                <div class="scan-icon">
+                    <i class="fas fa-qrcode"></i>
                 </div>
+                <h2><i class="fas fa-user-tie"></i> Registrar Nuevo Conductor</h2>
+                
+                <!-- Contenedor para html5-qrcode -->
+                <div id="qr-reader" style="width: 100%; margin: 20px 0;"></div>
+                <div id="qr-reader-results"></div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="userNombre"><i class="fas fa-user"></i> Nombre *</label>
-                        <input type="text" id="userNombre" name="userNombre" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="userApellido"><i class="fas fa-user"></i> Apellido *</label>
-                        <input type="text" id="userApellido" name="userApellido" required>
-                    </div>
-                </div>
+                <p class="step-description">Escanee el Carnet del conductor o suba una imagen del Carnet.</p>
+            </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="userCedula"><i class="fas fa-id-card"></i> Cédula *</label>
-                        <input type="text" id="userCedula" name="userCedula" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="userFechaNac"><i class="fas fa-calendar"></i> Fecha de Nacimiento *</label>
-                        <input type="date" id="userFechaNac" name="userFechaNac" required onchange="calcularEdad()">
-                    </div>
-                    <div class="form-group">
-                        <label for="userEdad"><i class="fas fa-birthday-cake"></i> Edad</label>
-                        <input type="text" id="userEdad" name="userEdad" readonly>
-                    </div>
+            <!-- MENSAJE DE ESPERA -->
+            <div id="stepLoading" class="modal-step" style="display: none;">
+                <div class="loading-icon">
+                    <i class="fas fa-spinner fa-spin"></i>
                 </div>
+                <h2>Validando datos...</h2>
+                <p class="step-description">Verificando información con el sistema</p>
+                <div class="loading-progress">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
 
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeUserForm()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-link"></i> Generar Enlace de Registro
-                    </button>
+            <!-- MODAL FORMULARIO REGISTRO -->
+            <div id="stepForm" class="modal-step" style="display: none;">
+                <h2><i class="fas fa-user-check"></i> Confirmar Datos del Conductor</h2>
+                
+                <!-- Resumen de datos del QR -->
+                <div class="data-summary" id="dataSummary">
+                    <h3>Datos obtenidos del QR:</h3>
+                    <div class="summary-grid" id="summaryGrid">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
                 </div>
-            </form>
+                
+                <!-- Formulario para completar -->
+                <form id="directConductorForm" class="direct-conductor-form">
+                    <div class="form-section">
+                        <h3><i class="fas fa-route"></i> Asignar Ruta</h3>
+                        <div class="direct-form-group">
+                            <label for="directRuta">Ruta Asignada *</label>
+                            <select id="directRuta" required>
+                                <option value="">Seleccione una ruta</option>
+                                <!-- Las rutas se cargarán dinámicamente -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3><i class="fas fa-user-lock"></i> Credenciales de Acceso</h3>
+                        <div class="direct-form-row">
+                            <div class="direct-form-group">
+                                <label for="directUsuario">Nombre de Usuario *</label>
+                                <input type="text" id="directUsuario" required 
+                                    placeholder="Ej: jperez123">
+                                <small>El conductor usará este usuario para iniciar sesión</small>
+                            </div>
+                        </div>
+                        
+                        <div class="direct-form-row">
+                            <div class="direct-form-group">
+                                <label for="directPassword">Contraseña *</label>
+                                <input type="password" id="directPassword" required 
+                                    placeholder="Mínimo 6 caracteres">
+                            </div>
+                            <div class="direct-form-group">
+                                <label for="directConfirmPassword">Confirmar Contraseña *</label>
+                                <input type="password" id="directConfirmPassword" required 
+                                    placeholder="Repita la contraseña">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="goBackToScan()">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Registrar Conductor
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            </div>
         </div>
-    </div>
 
     <script src="js/admin.js"></script>
 </body>

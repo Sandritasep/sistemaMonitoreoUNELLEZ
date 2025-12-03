@@ -771,65 +771,6 @@ body.admin-logged-in .admin-content {
     border-top: 1px solid #eee;
 }
 
-/* Modal Enlace Generado */
-.success-icon {
-    width: 80px;
-    height: 80px;
-    background: #28a745;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.success-icon i {
-    font-size: 2rem;
-    color: white;
-}
-
-.generated-link {
-    display: flex;
-    gap: 0.5rem;
-    margin: 1.5rem 0;
-}
-
-.generated-link input {
-    flex: 1;
-    padding: 12px 15px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    background: #f8f9fa;
-    font-size: 0.9rem;
-    font-family: monospace;
-}
-
-.btn-copy {
-    background: #1a2a6c;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 60px;
-}
-
-.btn-copy:hover {
-    background: #152252;
-    transform: translateY(-2px);
-}
-
 /* Botones */
 .btn {
     padding: 12px 24px;
@@ -935,4 +876,319 @@ body.admin-logged-in .admin-content {
         padding: 10px 16px;
         font-size: 0.9rem;
     }
+}
+
+/*---------------------------------------------------
+---------- MODAL REGISTRO NUEVO CONDUCTOR -----------
+--------------------------------------------------- */
+
+/* ===== ESTILOS PARA EL NUEVO MODAL DE CONDUCTOR ===== */
+
+/* Botón cerrar modal */
+.modal-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 10;
+    padding: 5px;
+    transition: color 0.3s ease;
+}
+
+.modal-close-btn:hover {
+    color: #d93025;
+}
+
+/* Pasos del modal */
+.modal-step {
+    display: none;
+}
+
+.modal-step.active {
+    display: block;
+}
+
+.step-description {
+    background: rgba(100, 100, 100, 0.2) !important;
+    backdrop-filter: blur(5px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 15px !important;
+    margin-top: 15px !important;
+    color: #333 !important;
+    text-align: center !important;
+    font-size: 14px !important;
+}
+
+/* Iconos */
+.scan-icon, .loading-icon {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.scan-icon i {
+    font-size: 4rem;
+    color: #1a2a6c;
+    background: rgba(26, 42, 108, 0.1);
+    padding: 1.5rem;
+    border-radius: 50%;
+}
+
+.loading-icon i {
+    font-size: 3rem;
+    color: #1a2a6c;
+}
+
+/* Barra de progreso */
+.loading-progress {
+    width: 100%;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    margin: 2rem 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #1a2a6c, #3498db);
+    border-radius: 4px;
+    animation: loading 2s ease-in-out infinite;
+}
+
+@keyframes loading {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+}
+
+/* Secciones del formulario */
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 1rem;
+}
+
+.form-section h3 {
+    color: #1a2a6c;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Formulario específico para conductor */
+.direct-conductor-form {
+    margin-top: 1rem;
+}
+
+.direct-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.direct-form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.direct-form-group input,
+.direct-form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.direct-form-group input:focus,
+.direct-form-group select:focus {
+    outline: none;
+    border-color: #1a2a6c;
+    box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.1);
+}
+
+.direct-form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.direct-form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.direct-form-row .direct-form-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+/* Validación de contraseña */
+.password-match {
+    color: #28a745;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.password-mismatch {
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Botones del formulario */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .direct-form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+
+/* ESTILOS PARA EL RESUMEN DE DATOS*/
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+
+.summary-row:hover {
+    background-color: #f9f9f9;
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+}
+
+.summary-label {
+    font-weight: 600;
+    color: #1a2a6c;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.summary-label i {
+    width: 20px;
+    text-align: center;
+}
+
+.summary-value {
+    color: #333;
+    font-weight: 500;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+/* Estilos para el scanner más pequeño */
+#scanner-container video {
+    width: 100% !important;
+    max-width: 350px !important;
+    height: auto !important;
+    border-radius: 8px;
+    border: 2px solid #1a2a6c;
+}
+
+/* Botones por defecto del scanner */
+#html5-qrcode-button-camera-permission {
+    text-align: center;
+    margin: 10px 0;
+}
+
+#html5-qrcode-button-camera-permission button {
+    background: #1a2a6c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin: 0 5px;
+    transition: background 0.3s;
+}
+
+#html5-qrcode-button-camera-permission button:hover {
+    background: #0d1a5c;
+}
+
+#html5-qrcode-anchor-scan-type-change,
+#html5-qrcode-select-camera,
+#html5-qrcode-button-torch,
+#html5-qrcode-button-zoom-change {
+    background: #28a745 !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 15px !important;
+    border-radius: 5px !important;
+    margin: 5px !important;
+    font-size: 13px !important;
+}
+
+/* Estilo para el mensaje debajo del scanner */
+#qr-reader-results {
+    background: rgba(100, 100, 100, 0.2) !important;
+    backdrop-filter: blur(5px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 15px !important;
+    margin-top: 15px !important;
+    color: #333 !important;
+    text-align: center !important;
+    font-size: 14px !important;
+    visibility: hidden;
+}
+
+
+/* Si el modal necesita ajustes de tamaño */
+.modal-content {
+    max-width: 500px !important;
 }

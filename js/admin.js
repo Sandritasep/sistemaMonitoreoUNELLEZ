@@ -1,5 +1,4 @@
 // Variables globales para admin
-let temporalLinks = JSON.parse(localStorage.getItem('unellez_temporal_links')) || {};
 let adminSession = JSON.parse(localStorage.getItem('admin_session')) || null;
 
 // Verificar sesión al cargar la página
@@ -109,15 +108,6 @@ function togglePasswordVisibility() {
 function initializeAdminPanel() {
     console.log('Inicializando panel admin...');
     
-    // Configurar formulario de usuario
-    const userForm = document.getElementById('userForm');
-    if (userForm) {
-        userForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            generateRegistrationLink();
-        });
-    }
-    
     // Configurar formulario de login (si existe en la página)
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
@@ -131,17 +121,7 @@ function initializeAdminPanel() {
     loadUsers();
     loadRoutes();
     updateStats();
-    
-    // Verificar y limpiar enlaces expirados cada minuto
-    setInterval(cleanExpiredLinks, 60000);
-    
-    // Configurar autofocus en login
-    setTimeout(() => {
-        const adminUsername = document.getElementById('adminUsername');
-        if (adminUsername && !adminSession) {
-            adminUsername.focus();
-        }
-    }, 100);
+    initializeConductorModal();
 }
 
 // Mostrar sección
@@ -346,36 +326,12 @@ function applyAllFilters() {
     renderUsersTable(filteredUsers);
 }
 
-// Busqueda global
-function filterTable() {
-    const searchTerm = document.getElementById('globalSearch').value.toLowerCase();
-    
-    if (searchTerm.trim() === '') {
-        applyAllFilters();
-        return;
-    }
-    
-    let filteredUsers = allUsers.filter(user => {
-        return (
-            user.tipo.toLowerCase().includes(searchTerm) ||
-            user.cedula.toLowerCase().includes(searchTerm) ||
-            user.nombre.toLowerCase().includes(searchTerm) ||
-            user.apellido.toLowerCase().includes(searchTerm) ||
-            `${user.nombre} ${user.apellido}`.toLowerCase().includes(searchTerm) ||
-            (user.detalles && user.detalles.toLowerCase().includes(searchTerm)) ||
-            (user.activo ? 'activo' : 'inactivo').includes(searchTerm)
-        );
-    });
-    
-    renderUsersTable(filteredUsers);
-}
-
 // Limpiar todos los filtros
 function clearFilters() {
     currentFilter = 'all';
     columnFilters = ['', '', '', ''];
     
-    // Limpiar inputs
+    // Limpiar inputs de filtros de columna
     document.querySelectorAll('.column-filter').forEach(input => {
         if (input.tagName === 'INPUT') {
             input.value = '';
@@ -383,8 +339,6 @@ function clearFilters() {
             input.value = '';
         }
     });
-    
-    document.getElementById('globalSearch').value = '';
     
     // Quitar resaltado de stats
     document.querySelectorAll('.stat-card').forEach(card => {
@@ -526,208 +480,6 @@ function openRouteForm() {
     showNotification('Funcionalidad de edición de rutas - En desarrollo', 'info');
 }
 
-// Abrir formulario de usuario
-function openUserForm() {
-    document.getElementById('modalUserForm').classList.add('active');
-    document.getElementById('userForm').reset();
-    toggleUserFields();
-}
-
-// Cerrar formulario de usuario
-function closeUserForm() {
-    document.getElementById('modalUserForm').classList.remove('active');
-}
-
-// Alternar campos según tipo de usuario
-function toggleUserFields() {
-    const tipo = document.getElementById('userTipo').value;
-    
-    // Ocultar todos los campos específicos
-    document.querySelectorAll('.user-fields').forEach(field => {
-        field.style.display = 'none';
-    });
-    
-    // Mostrar campos según tipo
-    if (tipo) {
-        const fieldElement = document.getElementById(tipo + 'Fields');
-        if (fieldElement) {
-            fieldElement.style.display = 'block';
-        }
-        
-        // Si es conductor, cargar rutas disponibles
-        if (tipo === 'conductor') {
-            loadRouteOptions();
-        }
-    }
-}
-
-// Cargar opciones de ruta para conductores
-function loadRouteOptions() {
-    let routesDB;
-    try {
-        routesDB = JSON.parse(localStorage.getItem('unellez_routes')) || {};
-    } catch (error) {
-        routesDB = {};
-    }
-    
-    const routeSelect = document.getElementById('userRuta');
-    if (!routeSelect) return;
-    
-    routeSelect.innerHTML = '<option value="">Seleccione ruta</option>';
-    
-    Object.keys(routesDB).forEach(routeKey => {
-        if (routesDB[routeKey].activa) {
-            const option = document.createElement('option');
-            option.value = routeKey;
-            option.textContent = `${routeKey.toUpperCase()} - ${routesDB[routeKey].nombre}`;
-            routeSelect.appendChild(option);
-        }
-    });
-}
-
-// Calcular edad
-function calcularEdad() {
-    const fechaNac = new Date(document.getElementById('userFechaNac').value);
-    if (isNaN(fechaNac.getTime())) return;
-    
-    const hoy = new Date();
-    let edad = hoy.getFullYear() - fechaNac.getFullYear();
-    const mes = hoy.getMonth() - fechaNac.getMonth();
-    
-    if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
-        edad--;
-    }
-    
-    document.getElementById('userEdad').value = edad + ' años';
-}
-
-// Generar enlace de registro
-function generateRegistrationLink() {
-    const formData = new FormData(document.getElementById('userForm'));
-    const userData = {
-        tipo: formData.get('userTipo'),
-        nombre: formData.get('userNombre'),
-        apellido: formData.get('userApellido'),
-        cedula: formData.get('userCedula'),
-        fechaNac: formData.get('userFechaNac'),
-        edad: document.getElementById('userEdad').value,
-        activo: true,
-        password: null,
-        username: null
-    };
-    
-    // Validaciones básicas
-    if (!userData.nombre || !userData.apellido || !userData.cedula) {
-        showNotification('Por favor complete todos los campos obligatorios', 'error');
-        return;
-    }
-    
-    // Agregar campos específicos según tipo
-    if (userData.tipo === 'estudiante') {
-        userData.carrera = formData.get('userCarrera');
-        userData.estudianteActivo = formData.get('userActivo') === 'on';
-        userData.detalles = `Carrera: ${userData.carrera} | Estudiante ${userData.estudianteActivo ? 'Activo' : 'Inactivo'}`;
-        
-        if (!userData.carrera) {
-            showNotification('Por favor seleccione una carrera para el estudiante', 'error');
-            return;
-        }
-    } else if (userData.tipo === 'conductor') {
-        userData.ruta = formData.get('userRuta');
-        userData.detalles = `Conductor | Ruta: ${userData.ruta}`;
-        
-        if (!userData.ruta) {
-            showNotification('Por favor seleccione una ruta para el conductor', 'error');
-            return;
-        }
-    } else if (userData.tipo === 'obrero') {
-        userData.detalles = 'Obrero UNELLEZ';
-    }
-    
-    // Verificar si la cédula ya existe
-    let usersDB;
-    try {
-        usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
-    } catch (error) {
-        usersDB = {};
-    }
-    
-    const existingUser = Object.values(usersDB).find(user => user.cedula === userData.cedula);
-    
-    if (existingUser) {
-        showNotification('Ya existe un usuario con esta cédula', 'error');
-        return;
-    }
-    
-    // Generar ID único y enlace temporal
-    const linkId = 'link_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    const expirationTime = Date.now() + (60 * 60 * 1000); // 1 hora
-    
-    temporalLinks[linkId] = {
-        userData: userData,
-        expiration: expirationTime,
-        used: false
-    };
-    
-    // Guardar en localStorage
-    try {
-        localStorage.setItem('unellez_temporal_links', JSON.stringify(temporalLinks));
-    } catch (error) {
-        showNotification('Error al guardar el enlace temporal', 'error');
-        return;
-    }
-    
-    // Generar URL de registro
-    const registrationUrl = `${window.location.origin}${window.location.pathname.replace('admin.html', 'register.html')}?token=${linkId}`;
-    
-    // Mostrar enlace generado
-    document.getElementById('generatedLink').value = registrationUrl;
-    document.getElementById('modalLinkGenerated').classList.add('active');
-    closeUserForm();
-}
-
-// Copiar enlace al portapapeles
-function copyLink() {
-    const linkInput = document.getElementById('generatedLink');
-    linkInput.select();
-    linkInput.setSelectionRange(0, 99999);
-    
-    try {
-        document.execCommand('copy');
-        showNotification('Enlace copiado al portapapeles', 'success');
-    } catch (err) {
-        console.error('Error al copiar:', err);
-        showNotification('Error al copiar el enlace', 'error');
-    }
-}
-
-// Cerrar modal de enlace
-function closeLinkModal() {
-    document.getElementById('modalLinkGenerated').classList.remove('active');
-    loadUsers(); // Recargar lista de usuarios
-}
-
-// Limpiar enlaces expirados
-function cleanExpiredLinks() {
-    const now = Date.now();
-    let updated = false;
-    
-    Object.keys(temporalLinks).forEach(linkId => {
-        if (temporalLinks[linkId].expiration < now) {
-            delete temporalLinks[linkId];
-            updated = true;
-        }
-    });
-    
-    if (updated) {
-        try {
-            localStorage.setItem('unellez_temporal_links', JSON.stringify(temporalLinks));
-        } catch (error) {
-            console.error('Error al limpiar enlaces expirados:', error);
-        }
-    }
-}
-
 // Cerrar sesión admin
 function logoutAdmin() {
     if (confirm('¿Está seguro que desea cerrar sesión?')) {
@@ -818,4 +570,501 @@ if (!document.querySelector('#notification-styles')) {
 // Función para editar ruta (placeholder)
 function editRoute(routeKey) {
     showNotification(`Editar ruta ${routeKey} - Funcionalidad en desarrollo`, 'info');
+}
+
+//----------------------------------------
+//-----------------------------------------
+//MODAL REGISTRO NUEVO CONDUCTOR
+//----------------------------------------
+//----------------------------------------
+
+
+// Abrir modal para registrar conductor
+function openDirectConductorModal() {
+    document.getElementById('modalDirectConductor').classList.add('active');
+    resetModalSteps();
+    
+    // Limpiar datos anteriores
+    scannedUserData = null;
+    document.getElementById('directConductorForm').reset();
+    
+    // Iniciar en paso 1 (escaneo QR)
+    showStep('stepScanQR');
+    
+    // Iniciar escáner QR con botones por defecto
+    setTimeout(() => {
+        startQRScanner();
+    }, 100);
+}
+
+// Cerrar modal conductor
+function closeDirectConductorModal() {
+    stopQRScanner();
+    document.getElementById('modalDirectConductor').classList.remove('active');
+}
+
+// Resetear pasos del modal
+function resetModalSteps() {
+    // Ocultar todos los pasos
+    document.querySelectorAll('.modal-step').forEach(step => {
+        step.style.display = 'none';
+        step.classList.remove('active');
+    });
+}
+
+// Mostrar un paso específico
+function showStep(stepId) {
+    resetModalSteps();
+    const step = document.getElementById(stepId);
+    if (step) {
+        step.style.display = 'block';
+        step.classList.add('active');
+    }
+}
+
+//=========================================
+// ===== ESCÁNER QR CON html5-qrcode =====
+//===========================================
+
+// Variables para el modal de conductor
+let html5QrCode = null;
+let qrScannerActive = false;
+let scannedUserData = null;
+
+
+// Iniciar escáner QR
+let scanner = null;
+
+
+function startQRScanner() {
+    // Limpiar contenedor
+    const qrReaderDiv = document.getElementById('qr-reader');
+    qrReaderDiv.innerHTML = '';
+    
+    // Configuración del escáner - CON LA CÁMARA ACTIVADA
+    const config = {
+        qrbox: { 
+            width: 250, 
+            height: 250 
+        },
+        fps: 10,
+        rememberLastUsedCamera: true, // Recordar la última cámara usada
+        showTorchButtonIfSupported: true,
+        showZoomSliderIfSupported: true,
+        // ESTO ES CLAVE: Incluir ambos tipos de escaneo
+        supportedScanTypes: [
+            Html5QrcodeScanType.SCAN_TYPE_CAMERA,
+            Html5QrcodeScanType.SCAN_TYPE_FILE
+        ],
+        // Configuración para que inicie automáticamente
+        showPermissionButtonIfSupported: false, // Ocultar botón de permiso
+        // Opciones de video (para mejor control de la cámara)
+        videoConstraints: {
+            facingMode: "environment", // Cámara trasera por defecto
+            width: { min: 640, ideal: 1280, max: 1920 },
+            height: { min: 480, ideal: 720, max: 1080 }
+        }
+    };
+    
+    // Crear instancia del escáner
+    scanner = new Html5QrcodeScanner('qr-reader', config);
+    
+    // Función cuando se detecta un QR
+    const onScanSuccess = (decodedText, decodedResult) => {
+        console.log("QR escaneado:", decodedText);
+        
+        // Detener el escáner inmediatamente
+        if (scanner) {
+            scanner.clear();
+            qrScannerActive = false;
+        }
+        
+        // Procesar los datos
+        processQRData(decodedText);
+    };
+    
+    // Función de error
+    const onScanError = (error) => {
+        // Ignorar errores comunes
+        if (error && !error.toString().includes("NotFoundException")) {
+            console.warn("Error en escáner QR:", error);
+            
+            // Si hay error de cámara, sugerir usar el botón de archivo
+            if (error.toString().includes("NotAllowedError") || 
+                error.toString().includes("Permission")) {
+                console.log("Permiso de cámara denegado. Use 'Scan an Image File'.");
+            }
+        }
+    };
+    
+    // Renderizar el escáner
+    try {
+        scanner.render(onScanSuccess, onScanError);
+        qrScannerActive = true;
+        console.log("Escáner iniciado con cámara activa y botón de archivo");
+        
+        // Verificar que todo esté funcionando
+        setTimeout(() => {
+            // Verificar que el botón de archivo esté presente
+            const fileButtons = document.querySelectorAll('button, input[type="file"]');
+            let hasFileButton = false;
+            
+            fileButtons.forEach(btn => {
+                if (btn.textContent.includes('Image') || 
+                    btn.textContent.includes('File') ||
+                    btn.type === 'file') {
+                    hasFileButton = true;
+                    console.log("✅ Botón de archivo detectado");
+                }
+            });
+            
+            if (!hasFileButton) {
+                console.warn("⚠️ Botón de archivo no encontrado");
+                // Puedes agregar manualmente si es necesario
+                addManualFileButton();
+            }
+        }, 500);
+        
+    } catch (err) {
+        console.error("Error al iniciar escáner:", err);
+        
+        // Si falla la cámara, ofrecer usar archivo directamente
+        if (err.toString().includes("camera") || 
+            err.toString().includes("NotAllowed")) {
+            showNotification('Cámara no disponible. Use "Scan an Image File"', 'warning');
+            // Aún así renderizar el escáner (el botón de archivo debería funcionar)
+            scanner = new Html5QrcodeScanner('qr-reader', {
+                qrbox: { width: 250, height: 250 },
+                fps: 10,
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_FILE] // Solo archivo
+            });
+            scanner.render(onScanSuccess, onScanError);
+        }
+    }
+}
+
+// Detener escáner QR
+function stopQRScanner() {
+    if (scanner) {
+        scanner.clear().then(() => {
+            qrScannerActive = false;
+            console.log("Escáner detenido y limpiado");
+        }).catch(err => {
+            console.error("Error al detener escáner:", err);
+        });
+    }
+}
+
+// Volver al escaneo
+function goBackToScan() {
+    showStep('stepScanQR');
+    startQRScanner();
+}
+
+// ===== PROCESAMIENTO DE DATOS DEL QR =====
+
+// Procesar datos del QR
+function processQRData(qrData) {
+    try {
+        // En producción, aquí enviarías los datos al backend
+        // Por ahora simulamos una respuesta del backend
+        
+        // Simular petición al backend
+        validateQRWithBackend(qrData).then(backendData => {
+            // Guardar datos recibidos
+            scannedUserData = backendData;
+            
+            // Mostrar resumen de datos
+            showDataSummary(backendData);
+            
+            // Cargar opciones de ruta
+            loadRutasOptions();
+            
+            // Generar credenciales por defecto
+            generateDefaultCredentials();
+            
+            // Mostrar formulario
+            showStep('stepForm');
+            
+        }).catch(error => {
+            console.error("Error del backend:", error);
+            showNotification('Error al validar datos con el sistema', 'error');
+        });
+        
+    } catch (error) {
+        console.error("Error procesando QR:", error);
+        showNotification('Error al procesar el código QR', 'error');
+    }
+}
+
+// Simular validación con backend
+async function validateQRWithBackend(qrData) {
+    // Simular delay de red
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    try {
+        // Intentar parsear como JSON
+        const parsedData = JSON.parse(qrData);
+        
+        // Validar datos mínimos
+        if (!parsedData.cedula || !parsedData.nombre) {
+            throw new Error("Datos incompletos en el QR");
+        }
+        
+        return {
+            nombre: parsedData.nombre || '',
+            apellido: parsedData.apellido || '',
+            cedula: parsedData.cedula || '',
+            condicion: parsedData.condicion || 'Conductor',
+            cargo: parsedData.cargo || 'Conductor UNELLEZ',
+            tipo: 'conductor'
+        };
+        
+    } catch (error) {
+        // Si no es JSON, parsear como string simple
+        const parts = qrData.split('|');
+        return {
+            nombre: parts[0] || '',
+            apellido: parts[1] || '',
+            cedula: parts[2] || '',
+            condicion: parts[3] || 'Conductor',
+            cargo: parts[4] || 'Conductor UNELLEZ',
+            tipo: 'conductor'
+        };
+    }
+}
+
+// Mostrar resumen de datos
+// Mostrar resumen de datos EN FILAS
+function showDataSummary(userData) {
+    const summaryGrid = document.getElementById('summaryGrid');
+    
+    summaryGrid.innerHTML = `
+        <div class="summary-row">
+            <div class="summary-label"><i class="fas fa-user"></i> Nombre Completo:</div>
+            <div class="summary-value">${userData.nombre} ${userData.apellido}</div>
+        </div>
+        <div class="summary-row">
+            <div class="summary-label"><i class="fas fa-id-card"></i> Cédula:</div>
+            <div class="summary-value">${userData.cedula}</div>
+        </div>
+        <div class="summary-row">
+            <div class="summary-label"><i class="fas fa-user-tag"></i> Condición:</div>
+            <div class="summary-value">${userData.condicion}</div>
+        </div>
+        <div class="summary-row">
+            <div class="summary-label"><i class="fas fa-briefcase"></i> Cargo:</div>
+            <div class="summary-value">${userData.cargo}</div>
+        </div>
+    `;
+}
+
+//====================================
+// ===== FORMULARIO Y VALIDACIONES =====
+//====================================
+
+// Cargar opciones de rutas
+function loadRutasOptions() {
+    const select = document.getElementById('directRuta');
+    select.innerHTML = '<option value="">Seleccione una ruta</option>';
+    
+    try {
+        const routesDB = JSON.parse(localStorage.getItem('unellez_routes')) || {
+            ruta1: { nombre: "Ciudad Varyna", activa: true, capacidad: 40 },
+            ruta2: { nombre: "Redoma Industrial", activa: true, capacidad: 35 },
+            ruta3: { nombre: "Raúl Leoni", activa: true, capacidad: 45 },
+            ruta4: { nombre: "Juan Pablo", activa: true, capacidad: 30 }
+        };
+        
+        Object.keys(routesDB).forEach(key => {
+            if (routesDB[key].activa) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `Ruta ${key.slice(-1)} - ${routesDB[key].nombre}`;
+                select.appendChild(option);
+            }
+        });
+    } catch (error) {
+        console.error("Error cargando rutas:", error);
+    }
+}
+
+// Generar credenciales por defecto
+function generateDefaultCredentials() {
+    if (!scannedUserData) return;
+    
+    const { nombre, apellido, cedula } = scannedUserData;
+    
+    // Generar usuario (primera letra nombre + apellido + últimos 3 dígitos cédula)
+    const username = `${nombre.charAt(0).toLowerCase()}${apellido.toLowerCase().replace(/\s+/g, '')}${cedula.slice(-3)}`;
+    document.getElementById('directUsuario').value = username;
+    
+    // Generar contraseña temporal
+    const tempPassword = generateTempPassword();
+    document.getElementById('directPassword').value = tempPassword;
+    document.getElementById('directConfirmPassword').value = tempPassword;
+    
+    // Verificar coincidencia de contraseñas
+    checkPasswordMatch();
+}
+
+// Generar contraseña temporal
+function generateTempPassword() {
+    const length = 8;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let password = "";
+    
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * charset.length);
+        password += charset[randomIndex];
+    }
+    
+    return password;
+}
+
+// Verificar que las contraseñas coincidan
+function checkPasswordMatch() {
+    const password = document.getElementById('directPassword').value;
+    const confirmPassword = document.getElementById('directConfirmPassword').value;
+    const messageElement = document.getElementById('passwordMatchMessage') || createPasswordMatchElement();
+    
+    if (password && confirmPassword) {
+        if (password === confirmPassword) {
+            messageElement.className = 'password-match';
+            messageElement.innerHTML = '<i class="fas fa-check-circle"></i> Las contraseñas coinciden';
+        } else {
+            messageElement.className = 'password-mismatch';
+            messageElement.innerHTML = '<i class="fas fa-times-circle"></i> Las contraseñas no coinciden';
+        }
+    }
+}
+
+// Crear elemento para mensaje de contraseña
+function createPasswordMatchElement() {
+    const messageElement = document.createElement('div');
+    messageElement.id = 'passwordMatchMessage';
+    document.getElementById('directConfirmPassword').parentNode.appendChild(messageElement);
+    return messageElement;
+}
+//================================================
+// ================= REGISTRO FINAL =================
+//================================================
+
+// Registrar conductor
+function registerDirectConductor(event) {
+    if (event) event.preventDefault();
+    
+    // Validar datos del formulario
+    if (!validateConductorForm()) {
+        return;
+    }
+    
+    // Crear objeto con datos del conductor
+    const conductorData = {
+        ...scannedUserData,
+        ruta: document.getElementById('directRuta').value,
+        username: document.getElementById('directUsuario').value.trim(),
+        password: document.getElementById('directPassword').value,
+        activo: true,
+        detalles: `Conductor | Ruta: ${document.getElementById('directRuta').selectedOptions[0].text}`,
+        fechaRegistro: new Date().toISOString(),
+        registradoPor: adminSession ? adminSession.username : 'admin'
+    };
+    
+    // Validar que no exista ya el usuario
+    let usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+    
+    // Verificar si ya existe la cédula
+    const cedulaExists = Object.values(usersDB).find(user => user.cedula === conductorData.cedula);
+    if (cedulaExists) {
+        showNotification('Ya existe un conductor con esta cédula', 'error');
+        return;
+    }
+    
+    // Verificar si ya existe el username
+    const usernameExists = Object.values(usersDB).find(user => user.username === conductorData.username);
+    if (usernameExists) {
+        showNotification('El nombre de usuario ya está en uso', 'error');
+        return;
+    }
+    
+    // Guardar en localStorage
+    const userId = 'cond_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    usersDB[userId] = conductorData;
+    
+    try {
+        localStorage.setItem('unellez_users', JSON.stringify(usersDB));
+        
+        // Mostrar éxito y cerrar modal
+        showNotification('Conductor registrado exitosamente', 'success');
+        setTimeout(() => {
+            closeDirectConductorModal();
+            loadUsers(); // Actualizar tabla
+        }, 1000);
+        
+    } catch (error) {
+        console.error("Error al guardar conductor:", error);
+        showNotification('Error al guardar el conductor', 'error');
+    }
+}
+
+// Validar formulario de conductor
+function validateConductorForm() {
+    const campos = [
+        { id: 'directRuta', name: 'Ruta' },
+        { id: 'directUsuario', name: 'Nombre de usuario' },
+        { id: 'directPassword', name: 'Contraseña' },
+        { id: 'directConfirmPassword', name: 'Confirmar contraseña' }
+    ];
+    
+    // Validar campos requeridos
+    for (const campo of campos) {
+        const element = document.getElementById(campo.id);
+        if (!element.value.trim()) {
+            showNotification(`El campo "${campo.name}" es requerido`, 'error');
+            element.focus();
+            return false;
+        }
+    }
+    
+    // Validar que las contraseñas coincidan
+    const password = document.getElementById('directPassword').value;
+    const confirmPassword = document.getElementById('directConfirmPassword').value;
+    
+    if (password !== confirmPassword) {
+        showNotification('Las contraseñas no coinciden', 'error');
+        document.getElementById('directConfirmPassword').focus();
+        return false;
+    }
+    
+    // Validar longitud de contraseña
+    if (password.length < 6) {
+        showNotification('La contraseña debe tener al menos 6 caracteres', 'error');
+        document.getElementById('directPassword').focus();
+        return false;
+    }
+    
+    return true;
+}
+
+// ===== INICIALIZACIÓN =====
+
+// Inicializar el modal de conductor
+function initializeConductorModal() {
+    // Configurar formulario
+    const form = document.getElementById('directConductorForm');
+    if (form) {
+        form.addEventListener('submit', registerDirectConductor);
+    }
+    
+    // Configurar validación de contraseñas en tiempo real
+    const passwordInputs = ['directPassword', 'directConfirmPassword'];
+    passwordInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('input', checkPasswordMatch);
+        }
+    });
+    
+    // El botón ya está en el HTML, no necesitamos crearlo dinámicamente
 }

@@ -10,10 +10,7 @@ const registrationState = {
     isCompleted: false,
     // Flag: para manejar errores de forma centralizada
     isShowingError: false,
-    
-    /** * Método 1: Asigna datos después del escaneo QR, normalizando el nombre.
-     * Esto corrige la inconsistencia de datos entre estudiantes y trabajadores.
-     */
+
     setUserData(data) {
         this.tempToken = data.cedula;
         let nombreCompletoFinal = 'N/A';
@@ -26,7 +23,6 @@ const registrationState = {
             nombreCompletoFinal = data.userData.nombre_completo ? data.userData.nombre_completo.toUpperCase() : 'N/A';
         }
 
-        // Crear el objeto de datos limpio y normalizado
         this.userData = {
             ...data.userData,
             tipo: data.tipo,
@@ -36,8 +32,6 @@ const registrationState = {
         };
     },
 
-    /** * Método 2: Actualiza la ruta seleccionada de forma inmutable.
-     */
     setRoute(routeId) {
         if (this.userData) {
             // Creamos una copia y solo actualizamos la ruta
@@ -48,14 +42,11 @@ const registrationState = {
         }
     },
     
-    /** * Método 3: Controla el flag de completado.
-     */
+
     setCompleted(status) {
         this.isCompleted = status;
     },
     
-    /** * Método 4: Controla el flag de error.
-     */
     setShowingError(status) {
         this.isShowingError = status;
     }
