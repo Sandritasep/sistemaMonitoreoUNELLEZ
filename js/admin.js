@@ -108,7 +108,7 @@ function togglePasswordVisibility() {
 function initializeAdminPanel() {
     console.log('Inicializando panel admin...');
     
-    // Configurar formulario de login (si existe en la página)
+    // Configurar formulario de login
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', function(e) {
@@ -117,11 +117,24 @@ function initializeAdminPanel() {
         });
     }
     
-    // Cargar datos
-    loadUsers();
-    loadRoutes();
-    updateStats();
+    // Inicializar modal de conductor
     initializeConductorModal();
+    
+    // Asegurar que el DOM esté listo antes de cargar usuarios
+    setTimeout(() => {
+        // Cargar datos
+        loadUsers();
+        loadRoutes();
+        updateStats();
+    }, 300);
+    
+    // Configurar autofocus en login
+    setTimeout(() => {
+        const adminUsername = document.getElementById('adminUsername');
+        if (adminUsername && !adminSession) {
+            adminUsername.focus();
+        }
+    }, 100);
 }
 
 // Mostrar sección
@@ -139,199 +152,449 @@ function showSection(section) {
 }
 
 // Cargar usuarios y actualizar estadísticas
-// Variables para la tabla
-let allUsers = [];
-let currentFilter = 'all';
-let columnFilters = ['', '', '', ''];
+// Variables para las tablas
+let todosUsuarios = [];
+let todosConductores = [];
+let filtroActual = 'all';
+let filtrosColumnas = ['', '', '', ''];
+let filtrosColumnasConductores = ['', '', '', '', '', '', ''];
 
 // Modificar la función loadUsers para usar la tabla
 function loadUsers() {
-    console.log('Cargando usuarios para tabla...');
+    console.log('Cargando usuarios...');
     
     try {
-        const usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
-        allUsers = Object.values(usersDB).map(user => ({
-            ...user,
-            id: user.cedula // Usar cédula como ID único
+        const usuariosDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+        const todosLosUsuarios = Object.values(usuariosDB).map(usuario => ({
+            ...usuario,
+            id: usuario.cedula
         }));
         
-        console.log(`Se cargaron ${allUsers.length} usuarios`);
+        // Separar conductores del resto
+        todosConductores = todosLosUsuarios.filter(usuario => usuario.tipo === 'conductor');
+        todosUsuarios = todosLosUsuarios.filter(usuario => usuario.tipo !== 'conductor');
+        
+        console.log(`Se cargaron ${todosUsuarios.length} usuarios y ${todosConductores.length} conductores`);
         
         // Actualizar estadísticas
         updateStats();
         
-        // Renderizar tabla
-        renderUsersTable(allUsers);
+        // Solo renderizar si los elementos existen
+        if (document.getElementById('usersTableBody') && document.getElementById('conductoresTableBody')) {
+            // Renderizar tabla según el filtro actual
+            if (filtroActual === 'conductor') {
+                renderConductoresTable(todosConductores);
+            } else {
+                renderUsersTable(todosUsuarios);
+            }
+        }
         
     } catch (error) {
         console.error('Error al cargar usuarios:', error);
-        allUsers = [];
-        renderUsersTable([]);
+        todosUsuarios = [];
+        todosConductores = [];
+        
+        // Solo intentar renderizar si los elementos existen
+        if (document.getElementById('usersTableBody')) {
+            renderUsersTable([]);
+        }
+        if (document.getElementById('conductoresTableBody')) {
+            renderConductoresTable([]);
+        }
     }
 }
 
-// Función para renderizar la tabla
-function renderUsersTable(users) {
+// Función para renderizar tabla de usuarios (sin conductores)
+function renderUsersTable(usuarios) {
     const tbody = document.getElementById('usersTableBody');
-    const resultsCount = document.getElementById('resultsCount');
+    const contadorResultados = document.getElementById('resultsCount');
+    const tablaUsuarios = document.getElementById('tableUsuarios');
+    const tablaConductores = document.getElementById('tableConductores');
     
-    if (!tbody) return;
+    if (!tbody || !tablaUsuarios || !tablaConductores) {
+        console.error('Elementos de la tabla no encontrados');
+        return;
+    }
     
-    if (users.length === 0) {
+    // Mostrar tabla de usuarios y ocultar tabla de conductores
+    tablaUsuarios.style.display = 'block';
+    tablaConductores.style.display = 'none';
+    
+    if (usuarios.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="5" class="no-users">
                     <i class="fas fa-user-slash"></i>
                     <h3>No hay usuarios registrados</h3>
-                    <p>Crea un nuevo usuario usando el botón "Crear Nuevo Usuario"</p>
+                    <p>Crea nuevos usuarios desde el sistema principal</p>
                 </td>
             </tr>
         `;
-        resultsCount.innerHTML = `Mostrando <strong>0</strong> de <strong>0</strong> usuarios`;
+        
+        if (contadorResultados) {
+            contadorResultados.innerHTML = `Mostrando <strong>0</strong> de <strong>0</strong> usuarios`;
+        }
         return;
     }
     
     tbody.innerHTML = '';
     
-    users.forEach(user => {
-        const row = document.createElement('tr');
+    usuarios.forEach(usuario => {
+        const fila = document.createElement('tr');
         
         // Icono según tipo
-        let tipoIcon = 'fas fa-user';
-        if (user.tipo === 'estudiante') tipoIcon = 'fas fa-user-graduate';
-        if (user.tipo === 'conductor') tipoIcon = 'fas fa-user-tie';
-        if (user.tipo === 'obrero') tipoIcon = 'fas fa-hard-hat';
+        let iconoTipo = 'fas fa-user';
+        if (usuario.tipo === 'estudiante') iconoTipo = 'fas fa-user-graduate';
+        if (usuario.tipo === 'obrero') iconoTipo = 'fas fa-hard-hat';
         
         // Clase para el tipo
-        const tipoClass = `type-${user.tipo}`;
+        const claseTipo = `type-${usuario.tipo}`;
         
         // Estado
-        const estado = user.activo ? 'Activo' : 'Inactivo';
-        const estadoClass = user.activo ? 'status-active' : 'status-inactive';
+        const estado = usuario.activo ? 'Activo' : 'Inactivo';
+        const claseEstado = usuario.activo ? 'status-active' : 'status-inactive';
         
-        row.innerHTML = `
+        fila.innerHTML = `
             <td>
-                <span class="user-type ${tipoClass}">
-                    <i class="${tipoIcon}"></i>
-                    ${user.tipo}
+                <span class="user-type ${claseTipo}">
+                    <i class="${iconoTipo}"></i>
+                    ${usuario.tipo}
                 </span>
             </td>
-            <td>${user.cedula}</td>
+            <td>${usuario.cedula}</td>
             <td>
-                <strong>${user.nombre} ${user.apellido}</strong>
-                ${user.detalles ? `<br><small style="color: #666; font-size: 12px;">${user.detalles}</small>` : ''}
+                <strong>${usuario.nombre} ${usuario.apellido}</strong>
+                ${usuario.detalles ? `<br><small style="color: #666; font-size: 12px;">${usuario.detalles}</small>` : ''}
             </td>
             <td>
-                <span class="user-status ${estadoClass}">${estado}</span>
+                <span class="user-status ${claseEstado}">${estado}</span>
             </td>
             <td>
-                <button class="btn-delete" onclick="deleteUser('${user.cedula}')">
+                <button class="btn-delete" onclick="eliminarUsuario('${usuario.cedula}')">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
             </td>
         `;
         
-        tbody.appendChild(row);
+        tbody.appendChild(fila);
     });
     
-    resultsCount.innerHTML = `Mostrando <strong>${users.length}</strong> de <strong>${allUsers.length}</strong> usuarios`;
+    if (contadorResultados) {
+        contadorResultados.innerHTML = `Mostrando <strong>${usuarios.length}</strong> de <strong>${todosUsuarios.length}</strong> usuarios`;
+    }
 }
 
-// Filtrar usuarios por tipo (al hacer clic en los stats)
-function filterUsersByType(tipo) {
-    currentFilter = tipo;
+// Función para renderizar tabla de conductores
+function renderConductoresTable(conductores) {
+    const tbody = document.getElementById('conductoresTableBody');
+    const contadorResultados = document.getElementById('conductoresResultsCount');
+    const tablaUsuarios = document.getElementById('tableUsuarios');
+    const tablaConductores = document.getElementById('tableConductores');
     
-    // Resaltar el stat seleccionado
-    document.querySelectorAll('.stat-card').forEach(card => {
-        card.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
-    });
-    
-    if (tipo !== 'all') {
-        const selectedCard = document.querySelector(`.stat-card[onclick*="${tipo}"]`);
-        if (selectedCard) {
-            selectedCard.style.boxShadow = '0 0 0 3px rgba(26, 42, 108, 0.2)';
-        }
-    } else {
-        const totalCard = document.getElementById('total-users');
-        if (totalCard) {
-            totalCard.style.boxShadow = '0 0 0 3px rgba(26, 42, 108, 0.2)';
-        }
+    if (!tbody || !tablaUsuarios || !tablaConductores) {
+        console.error('Elementos de la tabla de conductores no encontrados');
+        return;
     }
     
-    let filteredUsers = allUsers;
+    // Mostrar tabla de conductores y ocultar tabla de usuarios
+    tablaUsuarios.style.display = 'none';
+    tablaConductores.style.display = 'block';
     
-    if (tipo !== 'all') {
-        filteredUsers = allUsers.filter(user => user.tipo === tipo);
-    }
-    
-    // Aplicar filtros de columna si existen
-    filteredUsers = applyColumnFilters(filteredUsers);
-    
-    renderUsersTable(filteredUsers);
-}
-
-// Filtrar por columna
-function filterColumn(input) {
-    const columnIndex = parseInt(input.dataset.column);
-    const value = input.value.toLowerCase();
-    
-    columnFilters[columnIndex] = value;
-    
-    // Aplicar todos los filtros
-    applyAllFilters();
-}
-
-// Aplicar filtros de columna
-function applyColumnFilters(users) {
-    let filtered = [...users];
-    
-    columnFilters.forEach((filter, index) => {
-        if (filter.trim() === '') return;
+    if (conductores.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="no-users">
+                    <i class="fas fa-bus"></i>
+                    <h3>No hay conductores registrados</h3>
+                    <p>Presiona "Nuevo Conductor" para registrar uno</p>
+                </td>
+            </tr>
+        `;
         
-        filtered = filtered.filter(user => {
-            switch(index) {
+        if (contadorResultados) {
+            contadorResultados.innerHTML = `Mostrando <strong>0</strong> de <strong>0</strong> conductores`;
+        }
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    conductores.forEach(conductor => {
+        const fila = document.createElement('tr');
+        
+        // Formatear días
+        const diasFormateados = Array.isArray(conductor.diasTrabajo) 
+            ? conductor.diasTrabajo.map(dia => 
+                `<span class="badge-dias">${dia.charAt(0).toUpperCase() + dia.slice(1)}</span>`
+              ).join(' ')
+            : '<span class="badge-dias">No asignado</span>';
+        
+        // Formatear turnos
+        const turnosFormateados = Array.isArray(conductor.turnos) 
+            ? conductor.turnos.map(turno => 
+                `<span class="badge-turnos">${turno}</span>`
+              ).join(' ')
+            : '<span class="badge-turnos">No asignado</span>';
+        
+        // Información de unidad
+        const unidadInfo = conductor.unidad 
+            ? `<span class="badge-unidad">${conductor.unidad.nombre.split(' - ')[0]}</span>`
+            : '<span class="badge-unidad">No asignada</span>';
+        
+        // Estado
+        const estado = conductor.activo ? 'Activo' : 'Inactivo';
+        const claseEstado = conductor.activo ? 'status-active' : 'status-inactive';
+        
+        fila.innerHTML = `
+            <td>
+                <span class="user-type type-conductor">
+                    <i class="fas fa-user-tie"></i>
+                    Conductor
+                </span>
+            </td>
+            <td>${conductor.cedula}</td>
+            <td>
+                <strong>${conductor.nombre} ${conductor.apellido}</strong>
+                <br><small style="color: #666; font-size: 11px;">${conductor.rutaNombre || ''}</small>
+            </td>
+            <td>${diasFormateados}</td>
+            <td>${turnosFormateados}</td>
+            <td>${unidadInfo}</td>
+            <td>
+                <span class="user-status ${claseEstado}">${estado}</span>
+            </td>
+            <td>
+                <button class="btn-edit" onclick="editarConductor('${conductor.cedula}')">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button class="btn-delete" onclick="eliminarConductor('${conductor.cedula}')">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(fila);
+    });
+    
+    if (contadorResultados) {
+        contadorResultados.innerHTML = `Mostrando <strong>${conductores.length}</strong> de <strong>${todosConductores.length}</strong> conductores`;
+    }
+}
+
+// Filtrar usuarios por tipo
+function filterUsersByType(tipo) {
+    console.log(`Filtrando por tipo: ${tipo}`);
+    
+    // Pequeño retraso para asegurar que el DOM esté listo
+    setTimeout(() => {
+        // Verificar que los elementos existan antes de proceder
+        const tablaUsuarios = document.getElementById('tableUsuarios');
+        const tablaConductores = document.getElementById('tableConductores');
+        
+        console.log('Tabla usuarios encontrada:', !!tablaUsuarios);
+        console.log('Tabla conductores encontrada:', !!tablaConductores);
+        
+        if (!tablaUsuarios || !tablaConductores) {
+            console.error('Tablas no encontradas. IDs buscados: tableUsuarios, tableConductores');
+            console.error('Elementos actuales en el DOM:');
+            console.error('tableUsuarios:', document.getElementById('tableUsuarios'));
+            console.error('tableConductores:', document.getElementById('tableConductores'));
+            return;
+        }
+        
+        filtroActual = tipo;
+        
+        // Resaltar el stat seleccionado
+        document.querySelectorAll('.stat-card').forEach(card => {
+            if (card && card.style) {
+                card.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
+            }
+        });
+        
+        if (tipo !== 'all') {
+            // Buscar la tarjeta que contiene el onclick con este tipo
+            const tarjetas = document.querySelectorAll('.stat-card');
+            let tarjetaSeleccionada = null;
+            
+            tarjetas.forEach(tarjeta => {
+                const onclickAttr = tarjeta.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(tipo)) {
+                    tarjetaSeleccionada = tarjeta;
+                }
+            });
+            
+            if (tarjetaSeleccionada && tarjetaSeleccionada.style) {
+                tarjetaSeleccionada.style.boxShadow = '0 0 0 3px rgba(26, 42, 108, 0.2)';
+            }
+        } else {
+            const tarjetaTotal = document.getElementById('total-users');
+            if (tarjetaTotal && tarjetaTotal.style) {
+                tarjetaTotal.style.boxShadow = '0 0 0 3px rgba(26, 42, 108, 0.2)';
+            }
+        }
+        
+        console.log('Filtro actual:', filtroActual);
+        console.log('Todos usuarios:', todosUsuarios.length);
+        console.log('Todos conductores:', todosConductores.length);
+        
+        if (tipo === 'conductor') {
+            // Mostrar conductores
+            let conductoresFiltrados = todosConductores;
+            console.log('Conductores antes de filtros:', conductoresFiltrados.length);
+            conductoresFiltrados = aplicarFiltrosColumnasConductores(conductoresFiltrados);
+            console.log('Conductores después de filtros:', conductoresFiltrados.length);
+            renderConductoresTable(conductoresFiltrados);
+        } else if (tipo === 'all') {
+            // Mostrar todos los usuarios (excepto conductores)
+            let usuariosFiltrados = todosUsuarios;
+            console.log('Usuarios antes de filtros:', usuariosFiltrados.length);
+            usuariosFiltrados = aplicarFiltrosColumnas(usuariosFiltrados);
+            console.log('Usuarios después de filtros:', usuariosFiltrados.length);
+            renderUsersTable(usuariosFiltrados);
+        } else {
+            // Mostrar por tipo específico (estudiante, obrero)
+            let usuariosFiltrados = todosUsuarios.filter(usuario => usuario.tipo === tipo);
+            console.log(`Usuarios tipo ${tipo}:`, usuariosFiltrados.length);
+            usuariosFiltrados = aplicarFiltrosColumnas(usuariosFiltrados);
+            renderUsersTable(usuariosFiltrados);
+        }
+    }, 100); // Pequeño retraso para asegurar que el DOM esté listo
+}
+
+// Filtrar por columna en tabla de usuarios
+function filterColumn(input) {
+    const indiceColumna = parseInt(input.dataset.column);
+    const valor = input.value.toLowerCase();
+    
+    filtrosColumnas[indiceColumna] = valor;
+    
+    aplicarTodosLosFiltros();
+}
+
+// Filtrar por columna en tabla de conductores
+function filterConductorColumn(input) {
+    const indiceColumna = parseInt(input.dataset.column);
+    const valor = input.value.toLowerCase();
+    
+    filtrosColumnasConductores[indiceColumna] = valor;
+    
+    aplicarTodosLosFiltrosConductores();
+}
+
+// Aplicar filtros de columna para usuarios
+function aplicarFiltrosColumnas(usuarios) {
+    let filtrados = [...usuarios];
+    
+    filtrosColumnas.forEach((filtro, indice) => {
+        if (filtro.trim() === '') return;
+        
+        filtrados = filtrados.filter(usuario => {
+            switch(indice) {
                 case 0: // Tipo
-                    return user.tipo.toLowerCase().includes(filter);
+                    return usuario.tipo.toLowerCase().includes(filtro);
                 case 1: // Cédula
-                    return user.cedula.toLowerCase().includes(filter);
+                    return usuario.cedula.toLowerCase().includes(filtro);
                 case 2: // Nombre
-                    const fullName = `${user.nombre} ${user.apellido}`.toLowerCase();
-                    return fullName.includes(filter) || 
-                           user.nombre.toLowerCase().includes(filter) || 
-                           user.apellido.toLowerCase().includes(filter);
+                    const nombreCompleto = `${usuario.nombre} ${usuario.apellido}`.toLowerCase();
+                    return nombreCompleto.includes(filtro) || 
+                           usuario.nombre.toLowerCase().includes(filtro) || 
+                           usuario.apellido.toLowerCase().includes(filtro);
                 case 3: // Estado
-                    const estado = user.activo ? 'activo' : 'inactivo';
-                    return estado.includes(filter);
+                    const estado = usuario.activo ? 'activo' : 'inactivo';
+                    return estado.includes(filtro);
                 default:
                     return true;
             }
         });
     });
     
-    return filtered;
+    return filtrados;
 }
 
-// Aplicar todos los filtros (tipo + columnas)
-function applyAllFilters() {
-    let filteredUsers = allUsers;
+// Aplicar filtros de columna para conductores
+function aplicarFiltrosColumnasConductores(conductores) {
+    let filtrados = [...conductores];
+    
+    filtrosColumnasConductores.forEach((filtro, indice) => {
+        if (filtro.trim() === '') return;
+        
+        filtrados = filtrados.filter(conductor => {
+            switch(indice) {
+                case 0: // Tipo (siempre "conductor")
+                    return 'conductor'.includes(filtro);
+                case 1: // Cédula
+                    return conductor.cedula.toLowerCase().includes(filtro);
+                case 2: // Nombre
+                    const nombreCompleto = `${conductor.nombre} ${conductor.apellido}`.toLowerCase();
+                    return nombreCompleto.includes(filtro) || 
+                           conductor.nombre.toLowerCase().includes(filtro) || 
+                           conductor.apellido.toLowerCase().includes(filtro);
+                case 3: // Días
+                    const dias = Array.isArray(conductor.diasTrabajo) 
+                        ? conductor.diasTrabajo.join(' ').toLowerCase()
+                        : '';
+                    return dias.includes(filtro);
+                case 4: // Turno
+                    const turnos = Array.isArray(conductor.turnos) 
+                        ? conductor.turnos.join(' ').toLowerCase()
+                        : '';
+                    return turnos.includes(filtro);
+                case 5: // Unidad Bus
+                    const unidad = conductor.unidad 
+                        ? conductor.unidad.nombre.toLowerCase()
+                        : '';
+                    return unidad.includes(filtro);
+                case 6: // Estado
+                    const estado = conductor.activo ? 'activo' : 'inactivo';
+                    return estado.includes(filtro);
+                default:
+                    return true;
+            }
+        });
+    });
+    
+    return filtrados;
+}
+
+// Aplicar todos los filtros para usuarios
+function aplicarTodosLosFiltros() {
+    if (filtroActual === 'conductor') {
+        // Si estamos viendo conductores, usar su lógica de filtros
+        let conductoresFiltrados = todosConductores;
+        conductoresFiltrados = aplicarFiltrosColumnasConductores(conductoresFiltrados);
+        renderConductoresTable(conductoresFiltrados);
+        return;
+    }
+    
+    let usuariosFiltrados = todosUsuarios;
     
     // Filtro por tipo
-    if (currentFilter !== 'all') {
-        filteredUsers = filteredUsers.filter(user => user.tipo === currentFilter);
+    if (filtroActual !== 'all') {
+        usuariosFiltrados = usuariosFiltrados.filter(usuario => usuario.tipo === filtroActual);
     }
     
     // Filtros por columna
-    filteredUsers = applyColumnFilters(filteredUsers);
+    usuariosFiltrados = aplicarFiltrosColumnas(usuariosFiltrados);
     
-    renderUsersTable(filteredUsers);
+    renderUsersTable(usuariosFiltrados);
 }
 
-// Limpiar todos los filtros
-function clearFilters() {
-    currentFilter = 'all';
-    columnFilters = ['', '', '', ''];
+// Aplicar todos los filtros para conductores
+function aplicarTodosLosFiltrosConductores() {
+    let conductoresFiltrados = todosConductores;
     
-    // Limpiar inputs de filtros de columna
+    // Filtros por columna
+    conductoresFiltrados = aplicarFiltrosColumnasConductores(conductoresFiltrados);
+    
+    renderConductoresTable(conductoresFiltrados);
+}
+
+// Limpiar todos los filtros de usuarios
+function clearFilters() {
+    filtroActual = 'all';
+    filtrosColumnas = ['', '', '', ''];
+    
+    // Limpiar inputs de filtros
     document.querySelectorAll('.column-filter').forEach(input => {
         if (input.tagName === 'INPUT') {
             input.value = '';
@@ -345,65 +608,70 @@ function clearFilters() {
         card.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
     });
     
-    renderUsersTable(allUsers);
+    renderUsersTable(todosUsuarios);
 }
 
-// Actualizar estadísticas (modificada)
-function updateStats() {
-    if (allUsers.length === 0) {
-        try {
-            const usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
-            allUsers = Object.values(usersDB);
-        } catch (error) {
-            allUsers = [];
+// Limpiar todos los filtros de conductores
+function clearConductoresFilters() {
+    filtrosColumnasConductores = ['', '', '', '', '', '', ''];
+    
+    // Limpiar inputs de filtros de conductores
+    document.querySelectorAll('.column-filter-conductor').forEach(input => {
+        if (input.tagName === 'INPUT') {
+            input.value = '';
+        } else if (input.tagName === 'SELECT') {
+            input.value = '';
         }
-    }
+    });
     
-    const estudiantes = allUsers.filter(u => u.tipo === 'estudiante').length;
-    const conductores = allUsers.filter(u => u.tipo === 'conductor').length;
-    const obreros = allUsers.filter(u => u.tipo === 'obrero').length;
-    const total = allUsers.length;
-    
-    document.getElementById('estudiantesCount').textContent = estudiantes;
-    document.getElementById('conductoresCount').textContent = conductores;
-    document.getElementById('obrerosCount').textContent = obreros; // Necesitas agregar este elemento en el HTML
-    document.getElementById('totalUsers').textContent = total;
+    renderConductoresTable(todosConductores);
 }
 
-// Función para eliminar usuario
-function deleteUser(cedula) {
+// Actualizar estadísticas
+function updateStats() {
+    const estudiantes = todosUsuarios.filter(u => u.tipo === 'estudiante').length;
+    const obreros = todosUsuarios.filter(u => u.tipo === 'obrero').length;
+    const conductores = todosConductores.length;
+    const totalUsuarios = estudiantes + obreros; // Total sin conductores
+    const totalGeneral = estudiantes + obreros + conductores;
+    
+    // Actualizar solo si los elementos existen
+    const estudiantesEl = document.getElementById('estudiantesCount');
+    const obrerosEl = document.getElementById('obrerosCount');
+    const conductoresEl = document.getElementById('conductoresCount');
+    const totalEl = document.getElementById('totalUsers');
+    
+    if (estudiantesEl) estudiantesEl.textContent = estudiantes;
+    if (obrerosEl) obrerosEl.textContent = obreros;
+    if (conductoresEl) conductoresEl.textContent = conductores;
+    if (totalEl) totalEl.textContent = totalUsuarios; // Mostrar solo usuarios sin conductores
+    
+    console.log('Estadísticas actualizadas:', { estudiantes, obreros, conductores, totalUsuarios, totalGeneral });
+}
+
+// Función para eliminar usuario (tabla usuario)
+function eliminarUsuario(cedula) {
     if (!confirm(`¿Está seguro de eliminar al usuario con cédula ${cedula}?`)) {
         return;
     }
     
-    try {
-        const usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
-        let deleted = false;
-        
-        // Buscar y eliminar usuario por cédula
-        Object.keys(usersDB).forEach(key => {
-            if (usersDB[key].cedula === cedula) {
-                delete usersDB[key];
-                deleted = true;
-            }
-        });
-        
-        if (deleted) {
-            localStorage.setItem('unellez_users', JSON.stringify(usersDB));
-            showNotification('Usuario eliminado correctamente', 'success');
-            
-            // Recargar la tabla
-            setTimeout(() => {
-                loadUsers();
-            }, 500);
-        } else {
-            showNotification('No se encontró el usuario', 'error');
-        }
-        
-    } catch (error) {
-        console.error('Error al eliminar usuario:', error);
-        showNotification('Error al eliminar el usuario', 'error');
+    eliminarUsuarioPorCedula(cedula, false);
+}
+
+// Función para eliminar conductor
+function eliminarConductor(cedula) {
+    if (!confirm(`¿Está seguro de eliminar al conductor con cédula ${cedula}?`)) {
+        return;
     }
+    
+    eliminarUsuarioPorCedula(cedula, true);
+}
+
+// Función para editar conductor (placeholder por ahora)
+function editarConductor(cedula) {
+    showNotification(`Editar conductor ${cedula} - Funcionalidad en desarrollo`, 'info');
+    // Aquí podrías abrir un modal de edición similar al de registro
+    // openEditConductorModal(cedula);
 }
 
 // Cargar rutas
@@ -599,8 +867,30 @@ function openDirectConductorModal() {
 
 // Cerrar modal conductor
 function closeDirectConductorModal() {
-    stopQRScanner();
-    document.getElementById('modalDirectConductor').classList.remove('active');
+    console.log("Cerrando modal registro nuevo conductor");
+
+    const qrReaderDiv = document.getElementById('qr-reader');
+    if (qrReaderDiv) {
+        qrReaderDiv.innerHTML = '';
+        console.log("✅ Contenedor QR limpiado");
+    }
+    
+    // 3. Resetear variables
+    qrScannerActive = false;
+    scannedUserData = null;
+    
+    // 4. Cerrar el modal
+    const modal = document.getElementById('modalDirectConductor');
+    if (modal) {
+        modal.classList.remove('active');
+        console.log("✅ Modal cerrado");
+    }
+    
+    // 5. Opcional: Limpiar formulario
+    const form = document.getElementById('directConductorForm');
+    if (form) {
+        form.reset();
+    }
 }
 
 // Resetear pasos del modal
@@ -637,120 +927,58 @@ let scanner = null;
 
 
 function startQRScanner() {
-    // Limpiar contenedor
-    const qrReaderDiv = document.getElementById('qr-reader');
-    qrReaderDiv.innerHTML = '';
-    
-    // Configuración del escáner - CON LA CÁMARA ACTIVADA
+    // Configuración mínima que funciona
     const config = {
-        qrbox: { 
-            width: 250, 
-            height: 250 
-        },
+        qrbox: { width: 250, height: 250 },
         fps: 10,
-        rememberLastUsedCamera: true, // Recordar la última cámara usada
-        showTorchButtonIfSupported: true,
-        showZoomSliderIfSupported: true,
-        // ESTO ES CLAVE: Incluir ambos tipos de escaneo
         supportedScanTypes: [
             Html5QrcodeScanType.SCAN_TYPE_CAMERA,
-            Html5QrcodeScanType.SCAN_TYPE_FILE
-        ],
-        // Configuración para que inicie automáticamente
-        showPermissionButtonIfSupported: false, // Ocultar botón de permiso
-        // Opciones de video (para mejor control de la cámara)
-        videoConstraints: {
-            facingMode: "environment", // Cámara trasera por defecto
-            width: { min: 640, ideal: 1280, max: 1920 },
-            height: { min: 480, ideal: 720, max: 1080 }
-        }
+            Html5QrcodeScanType.SCAN_TYPE_FILE  // ← ESTO ES LO MÁS IMPORTANTE
+        ]
     };
     
-    // Crear instancia del escáner
+    // Crear y renderizar
     scanner = new Html5QrcodeScanner('qr-reader', config);
     
-    // Función cuando se detecta un QR
-    const onScanSuccess = (decodedText, decodedResult) => {
-        console.log("QR escaneado:", decodedText);
-        
-        // Detener el escáner inmediatamente
-        if (scanner) {
-            scanner.clear();
-            qrScannerActive = false;
+    scanner.render(
+        (decodedText) => {
+            console.log("QR:", decodedText);
+            if (scanner) scanner.clear();
+            processQRData(decodedText);
+        },
+        (error) => {
+            console.log("Escaneando...", error);
         }
-        
-        // Procesar los datos
-        processQRData(decodedText);
-    };
-    
-    // Función de error
-    const onScanError = (error) => {
-        // Ignorar errores comunes
-        if (error && !error.toString().includes("NotFoundException")) {
-            console.warn("Error en escáner QR:", error);
-            
-            // Si hay error de cámara, sugerir usar el botón de archivo
-            if (error.toString().includes("NotAllowedError") || 
-                error.toString().includes("Permission")) {
-                console.log("Permiso de cámara denegado. Use 'Scan an Image File'.");
-            }
-        }
-    };
-    
-    // Renderizar el escáner
-    try {
-        scanner.render(onScanSuccess, onScanError);
-        qrScannerActive = true;
-        console.log("Escáner iniciado con cámara activa y botón de archivo");
-        
-        // Verificar que todo esté funcionando
-        setTimeout(() => {
-            // Verificar que el botón de archivo esté presente
-            const fileButtons = document.querySelectorAll('button, input[type="file"]');
-            let hasFileButton = false;
-            
-            fileButtons.forEach(btn => {
-                if (btn.textContent.includes('Image') || 
-                    btn.textContent.includes('File') ||
-                    btn.type === 'file') {
-                    hasFileButton = true;
-                    console.log("✅ Botón de archivo detectado");
-                }
-            });
-            
-            if (!hasFileButton) {
-                console.warn("⚠️ Botón de archivo no encontrado");
-                // Puedes agregar manualmente si es necesario
-                addManualFileButton();
-            }
-        }, 500);
-        
-    } catch (err) {
-        console.error("Error al iniciar escáner:", err);
-        
-        // Si falla la cámara, ofrecer usar archivo directamente
-        if (err.toString().includes("camera") || 
-            err.toString().includes("NotAllowed")) {
-            showNotification('Cámara no disponible. Use "Scan an Image File"', 'warning');
-            // Aún así renderizar el escáner (el botón de archivo debería funcionar)
-            scanner = new Html5QrcodeScanner('qr-reader', {
-                qrbox: { width: 250, height: 250 },
-                fps: 10,
-                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_FILE] // Solo archivo
-            });
-            scanner.render(onScanSuccess, onScanError);
-        }
-    }
+    );
 }
 
 // Detener escáner QR
 function stopQRScanner() {
+    console.log("🛑 Intentando detener scanner...");
+    
     if (scanner) {
+        console.log("🔍 Scanner encontrado, limpiando...");
         scanner.clear().then(() => {
             qrScannerActive = false;
-            console.log("Escáner detenido y limpiado");
+            scanner = null;
+            console.log("✅ Scanner detenido correctamente");
         }).catch(err => {
-            console.error("Error al detener escáner:", err);
+            console.warn("⚠️ Advertencia al limpiar scanner:", err);
+            qrScannerActive = false;
+            scanner = null;
+        });
+    } else {
+        console.log("ℹ️ No hay scanner activo para detener");
+        qrScannerActive = false;
+    }
+    
+    // Limpiar también si usabas html5QrCode (por si acaso)
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            html5QrCode.clear();
+            html5QrCode = null;
+        }).catch(err => {
+            console.warn("Error al detener html5QrCode:", err);
         });
     }
 }
@@ -834,7 +1062,6 @@ async function validateQRWithBackend(qrData) {
     }
 }
 
-// Mostrar resumen de datos
 // Mostrar resumen de datos EN FILAS
 function showDataSummary(userData) {
     const summaryGrid = document.getElementById('summaryGrid');
@@ -887,6 +1114,272 @@ function loadRutasOptions() {
     } catch (error) {
         console.error("Error cargando rutas:", error);
     }
+}
+
+// NUEVAS FUNCIONES PARA LOS CHECKBOXES
+
+// Seleccionar todos los días
+function seleccionarTodosDias(checkbox) {
+    const diasCheckboxes = document.querySelectorAll('input[name="dias"]');
+    diasCheckboxes.forEach(diaCheckbox => {
+        diaCheckbox.checked = checkbox.checked;
+    });
+}
+
+// Seleccionar todos los turnos
+function seleccionarTodosTurnos(checkbox) {
+    const turnosCheckboxes = document.querySelectorAll('input[name="turnos"]');
+    turnosCheckboxes.forEach(turnoCheckbox => {
+        turnoCheckbox.checked = checkbox.checked;
+    });
+}
+
+// MODIFICA la función loadRutasOptions() para también cargar unidades:
+function loadRutasOptions() {
+    const selectRuta = document.getElementById('directRuta');
+    const selectUnidad = document.getElementById('directUnidad');
+    
+    // Limpiar selects
+    selectRuta.innerHTML = '<option value="">Seleccione una ruta</option>';
+    selectUnidad.innerHTML = '<option value="">Seleccione una unidad</option>';
+    
+    try {
+        // Cargar rutas
+        const routesDB = JSON.parse(localStorage.getItem('unellez_routes')) || {
+            ruta1: { nombre: "Ciudad Varyna", activa: true, capacidad: 40 },
+            ruta2: { nombre: "Redoma Industrial", activa: true, capacidad: 35 },
+            ruta3: { nombre: "Raúl Leoni", activa: true, capacidad: 45 },
+            ruta4: { nombre: "Juan Pablo", activa: true, capacidad: 30 }
+        };
+        
+        Object.keys(routesDB).forEach(key => {
+            if (routesDB[key].activa) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `Ruta ${key.slice(-1)} - ${routesDB[key].nombre}`;
+                selectRuta.appendChild(option);
+            }
+        });
+        
+        // Cargar unidades (buses)
+        // En un sistema real, esto vendría de una base de datos
+        // Por ahora, creamos unidades de ejemplo basadas en las rutas
+        const unidades = [
+            { id: 'bus_001', nombre: 'Bus 001 - Mercedes Benz', placa: 'ABC-123', capacidad: 40, estado: 'disponible' },
+            { id: 'bus_002', nombre: 'Bus 002 - Volvo', placa: 'DEF-456', capacidad: 35, estado: 'disponible' },
+            { id: 'bus_003', nombre: 'Bus 003 - Yutong', placa: 'GHI-789', capacidad: 45, estado: 'disponible' },
+            { id: 'bus_004', nombre: 'Bus 004 - Higer', placa: 'JKL-012', capacidad: 30, estado: 'disponible' },
+            { id: 'bus_005', nombre: 'Bus 005 - Mercedes Benz', placa: 'MNO-345', capacidad: 40, estado: 'disponible' }
+        ];
+        
+        unidades.forEach(unidad => {
+            if (unidad.estado === 'disponible') {
+                const option = document.createElement('option');
+                option.value = unidad.id;
+                option.textContent = `${unidad.nombre} (Placa: ${unidad.placa})`;
+                selectUnidad.appendChild(option);
+            }
+        });
+        
+    } catch (error) {
+        console.error("Error cargando rutas y unidades:", error);
+    }
+}
+
+// MODIFICA la función validateConductorForm() para validar los nuevos campos:
+function validateConductorForm() {
+    const campos = [
+        { id: 'directRuta', nombre: 'Ruta' },
+        { id: 'directUnidad', nombre: 'Unidad' },
+        { id: 'directUsuario', nombre: 'Nombre de usuario' },
+        { id: 'directPassword', nombre: 'Contraseña' },
+        { id: 'directConfirmPassword', nombre: 'Confirmar contraseña' }
+    ];
+    
+    // Validar campos requeridos
+    for (const campo of campos) {
+        const elemento = document.getElementById(campo.id);
+        if (!elemento.value.trim()) {
+            showNotification(`El campo "${campo.nombre}" es requerido`, 'error');
+            elemento.focus();
+            return false;
+        }
+    }
+    
+    // Validar que se haya seleccionado al menos un día
+    const diasSeleccionados = document.querySelectorAll('input[name="dias"]:checked');
+    if (diasSeleccionados.length === 0) {
+        showNotification('Debe seleccionar al menos un día de trabajo', 'error');
+        return false;
+    }
+    
+    // Validar que se haya seleccionado al menos un turno
+    const turnosSeleccionados = document.querySelectorAll('input[name="turnos"]:checked');
+    if (turnosSeleccionados.length === 0) {
+        showNotification('Debe seleccionar al menos un turno', 'error');
+        return false;
+    }
+    
+    // Validar que las contraseñas coincidan
+    const contraseña = document.getElementById('directPassword').value;
+    const confirmarContraseña = document.getElementById('directConfirmPassword').value;
+    
+    if (contraseña !== confirmarContraseña) {
+        showNotification('Las contraseñas no coinciden', 'error');
+        document.getElementById('directConfirmPassword').focus();
+        return false;
+    }
+    
+    // Validar longitud de contraseña
+    if (contraseña.length < 6) {
+        showNotification('La contraseña debe tener al menos 6 caracteres', 'error');
+        document.getElementById('directPassword').focus();
+        return false;
+    }
+    
+    return true;
+}
+
+// MODIFICA la función registerDirectConductor() para guardar los nuevos datos:
+function registerDirectConductor(event) {
+    if (event) event.preventDefault();
+    
+    // Validar datos del formulario
+    if (!validateConductorForm()) {
+        return;
+    }
+    
+    // Obtener días seleccionados
+    const diasSeleccionados = Array.from(document.querySelectorAll('input[name="dias"]:checked'))
+        .map(checkbox => checkbox.value);
+    
+    // Obtener turnos seleccionados
+    const turnosSeleccionados = Array.from(document.querySelectorAll('input[name="turnos"]:checked'))
+        .map(checkbox => checkbox.value);
+    
+    // Obtener información de la unidad seleccionada
+    const selectUnidad = document.getElementById('directUnidad');
+    const unidadSeleccionada = {
+        id: selectUnidad.value,
+        nombre: selectUnidad.options[selectUnidad.selectedIndex].text
+    };
+    
+    // Crear objeto con datos del conductor
+    const datosConductor = {
+        ...scannedUserData,
+        ruta: document.getElementById('directRuta').value,
+        rutaNombre: document.getElementById('directRuta').options[document.getElementById('directRuta').selectedIndex].text,
+        unidad: unidadSeleccionada,
+        diasTrabajo: diasSeleccionados,
+        turnos: turnosSeleccionados,
+        nombreUsuario: document.getElementById('directUsuario').value.trim(),
+        contraseña: document.getElementById('directPassword').value,
+        activo: true,
+        detalles: `Conductor | Ruta: ${document.getElementById('directRuta').options[document.getElementById('directRuta').selectedIndex].text} | Unidad: ${unidadSeleccionada.nombre}`,
+        horarioDetalles: `Días: ${diasSeleccionados.join(', ')} | Turnos: ${turnosSeleccionados.join(', ')}`,
+        fechaRegistro: new Date().toISOString(),
+        registradoPor: adminSession ? adminSession.nombreUsuario : 'admin'
+    };
+    
+    // Validar que no exista ya el usuario
+    let usuariosDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+    
+    // Verificar si ya existe la cédula
+    const cedulaExiste = Object.values(usuariosDB).find(usuario => usuario.cedula === datosConductor.cedula);
+    if (cedulaExiste) {
+        showNotification('Ya existe un conductor con esta cédula', 'error');
+        return;
+    }
+    
+    // Verificar si ya existe el nombre de usuario
+    const usuarioExiste = Object.values(usuariosDB).find(usuario => usuario.nombreUsuario === datosConductor.nombreUsuario);
+    if (usuarioExiste) {
+        showNotification('El nombre de usuario ya está en uso', 'error');
+        return;
+    }
+    
+    // Guardar en localStorage
+    const usuarioId = 'cond_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    usuariosDB[usuarioId] = datosConductor;
+    
+    try {
+        localStorage.setItem('unellez_users', JSON.stringify(usuariosDB));
+        
+        // Mostrar éxito y cerrar modal
+        showNotification('Conductor registrado exitosamente', 'success');
+        
+        // También actualizar el estado de la unidad a "asignada"
+        actualizarEstadoUnidad(unidadSeleccionada.id, 'asignada');
+        
+        setTimeout(() => {
+            closeDirectConductorModal();
+            loadUsers(); // Actualizar tabla
+        }, 1000);
+        
+    } catch (error) {
+        console.error("Error al guardar conductor:", error);
+        showNotification('Error al guardar el conductor', 'error');
+    }
+}
+
+// Función para actualizar el estado de la unidad
+function actualizarEstadoUnidad(idUnidad, nuevoEstado) {
+    try {
+        // En un sistema real, esto actualizaría en la base de datos
+        // Por ahora, solo mostramos un log
+        console.log(`Actualizando unidad ${idUnidad} a estado: ${nuevoEstado}`);
+        
+        // Aquí podrías tener un localStorage para unidades
+        // localStorage.setItem('unellez_unidades', JSON.stringify(unidadesActualizadas));
+        
+    } catch (error) {
+        console.error("Error actualizando estado de unidad:", error);
+    }
+}
+
+// MODIFICA initializeConductorModal() para inicializar los checkboxes:
+function initializeConductorModal() {
+    // Configurar formulario
+    const formulario = document.getElementById('directConductorForm');
+    if (formulario) {
+        formulario.addEventListener('submit', registerDirectConductor);
+    }
+    
+    // Configurar validación de contraseñas en tiempo real
+    const inputsContraseña = ['directPassword', 'directConfirmPassword'];
+    inputsContraseña.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('input', checkPasswordMatch);
+        }
+    });
+    
+    // Configurar eventos para los checkboxes
+    configurarEventosCheckboxes();
+}
+
+function configurarEventosCheckboxes() {
+    // Cuando se desmarque "seleccionar todos" de días, desmarcar el checkbox principal
+    const checkboxesDias = document.querySelectorAll('input[name="dias"]');
+    checkboxesDias.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const checkboxTodosDias = document.getElementById('todosDias');
+            if (!this.checked && checkboxTodosDias.checked) {
+                checkboxTodosDias.checked = false;
+            }
+        });
+    });
+    
+    // Cuando se desmarque "seleccionar todos" de turnos, desmarcar el checkbox principal
+    const checkboxesTurnos = document.querySelectorAll('input[name="turnos"]');
+    checkboxesTurnos.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const checkboxTodosTurnos = document.getElementById('todosTurnos');
+            if (!this.checked && checkboxTodosTurnos.checked) {
+                checkboxTodosTurnos.checked = false;
+            }
+        });
+    });
 }
 
 // Generar credenciales por defecto
@@ -946,6 +1439,7 @@ function createPasswordMatchElement() {
     document.getElementById('directConfirmPassword').parentNode.appendChild(messageElement);
     return messageElement;
 }
+
 //================================================
 // ================= REGISTRO FINAL =================
 //================================================

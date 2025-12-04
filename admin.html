@@ -102,8 +102,8 @@
             <div class="admin-section active" id="usersSection">
                 <h2><i class="fas fa-users"></i> Gestión de Usuarios</h2>
                 
-                <div class="admin-stats" onclick="filterUsersByType('estudiante')">
-                    <div class="stat-card">
+                <div class="admin-stats">
+                    <div class="stat-card" onclick="filterUsersByType('estudiante')">
                         <div class="stat-icon">
                             <i class="fas fa-user-graduate"></i>
                         </div>
@@ -112,7 +112,7 @@
                             <p>Estudiantes</p>
                         </div>
                     </div>
-                    <div class="stat-card" onclick="filterUsersByType('trabajador')">
+                    <div class="stat-card" onclick="filterUsersByType('obrero')">
                         <div class="stat-icon">
                             <i class="fas fa-briefcase"></i>
                         </div>
@@ -150,8 +150,8 @@
                     </button>
                 </div>
 
-                <!-- Tabla de Usuarios -->
-                <div class="table-container">
+                <!-- Tabla de Usuarios ESTUDIANTES Y TRABAJADORES -->
+                <div class="table-container" id="tableUsuarios">
                     <div class="table-header">
                         <div class="table-title">
                             <i class="fas fa-list"></i> Lista de Usuarios Registrados
@@ -201,6 +201,80 @@
                         Mostrando <strong>0</strong> de <strong>0</strong> usuarios
                     </div>
                 </div>
+
+                <!-- TABLA CONDUCTORES -->
+                 <div class="table-container" id="tableConductores" style="display: none;">
+                    <div class="table-header">
+                        <div class="table-title">
+                            <i class="fas fa-bus"></i> Lista de Conductores
+                        </div>
+                        <button class="btn btn-secondary" onclick="clearConductoresFilters()">
+                            <i class="fas fa-filter"></i> Limpiar Filtros
+                        </button>
+                    </div>
+                    
+                    <!-- tabla -->
+                    <table class="users-table" id="conductoresTable">
+                        <thead>
+                            <tr>
+                                <th width="10%">
+                                    <strong>Tipo</strong>
+                                    <select class="column-filter-conductor" data-column="0" onchange="filterConductorColumn(this)">
+                                        <option value="">Todos</option>
+                                        <option value="conductor">Conductor</option>
+                                    </select>
+                                </th>
+                                <th width="10%">
+                                    <strong>Cédula</strong>
+                                    <input type="text" class="column-filter-conductor" placeholder="Filtrar cédula..." 
+                                        data-column="1" onkeyup="filterConductorColumn(this)">
+                                </th>
+                                <th width="20%">
+                                    <strong>Nombre Completo</strong> 
+                                    <input type="text" class="column-filter-conductor" placeholder="Filtrar nombre..." 
+                                        data-column="2" onkeyup="filterConductorColumn(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Días</strong>
+                                    <input type="text" class="column-filter-conductor" placeholder="Filtrar días..." 
+                                        data-column="3" onkeyup="filterConductorColumn(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Turno</strong>
+                                    <select class="column-filter-conductor" data-column="4" onchange="filterConductorColumn(this)">
+                                        <option value="">Todos</option>
+                                        <option value="mañana">Mañana</option>
+                                        <option value="medio dia">Medio Día</option>
+                                        <option value="tarde">Tarde</option>
+                                    </select>
+                                </th>
+                                <th width="15%">
+                                    <strong>Unidad Bus</strong>
+                                    <input type="text" class="column-filter-conductor" placeholder="Filtrar unidad..." 
+                                        data-column="5" onkeyup="filterConductorColumn(this)">
+                                </th>
+                                <th width="10%">
+                                    <strong>Estado</strong>
+                                    <select class="column-filter-conductor" data-column="6" onchange="filterConductorColumn(this)">
+                                        <option value="">Todos</option>
+                                        <option value="Activo">Activo</option>
+                                        <option value="Inactivo">Inactivo</option>
+                                    </select>
+                                </th>
+                                <th width="15%">
+                                    <strong>Acciones</strong>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="conductoresTableBody">
+                            <!-- Los conductores se cargarán aquí -->
+                        </tbody>
+                    </table>
+                    
+                    <div class="results-count" id="conductoresResultsCount">
+                        Mostrando <strong>0</strong> de <strong>0</strong> conductores
+                    </div>
+                </div>
             </div>
 
             <!-- Sección RUTAS -->
@@ -245,7 +319,8 @@
     <!-- Modal Registro Conductor Directo -->
     <div class="modal" id="modalDirectConductor">
         <div class="modal-overlay"></div>
-        <div class="modal-content large">   
+        <div class="modal-content large"> 
+
             <!-- Botón cerrar modal -->
             <button class="modal-close-btn" onclick="closeDirectConductorModal()">
                 <i class="fas fa-times"></i>
@@ -291,6 +366,8 @@
                 
                 <!-- Formulario para completar -->
                 <form id="directConductorForm" class="direct-conductor-form">
+
+                    <!-- ASIGNACION DE RUTA -->
                     <div class="form-section">
                         <h3><i class="fas fa-route"></i> Asignar Ruta</h3>
                         <div class="direct-form-group">
@@ -301,7 +378,87 @@
                             </select>
                         </div>
                     </div>
-                    
+
+                    <!-- ASIGNACION DE DIAS -->
+                     <div class="form-section">
+                        <h3><i class="fas fa-calendar-alt"></i> Asignar Días de Trabajo</h3>
+                        <div class="direct-form-group">
+                            <label>Seleccione los días *</label>
+                            <div class="checkbox-group-grid">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="diaLunes" name="dias" value="lunes">
+                                    <label for="diaLunes">Lunes</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="diaMartes" name="dias" value="martes">
+                                    <label for="diaMartes">Martes</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="diaMiercoles" name="dias" value="miercoles">
+                                    <label for="diaMiercoles">Miércoles</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="diaJueves" name="dias" value="jueves">
+                                    <label for="diaJueves">Jueves</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="diaViernes" name="dias" value="viernes">
+                                    <label for="diaViernes">Viernes</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="diaSabado" name="dias" value="sabado">
+                                    <label for="diaSabado">Sábado</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="todosDias" onclick="seleccionarTodosDias(this)">
+                                    <label for="todosDias">Seleccionar todos</label>
+                                </div>
+                            </div>
+                            <small>Seleccione uno o varios días de trabajo</small>
+                        </div>
+                    </div>
+
+                    <!-- ASIGNACION DE TURNOS -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-clock"></i> Asignar Turnos</h3>
+                        <div class="direct-form-group">
+                            <label>Seleccione los turnos *</label>
+                            <div class="checkbox-group-grid">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="turnoManana" name="turnos" value="mañana">
+                                    <label for="turnoManana">Mañana (6:00 AM)</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="turnoMedioDia" name="turnos" value="medio dia">
+                                    <label for="turnoMedioDia">Medio Día (12:00 PM)</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="turnoTarde" name="turnos" value="tarde">
+                                    <label for="turnoTarde">Tarde (6:00 PM)</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="todosTurnos" onclick="seleccionarTodosTurnos(this)">
+                                    <label for="todosTurnos">Seleccionar todos</label>
+                                </div>
+                            </div>
+                            <small>Seleccione uno, dos o todos los turnos</small>
+                        </div>
+                    </div>
+
+                    <!-- ASIGNACION DE UNIDAD BUS -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-bus"></i> Asignar Unidad (Bus)</h3>
+                        <div class="direct-form-group">
+                            <label for="directUnidad">Unidad Asignada *</label>
+                            <select id="directUnidad" required>
+                                <option value="">Seleccione una unidad</option>
+                                <!-- Las unidades se cargarán dinámicamente -->
+                            </select>
+                            <small>Bus que será asignado al conductor</small>
+                        </div>
+                    </div>
+
+                    <!-- CREAR LAS CREDENCIALES DE ACCESO -->
                     <div class="form-section">
                         <h3><i class="fas fa-user-lock"></i> Credenciales de Acceso</h3>
                         <div class="direct-form-row">
@@ -327,6 +484,7 @@
                         </div>
                     </div>
                     
+                    <!-- BOTONES -->
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" onclick="goBackToScan()">
                             <i class="fas fa-arrow-left"></i> Volver
