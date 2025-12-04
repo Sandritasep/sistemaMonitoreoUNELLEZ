@@ -473,28 +473,55 @@ body.admin-logged-in .admin-content {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     position: relative;
+    vertical-align: top;
+}
+
+.users-table th strong {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
 }
 
 /* Filtros de columna */
-.column-filter {
-    width: calc(100% - 24px);
-    margin: 8px 12px 0;
-    padding: 8px 10px;
-    border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 4px;
-    background: rgba(255,255,255,0.1);
-    color: white;
-    font-size: 13px;
+/* Para los select dentro de los filtros de columna */
+.column-filter option,
+.column-filter-conductor option {
+    background: white !important;
+    color: #333 !important;
+    font-size: 13px !important;
+    padding: 8px !important;
 }
 
-.column-filter::placeholder {
-    color: rgba(255, 255, 255, 0.945);
+/* Para mejorar la visibilidad de los select */
+.column-filter,
+.column-filter-conductor {
+    color: white !important;
+    font-size: 13px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    padding: 8px 10px !important;
+    border-radius: 4px !important;
 }
 
-.column-filter:focus {
-    outline: none;
-    background: rgba(255,255,255,0.2);
-    border-color: rgba(255,255,255,0.5);
+/* Estilo para las opciones al abrir el select */
+.column-filter:focus,
+.column-filter-conductor:focus {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+}
+
+/* Placeholder color */
+.column-filter::placeholder,
+.column-filter-conductor::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Estilo específico para select de "Todos" */
+.column-filter option[value=""],
+.column-filter-conductor option[value=""] {
+    color: #666 !important;
+    font-style: italic !important;
+    font-weight: bold;
 }
 
 .users-table tbody tr {
