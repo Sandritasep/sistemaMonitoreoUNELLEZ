@@ -82,13 +82,13 @@
                 <p class="admin-welcome">Bienvenido, <span id="adminName">Administrador</span></p>
             </div>
             <div class="admin-nav">
-                <button class="btn-admin" onclick="showSection('users')">
+                <button class="btn-admin" onclick="mostrarSeccion('usuarios')">
                     <i class="fas fa-users"></i> Gestionar Usuarios
                 </button>
-                <button class="btn-admin" onclick="showSection('routes')">
+                <button class="btn-admin" onclick="mostrarSeccion('rutas')">
                     <i class="fas fa-route"></i> Gestionar Rutas
                 </button>
-                <button class="btn-admin" onclick="logoutAdmin()" id="btn-logout">
+                <button class="btn-admin" onclick="cerrarSesionAdmin()" id="btn-logout">
                     <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
                 </button>
             </div>
@@ -99,120 +99,218 @@
         <div class="admin-container">
 
             <!-- Sección USUARIOS -->
-            <div class="admin-section active" id="usersSection">
+            <div class="admin-section active" id="usuariosSection">
                 <h2><i class="fas fa-users"></i> Gestión de Usuarios</h2>
                 
                 <div class="admin-stats">
-                    <div class="stat-card" onclick="filterUsersByType('estudiante')">
+                    <div class="stat-card" onclick="filtrarUsuariosPorTipo('estudiante')">
                         <div class="stat-icon">
                             <i class="fas fa-user-graduate"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 id="estudiantesCount">0</h3>
+                            <h3 id="contadorEstudiantes">0</h3>
                             <p>Estudiantes</p>
                         </div>
                     </div>
-                    <div class="stat-card" onclick="filterUsersByType('obrero')">
+                    <div class="stat-card" onclick="filtrarUsuariosPorTipo('trabajador')">
                         <div class="stat-icon">
                             <i class="fas fa-briefcase"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 id="obrerosCount">0</h3>
-                            <p>Profesores/trabajadores</p>
+                            <h3 id="contadorTrabajadores">0</h3>
+                            <p>Profesores/Trabajadores</p>
                         </div>
                     </div>
-                    <div class="stat-card" onclick="filterUsersByType('conductor')">
+                    <div class="stat-card" onclick="filtrarUsuariosPorTipo('conductor')">
                         <div class="stat-icon">
                             <i class="fas fa-bus"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 id="conductoresCount">0</h3>
+                            <h3 id="contadorConductores">0</h3>
                             <p>Conductores</p>
                         </div>
                     </div>
-                    <div class="stat-card" id="total-users" onclick="filterUsersByType('all')">
-                        <div class="stat-icon" id="iconTotal">
+                    <div class="stat-card" id="total-usuarios" onclick="filtrarUsuariosPorTipo('todos')">
+                        <div class="stat-icon" id="iconoTotal">
                             <i class="fas fa-users"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 id="totalUsers" class="totalusuarios">0</h3>
-                            <p id="totalu">Total Usuarios</p>
+                            <h3 id="totalUsuarios">0</h3>
+                            <p id="totalU">Total Usuarios</p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="admin-actions">
+                <!-- boton nuevo conductor -->
+                <div class="admin-actions" id="accionesConductor" style="display: none;">
                     <button class="btn btn-primary" onclick="openDirectConductorModal()">
                         <i class="fas fa-plus"></i> Nuevo Conductor
                     </button>
-                    <button class="btn btn-secondary" onclick="loadUsers()">
-                        <i class="fas fa-sync"></i> Actualizar Lista
-                    </button>
                 </div>
 
-                <!-- Tabla de Usuarios ESTUDIANTES Y TRABAJADORES -->
-                <div class="table-container" id="tableUsuarios">
+                <!-- Tabla de ESTUDIANTES -->
+                <div class="table-container" id="tablaEstudiantes" style="display: none;">
                     <div class="table-header">
                         <div class="table-title">
-                            <i class="fas fa-list"></i> Lista de Usuarios Registrados
+                            <i class="fas fa-user-graduate"></i> Lista de Estudiantes
                         </div>
-                        <button class="btn btn-secondary" onclick="clearFilters()">
-                            <i class="fas fa-filter"></i> Limpiar Filtros
-                        </button>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary" onclick="limpiarFiltros()">
+                                <i class="fas fa-filter"></i> Limpiar Filtros
+                            </button>
+                            <button class="btn btn-secondary" onclick="cargarUsuarios()">
+                                <i class="fas fa-sync"></i> Actualizar Lista
+                            </button>
+                        </div>
                     </div>
                     
-                    <table class="users-table" id="usersTable">
+                    <table class="users-table">
                         <thead>
                             <tr>
-                                <th width="15%">
+                                <th width="10%">
                                     <strong>Tipo</strong>
                                 </th>
                                 <th width="15%">
                                     <strong>Cédula</strong>
-                                    <input type="text" class="column-filter" placeholder="Filtrar cédula..." 
-                                        data-column="1" onkeyup="filterColumn(this)">
-                                </th>
-                                <th width="30%">
-                                    <strong>Nombre Completo</strong> 
-                                    <input type="text" class="column-filter" placeholder="Filtrar nombre..." 
-                                        data-column="2" onkeyup="filterColumn(this)">
+                                    <input type="text" class="filtro-columna" placeholder="Filtrar cédula..." 
+                                        data-columna="1" onkeyup="filtrarColumna(this)">
                                 </th>
                                 <th width="20%">
+                                    <strong>Nombre Completo</strong>
+                                    <input type="text" class="filtro-columna" placeholder="Filtrar nombre..." 
+                                        data-columna="2" onkeyup="filtrarColumna(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Carrera</strong>
+                                    <select class="filtro-columna" data-columna="3" onchange="filtrarColumna(this)">
+                                        <option value="">Todas</option>
+                                        <option value="Ingeniería">Ingeniería</option>
+                                        <option value="Medicina">Medicina</option>
+                                        <option value="Derecho">Derecho</option>
+                                        <option value="Administración">Administración</option>
+                                        <option value="Educación">Educación</option>
+                                        <option value="Arquitectura">Arquitectura</option>
+                                    </select>
+                                </th>
+                                <th width="15%">
+                                    <strong>Ruta Elegida</strong>
+                                    <select class="filtro-columna" data-columna="4" onchange="filtrarColumna(this)">
+                                        <option value="">Todas</option>
+                                        <!-- Las rutas se cargarán dinámicamente -->
+                                    </select>
+                                </th>
+                                <th width="10%">
                                     <strong>Estado</strong>
-                                    <select class="column-filter" data-column="3" onchange="filterColumn(this)">
+                                    <select class="filtro-columna" data-columna="5" onchange="filtrarColumna(this)">
                                         <option value="">Todos</option>
                                         <option value="Activo">Activo</option>
                                         <option value="Inactivo">Inactivo</option>
                                     </select>
                                 </th>
-                                <th width="20%">
+                                <th width="15%">
                                     <strong>Acciones</strong>
                                 </th>
                             </tr>
                         </thead>
-                        <tbody id="usersTableBody">
-                            <!-- Los usuarios se cargarán aquí dinámicamente -->
+                        <tbody id="cuerpoTablaEstudiantes">
+                            <!-- Los estudiantes se cargarán aquí -->
                         </tbody>
                     </table>
                     
-                    <div class="results-count" id="resultsCount">
-                        Mostrando <strong>0</strong> de <strong>0</strong> usuarios
+                    <div class="contador-resultados" id="contadorResultadosEstudiantes">
+                        Mostrando <strong>0</strong> de <strong>0</strong> estudiantes
                     </div>
                 </div>
 
-                <!-- TABLA CONDUCTORES -->
-                 <div class="table-container" id="tableConductores" style="display: none;">
+                <!-- Tabla de TRABAJADORES -->
+                <div class="table-container" id="tablaTrabajadores" style="display: none;">
+                    <div class="table-header">
+                        <div class="table-title">
+                            <i class="fas fa-briefcase"></i> Lista de Profesores/Trabajadores
+                        </div>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary" onclick="limpiarFiltros()">
+                                <i class="fas fa-filter"></i> Limpiar Filtros
+                            </button>
+                            <button class="btn btn-secondary" onclick="cargarUsuarios()">
+                                <i class="fas fa-sync"></i> Actualizar Lista
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th width="6%">
+                                    <strong>Tipo</strong>
+                                </th>
+                                <th width="10%">
+                                    <strong>Cédula</strong>
+                                    <input type="text" class="filtro-columna" placeholder="Filtrar cédula..." 
+                                        data-columna="1" onkeyup="filtrarColumna(this)">
+                                </th>
+                                <th width="20%">
+                                    <strong>Nombre Completo</strong>
+                                    <input type="text" class="filtro-columna" placeholder="Filtrar nombre..." 
+                                        data-columna="2" onkeyup="filtrarColumna(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Condición</strong>
+                                    <input type="text" class="filtro-columna" placeholder="Filtrar condición..." 
+                                        data-columna="3" onkeyup="filtrarColumna(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Cargo</strong>
+                                    <input type="text" class="filtro-columna" placeholder="Filtrar cargo..." 
+                                        data-columna="4" onkeyup="filtrarColumna(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Ruta Elegida</strong>
+                                    <select class="filtro-columna" data-columna="5" onchange="filtrarColumna(this)">
+                                        <option value="">Todas</option>
+                                        <!-- Las rutas se cargarán dinámicamente -->
+                                    </select>
+                                </th>
+                                <th width="10%">
+                                    <strong>Estado</strong>
+                                    <select class="filtro-columna" data-columna="6" onchange="filtrarColumna(this)">
+                                        <option value="">Todos</option>
+                                        <option value="Activo">Activo</option>
+                                        <option value="Inactivo">Inactivo</option>
+                                    </select>
+                                </th>
+                                <th width="19%">
+                                    <strong>Acciones</strong>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaTrabajadores">
+                            <!-- Los trabajadores se cargarán aquí -->
+                        </tbody>
+                    </table>
+                    
+                    <div class="contador-resultados" id="contadorResultadosTrabajadores">
+                        Mostrando <strong>0</strong> de <strong>0</strong> trabajadores
+                    </div>
+                </div>
+
+                <!-- Tabla de CONDUCTORES -->
+                <div class="table-container" id="tablaConductores" style="display: none;">
                     <div class="table-header">
                         <div class="table-title">
                             <i class="fas fa-bus"></i> Lista de Conductores
                         </div>
-                        <button class="btn btn-secondary" onclick="clearConductoresFilters()">
-                            <i class="fas fa-filter"></i> Limpiar Filtros
-                        </button>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary" onclick="limpiarFiltrosConductores()">
+                                <i class="fas fa-filter"></i> Limpiar Filtros
+                            </button>
+                            <button class="btn btn-secondary" onclick="cargarUsuarios()">
+                                <i class="fas fa-sync"></i> Actualizar Lista
+                            </button>
+                        </div>
                     </div>
                     
-                    <!-- tabla -->
-                    <table class="users-table" id="conductoresTable">
+                    <table class="users-table">
                         <thead>
                             <tr>
                                 <th width="10%">
@@ -220,36 +318,45 @@
                                 </th>
                                 <th width="10%">
                                     <strong>Cédula</strong>
-                                    <input type="text" class="column-filter-conductor" placeholder="Filtrar cédula..." 
-                                        data-column="1" onkeyup="filterConductorColumn(this)">
+                                    <input type="text" class="filtro-columna-conductor" placeholder="Filtrar cédula..." 
+                                        data-columna="1" onkeyup="filtrarColumnaConductor(this)">
                                 </th>
                                 <th width="20%">
-                                    <strong>Nombre Completo</strong> 
-                                    <input type="text" class="column-filter-conductor" placeholder="Filtrar nombre..." 
-                                        data-column="2" onkeyup="filterConductorColumn(this)">
+                                    <strong>Nombre Completo</strong>
+                                    <input type="text" class="filtro-columna-conductor" placeholder="Filtrar nombre..." 
+                                        data-columna="2" onkeyup="filtrarColumnaConductor(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Ruta Asignada</strong>
+                                    <select class="filtro-columna-conductor" data-columna="3" onchange="filtrarColumnaConductor(this)">
+                                        <option value="">Todas</option>
+                                        <!-- Las rutas se cargarán dinámicamente -->
+                                    </select>
                                 </th>
                                 <th width="15%">
                                     <strong>Días</strong>
-                                    <input type="text" class="column-filter-conductor" placeholder="Filtrar días..." 
-                                        data-column="3" onkeyup="filterConductorColumn(this)">
+                                    <select class="filtro-columna-conductor" data-columna="4" onchange="filtrarColumnaConductor(this)">
+                                        <option value="">Todos</option>
+                                        <option value="Lunes">Lunes</option>
+                                        <option value="Martes">Martes</option>
+                                        <option value="Miércoles">Miércoles</option>
+                                        <option value="Jueves">Jueves</option>
+                                        <option value="Viernes">Viernes</option>
+                                        <option value="Sábado">Sábado</option>
+                                    </select>
                                 </th>
                                 <th width="15%">
                                     <strong>Turno</strong>
-                                    <select class="column-filter-conductor" data-column="4" onchange="filterConductorColumn(this)">
+                                    <select class="filtro-columna-conductor" data-columna="5" onchange="filtrarColumnaConductor(this)">
                                         <option value="">Todos</option>
                                         <option value="mañana">Mañana</option>
                                         <option value="medio dia">Medio Día</option>
                                         <option value="tarde">Tarde</option>
                                     </select>
                                 </th>
-                                <th width="15%">
-                                    <strong>Unidad Bus</strong>
-                                    <input type="text" class="column-filter-conductor" placeholder="Filtrar unidad..." 
-                                        data-column="5" onkeyup="filterConductorColumn(this)">
-                                </th>
                                 <th width="10%">
                                     <strong>Estado</strong>
-                                    <select class="column-filter-conductor" data-column="6" onchange="filterConductorColumn(this)">
+                                    <select class="filtro-columna-conductor" data-columna="6" onchange="filtrarColumnaConductor(this)">
                                         <option value="">Todos</option>
                                         <option value="Activo">Activo</option>
                                         <option value="Inactivo">Inactivo</option>
@@ -260,19 +367,87 @@
                                 </th>
                             </tr>
                         </thead>
-                        <tbody id="conductoresTableBody">
+                        <tbody id="cuerpoTablaConductores">
                             <!-- Los conductores se cargarán aquí -->
                         </tbody>
                     </table>
                     
-                    <div class="results-count" id="conductoresResultsCount">
+                    <div class="contador-resultados" id="contadorResultadosConductores">
                         Mostrando <strong>0</strong> de <strong>0</strong> conductores
+                    </div>
+                </div>
+
+                <!-- Tabla de TODOS LOS USUARIOS -->
+                <div class="table-container" id="tablaTodosUsuarios" style="display: none;">
+                    <div class="table-header">
+                        <div class="table-title">
+                            <i class="fas fa-users"></i> Lista de Todos los Usuarios
+                        </div>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary" onclick="limpiarFiltrosTodos()">
+                                <i class="fas fa-filter"></i> Limpiar Filtros
+                            </button>
+                            <button class="btn btn-secondary" onclick="cargarUsuarios()">
+                                <i class="fas fa-sync"></i> Actualizar Lista
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th width="10%">
+                                    <strong>Tipo</strong>
+                                    <select class="filtro-columna-todos" data-columna="0" onchange="filtrarColumnaTodos(this)">
+                                        <option value="">Todos</option>
+                                        <option value="estudiante">Estudiante</option>
+                                        <option value="trabajador">Trabajador</option>
+                                        <option value="conductor">Conductor</option>
+                                    </select>
+                                </th>
+                                <th width="15%">
+                                    <strong>Cédula</strong>
+                                    <input type="text" class="filtro-columna-todos" placeholder="Filtrar cédula..." 
+                                        data-columna="1" onkeyup="filtrarColumnaTodos(this)">
+                                </th>
+                                <th width="20%">
+                                    <strong>Nombre Completo</strong>
+                                    <input type="text" class="filtro-columna-todos" placeholder="Filtrar nombre..." 
+                                        data-columna="2" onkeyup="filtrarColumnaTodos(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Ruta Elegida</strong>
+                                    <select class="filtro-columna-todos" data-columna="3" onchange="filtrarColumnaTodos(this)">
+                                        <option value="">Todas</option>
+                                        <!-- Las rutas se cargarán dinámicamente -->
+                                    </select>
+                                </th>
+                                <th width="10%">
+                                    <strong>Estado</strong>
+                                    <select class="filtro-columna-todos" data-columna="4" onchange="filtrarColumnaTodos(this)">
+                                        <option value="">Todos</option>
+                                        <option value="Activo">Activo</option>
+                                        <option value="Inactivo">Inactivo</option>
+                                    </select>
+                                </th>
+                                <th width="15%">
+                                    <strong>Acciones</strong>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaTodosUsuarios">
+                            <!-- Todos los usuarios se cargarán aquí -->
+                        </tbody>
+                    </table>
+                    
+                    <div class="contador-resultados" id="contadorResultadosTodos">
+                        Mostrando <strong>0</strong> de <strong>0</strong> usuarios
                     </div>
                 </div>
             </div>
 
             <!-- Sección RUTAS -->
-            <div class="admin-section" id="routesSection">
+            <div class="admin-section" id="rutasSection">
                 <h2><i class="fas fa-route"></i> Gestión de Rutas</h2>
                 
                 <div class="admin-stats">
@@ -314,18 +489,20 @@
     <div class="modal" id="modalDirectConductor">
         <div class="modal-overlay"></div>
         <div class="modal-content large"> 
-
-            <!-- Botón cerrar modal -->
-            <button class="modal-close-btn" onclick="closeDirectConductorModal()">
-                <i class="fas fa-times"></i>
-            </button>
             
             <!-- SCANNER QR -->
             <div id="stepScanQR" class="modal-step active">
+                <div class="modal-step-header">
+                    <h2><i class="fas fa-user-tie"></i> Registrar Nuevo Conductor</h2>
+                    <!-- Botón cerrar modal -->
+                    <button class="modal-close-btn" onclick="closeDirectConductorModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
                 <div class="scan-icon">
                     <i class="fas fa-qrcode"></i>
                 </div>
-                <h2><i class="fas fa-user-tie"></i> Registrar Nuevo Conductor</h2>
                 
                 <!-- Contenedor para html5-qrcode -->
                 <div id="qr-reader" style="width: 100%; margin: 20px 0;"></div>
@@ -348,11 +525,13 @@
 
             <!-- MODAL FORMULARIO REGISTRO -->
             <div id="stepForm" class="modal-step" style="display: none;">
-                <h2><i class="fas fa-user-check"></i> Confirmar Datos del Conductor</h2>
+                <div class="modal-step-header">
+                    <h2><i class="fas fa-user-check"></i>Datos del Conductor</h2>
+                </div>
                 
                 <!-- Resumen de datos del QR -->
                 <div class="data-summary" id="dataSummary">
-                    <h3>Datos obtenidos del QR:</h3>
+                    <h3><i class="fas fa-id-card"></i>Datos obtenidos del QR:</h3>
                     <div class="summary-grid" id="summaryGrid">
                         <!-- Se llenará dinámicamente -->
                     </div>
@@ -374,7 +553,7 @@
                     </div>
 
                     <!-- ASIGNACION DE DIAS -->
-                     <div class="form-section">
+                    <div class="form-section">
                         <h3><i class="fas fa-calendar-alt"></i> Asignar Días de Trabajo</h3>
                         <div class="direct-form-group">
                             <label>Seleccione los días *</label>
@@ -439,19 +618,6 @@
                         </div>
                     </div>
 
-                    <!-- ASIGNACION DE UNIDAD BUS -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-bus"></i> Asignar Unidad (Bus)</h3>
-                        <div class="direct-form-group">
-                            <label for="directUnidad">Unidad Asignada *</label>
-                            <select id="directUnidad" required>
-                                <option value="">Seleccione una unidad</option>
-                                <!-- Las unidades se cargarán dinámicamente -->
-                            </select>
-                            <small>Bus que será asignado al conductor</small>
-                        </div>
-                    </div>
-
                     <!-- CREAR LAS CREDENCIALES DE ACCESO -->
                     <div class="form-section">
                         <h3><i class="fas fa-user-lock"></i> Credenciales de Acceso</h3>
@@ -467,13 +633,21 @@
                         <div class="direct-form-row">
                             <div class="direct-form-group">
                                 <label for="directPassword">Contraseña *</label>
-                                <input type="password" id="directPassword" required 
-                                    placeholder="Mínimo 6 caracteres">
+                                <div class="password-input">
+                                    <input type="password" id="directPassword" placeholder="Ingrese contraseña" required>
+                                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="direct-form-group">
                                 <label for="directConfirmPassword">Confirmar Contraseña *</label>
-                                <input type="password" id="directConfirmPassword" required 
-                                    placeholder="Repita la contraseña">
+                                <div class="password-input">
+                                    <input type="password" id="directConfirmPassword" placeholder="Confirme la contraseña" required>
+                                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -488,8 +662,6 @@
                         </button>
                     </div>
                 </form>
-            </div>
-
             </div>
         </div>
 

@@ -1,53 +1,53 @@
-// Variables globales para admin
-let adminSession = JSON.parse(localStorage.getItem('admin_session')) || null;
+// Variables globales para administración
+let sesionAdmin = JSON.parse(localStorage.getItem('admin_session')) || null;
+
+// Variables para las tablas
+let todosUsuarios = [];
+let estudiantes = [];
+let trabajadores = [];
+let conductores = [];
+let filtroActual = 'todos';
+let filtrosEstudiantes = ['', '', '', '', '', ''];
+let filtrosTrabajadores = ['', '', '', '', '', '', ''];
+let filtrosConductores = ['', '', '', '', '', '', ''];
+let filtrosTodos = ['', '', '', '', ''];
 
 // Verificar sesión al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM cargado, verificando sesión...');
-    console.log('Sesión actual:', adminSession);
     
-    // Si hay sesión activa, mostrar contenido admin
-    if (adminSession && adminSession.loggedIn) {
-        console.log('Sesión activa encontrada, mostrando panel...');
-        showAdminContent();
-        initializeAdminPanel();
+    if (sesionAdmin && sesionAdmin.loggedIn) {
+        mostrarContenidoAdmin();
+        inicializarPanelAdmin();
     } else {
-        console.log('No hay sesión activa, mostrando login...');
-        // Mostrar login modal
-        showLoginModal();
+        mostrarModalLogin();
     }
 });
 
 // Mostrar modal de login
-function showLoginModal() {
+function mostrarModalLogin() {
     console.log('Mostrando modal de login...');
     document.getElementById('loginModal').classList.add('active');
     document.body.classList.remove('admin-logged-in');
     document.getElementById('loginForm').reset();
     
-    // Poner foco en el campo de usuario
     setTimeout(() => {
         document.getElementById('adminUsername').focus();
     }, 300);
 }
 
 // Mostrar contenido admin
-function showAdminContent() {
+function mostrarContenidoAdmin() {
     console.log('Mostrando contenido admin...');
     
-    // Ocultar login modal
     document.getElementById('loginModal').classList.remove('active');
-    
-    // Añadir clase al body para mostrar admin
     document.body.classList.add('admin-logged-in');
     
-    // Mostrar nombre del admin
-    if (adminSession && adminSession.username) {
-        document.getElementById('adminName').textContent = adminSession.username;
+    if (sesionAdmin && sesionAdmin.username) {
+        document.getElementById('adminName').textContent = sesionAdmin.username;
     }
     
-    // Cargar datos iniciales
-    initializeAdminPanel();
+    inicializarPanelAdmin();
 }
 
 // Función de login
@@ -56,59 +56,79 @@ function adminLogin() {
     const username = document.getElementById('adminUsername').value.trim();
     const password = document.getElementById('adminPassword').value.trim();
     
-    // Credenciales hardcodeadas para demo
-    const adminCredentials = {
+    const credencialesAdmin = {
         username: 'admin',
         password: 'admin123'
     };
     
-    if (username === adminCredentials.username && password === adminCredentials.password) {
+    if (username === credencialesAdmin.username && password === credencialesAdmin.password) {
         console.log('Credenciales correctas, creando sesión...');
-        // Crear sesión
-        adminSession = {
+        sesionAdmin = {
             loggedIn: true,
             username: username,
             loginTime: Date.now()
         };
         
-        localStorage.setItem('admin_session', JSON.stringify(adminSession));
+        localStorage.setItem('admin_session', JSON.stringify(sesionAdmin));
+        mostrarNotificacion('¡Inicio de sesión exitoso!', 'success');
         
-        // Mostrar notificación de éxito
-        showNotification('¡Inicio de sesión exitoso!', 'success');
-        
-        // Mostrar contenido admin
         setTimeout(() => {
-            showAdminContent();
+            mostrarContenidoAdmin();
         }, 500);
         
     } else {
-        showNotification('Credenciales incorrectas. Use: admin / admin123', 'error');
+        mostrarNotificacion('Credenciales incorrectas. Use: admin / admin123', 'error');
         document.getElementById('adminPassword').value = '';
         document.getElementById('adminPassword').focus();
     }
 }
 
 // Alternar visibilidad de contraseña
-function togglePasswordVisibility() {
-    const passwordInput = document.getElementById('adminPassword');
-    const toggleButton = document.querySelector('.toggle-password i');
+function togglePasswordVisibility(buttonElement) {
+    console.log('togglePasswordVisibility llamado:', buttonElement);
+    
+    let passwordInput, toggleButton;
+    
+    if (buttonElement && buttonElement.classList.contains('toggle-password')) {
+        // Llamado desde formulario de conductor (se pasó 'this')
+        toggleButton = buttonElement;
+        passwordInput = toggleButton.previousElementSibling; // El input está antes del botón
+    } else {
+        // Llamado desde login admin (sin parámetros)
+        passwordInput = document.getElementById('adminPassword');
+        const toggleButtonContainer = document.querySelector('.toggle-password');
+        toggleButton = toggleButtonContainer ? toggleButtonContainer.querySelector('i') : null;
+    }
+    
+    if (!passwordInput) {
+        console.error('No se pudo encontrar el input de contraseña');
+        return;
+    }
+    
+    let icon = toggleButton;
+    if (toggleButton && toggleButton.tagName === 'BUTTON') {
+        icon = toggleButton.querySelector('i');
+    }
     
     if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
-        toggleButton.classList.remove('fa-eye');
-        toggleButton.classList.add('fa-eye-slash');
+        if (icon) {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        }
     } else {
         passwordInput.type = 'password';
-        toggleButton.classList.remove('fa-eye-slash');
-        toggleButton.classList.add('fa-eye');
+        if (icon) {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
     }
 }
 
 // Inicializar panel admin
-function initializeAdminPanel() {
+function inicializarPanelAdmin() {
     console.log('Inicializando panel admin...');
     
-    // Configurar formulario de login
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', function(e) {
@@ -117,193 +137,292 @@ function initializeAdminPanel() {
         });
     }
     
-    // Inicializar modal de conductor
-    initializeConductorModal();
+    inicializarModalConductor();
     
-    // Asegurar que el DOM esté listo antes de cargar usuarios
     setTimeout(() => {
-        // Cargar datos
-        loadUsers();
-        loadRoutes();
-        updateStats();
+        cargarUsuarios();
+        cargarRutas();
+        actualizarEstadisticas();
     }, 300);
     
-    // Configurar autofocus en login
     setTimeout(() => {
         const adminUsername = document.getElementById('adminUsername');
-        if (adminUsername && !adminSession) {
+        if (adminUsername && !sesionAdmin) {
             adminUsername.focus();
         }
     }, 100);
 }
 
 // Mostrar sección
-function showSection(section) {
-    // Ocultar todas las secciones
+function mostrarSeccion(seccion) {
     document.querySelectorAll('.admin-section').forEach(sec => {
         sec.classList.remove('active');
     });
     
-    // Mostrar la sección seleccionada
-    const targetSection = document.getElementById(section + 'Section');
-    if (targetSection) {
-        targetSection.classList.add('active');
+    const seccionObjetivo = document.getElementById(seccion + 'Section');
+    if (seccionObjetivo) {
+        seccionObjetivo.classList.add('active');
     }
 }
 
-// Cargar usuarios y actualizar estadísticas
-// Variables para las tablas
-let todosUsuarios = [];
-let todosConductores = [];
-let filtroActual = 'all';
-let filtrosColumnas = ['', '', '', ''];
-let filtrosColumnasConductores = ['', '', '', '', '', '', ''];
+// Ocultar todas las tablas
+function ocultarTodasLasTablas() {
+    document.getElementById('tablaEstudiantes').style.display = 'none';
+    document.getElementById('tablaTrabajadores').style.display = 'none';
+    document.getElementById('tablaConductores').style.display = 'none';
+    document.getElementById('tablaTodosUsuarios').style.display = 'none';
+}
 
-// Modificar la función loadUsers para usar la tabla
-function loadUsers() {
+// Cargar usuarios y actualizar estadísticas
+function cargarUsuarios() {
     console.log('Cargando usuarios...');
     
     try {
         const usuariosDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
-        const todosLosUsuarios = Object.values(usuariosDB).map(usuario => ({
+        todosUsuarios = Object.values(usuariosDB).map(usuario => ({
             ...usuario,
             id: usuario.cedula
         }));
         
-        // Separar conductores del resto
-        todosConductores = todosLosUsuarios.filter(usuario => usuario.tipo === 'conductor');
-        todosUsuarios = todosLosUsuarios.filter(usuario => usuario.tipo !== 'conductor');
+        // Separar por tipo
+        estudiantes = todosUsuarios.filter(usuario => usuario.tipo === 'estudiante');
+        trabajadores = todosUsuarios.filter(usuario => usuario.tipo === 'trabajador' || usuario.tipo === 'obrero');
+        conductores = todosUsuarios.filter(usuario => usuario.tipo === 'conductor');
         
-        console.log(`Se cargaron ${todosUsuarios.length} usuarios y ${todosConductores.length} conductores`);
+        console.log(`Se cargaron: ${estudiantes.length} estudiantes, ${trabajadores.length} trabajadores, ${conductores.length} conductores`);
         
-        // Actualizar estadísticas
-        updateStats();
+        actualizarEstadisticas();
         
-        // Solo renderizar si los elementos existen
-        if (document.getElementById('usersTableBody') && document.getElementById('conductoresTableBody')) {
-            // Renderizar tabla según el filtro actual
-            if (filtroActual === 'conductor') {
-                renderConductoresTable(todosConductores);
-            } else {
-                renderUsersTable(todosUsuarios);
+        // Renderizar tabla según el filtro actual
+        if (document.getElementById('cuerpoTablaEstudiantes')) {
+            switch(filtroActual) {
+                case 'estudiante':
+                    renderizarTablaEstudiantes(estudiantes);
+                    break;
+                case 'trabajador':
+                    renderizarTablaTrabajadores(trabajadores);
+                    break;
+                case 'conductor':
+                    renderizarTablaConductores(conductores);
+                    break;
+                case 'todos':
+                    renderizarTablaTodosUsuarios(todosUsuarios);
+                    break;
             }
         }
         
     } catch (error) {
         console.error('Error al cargar usuarios:', error);
         todosUsuarios = [];
-        todosConductores = [];
+        estudiantes = [];
+        trabajadores = [];
+        conductores = [];
         
-        // Solo intentar renderizar si los elementos existen
-        if (document.getElementById('usersTableBody')) {
-            renderUsersTable([]);
-        }
-        if (document.getElementById('conductoresTableBody')) {
-            renderConductoresTable([]);
-        }
+        renderizarTablaEstudiantes([]);
+        renderizarTablaTrabajadores([]);
+        renderizarTablaConductores([]);
+        renderizarTablaTodosUsuarios([]);
     }
 }
 
-// Función para renderizar tabla de usuarios (sin conductores)
-function renderUsersTable(usuarios) {
-    const tbody = document.getElementById('usersTableBody');
-    const contadorResultados = document.getElementById('resultsCount');
-    const tablaUsuarios = document.getElementById('tableUsuarios');
-    const tablaConductores = document.getElementById('tableConductores');
+// Función para renderizar tabla de estudiantes
+function renderizarTablaEstudiantes(estudiantes) {
+    const cuerpoTabla = document.getElementById('cuerpoTablaEstudiantes');
+    const contadorResultados = document.getElementById('contadorResultadosEstudiantes');
+    const tablaEstudiantes = document.getElementById('tablaEstudiantes');
     
-    if (!tbody || !tablaUsuarios || !tablaConductores) {
+    if (!cuerpoTabla || !tablaEstudiantes) {
         console.error('Elementos de la tabla no encontrados');
         return;
     }
     
-    // Mostrar tabla de usuarios y ocultar tabla de conductores
-    tablaUsuarios.style.display = 'block';
-    tablaConductores.style.display = 'none';
+    // Ocultar todas las tablas primero
+    ocultarTodasLasTablas();
+    tablaEstudiantes.style.display = 'block';
     
-    if (usuarios.length === 0) {
-        tbody.innerHTML = `
+    // Aplicar filtros
+    estudiantes = aplicarFiltrosEstudiantes(estudiantes);
+    
+    if (estudiantes.length === 0) {
+        cuerpoTabla.innerHTML = `
             <tr>
-                <td colspan="5" class="no-users">
-                    <i class="fas fa-user-slash"></i>
-                    <h3>No hay usuarios registrados</h3>
-                    <p>Crea nuevos usuarios desde el sistema principal</p>
+                <td colspan="7" class="no-users">
+                    <i class="fas fa-user-graduate"></i>
+                    <h3>No hay estudiantes registrados</h3>
+                    <p>Registra nuevos estudiantes desde el sistema principal</p>
                 </td>
             </tr>
         `;
         
         if (contadorResultados) {
-            contadorResultados.innerHTML = `Mostrando <strong>0</strong> de <strong>0</strong> usuarios`;
+            contadorResultados.innerHTML = `Mostrando <strong>0</strong> de <strong>0</strong> estudiantes`;
         }
         return;
     }
     
-    tbody.innerHTML = '';
+    cuerpoTabla.innerHTML = '';
     
-    usuarios.forEach(usuario => {
+    estudiantes.forEach(estudiante => {
         const fila = document.createElement('tr');
         
-        // Icono según tipo
-        let iconoTipo = 'fas fa-user';
-        if (usuario.tipo === 'estudiante') iconoTipo = 'fas fa-user-graduate';
-        if (usuario.tipo === 'obrero') iconoTipo = 'fas fa-hard-hat';
-        
-        // Clase para el tipo
-        const claseTipo = `type-${usuario.tipo}`;
+        // Icono y tipo
+        const iconoTipo = 'fas fa-user-graduate';
+        const claseTipo = 'type-estudiante';
         
         // Estado
-        const estado = usuario.activo ? 'Activo' : 'Inactivo';
-        const claseEstado = usuario.activo ? 'status-active' : 'status-inactive';
+        const estado = estudiante.activo ? 'Activo' : 'Inactivo';
+        const claseEstado = estudiante.activo ? 'status-active' : 'status-inactive';
+        
+        // Carrera (si no existe, mostrar "No especificada")
+        const carrera = estudiante.carrera || 'No especificada';
+        
+        // Ruta elegida (si no existe, mostrar "No asignada")
+        const ruta = estudiante.rutaNombre || estudiante.ruta || 'No asignada';
         
         fila.innerHTML = `
             <td>
                 <span class="user-type ${claseTipo}">
                     <i class="${iconoTipo}"></i>
-                    ${usuario.tipo}
+                    Estudiante
                 </span>
             </td>
-            <td>${usuario.cedula}</td>
+            <td>${estudiante.cedula}</td>
             <td>
-                <strong>${usuario.nombre} ${usuario.apellido}</strong>
-                ${usuario.detalles ? `<br><small style="color: #666; font-size: 12px;">${usuario.detalles}</small>` : ''}
+                <strong>${estudiante.nombre} ${estudiante.apellido}</strong>
             </td>
+            <td>${carrera}</td>
+            <td>${ruta}</td>
             <td>
                 <span class="user-status ${claseEstado}">${estado}</span>
             </td>
             <td>
-                <button class="btn-delete" onclick="eliminarUsuario('${usuario.cedula}')">
+                <button class="btn-edit" onclick="editarUsuario('${estudiante.cedula}')">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button class="btn-delete" onclick="eliminarUsuario('${estudiante.cedula}')">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
             </td>
         `;
         
-        tbody.appendChild(fila);
+        cuerpoTabla.appendChild(fila);
     });
     
     if (contadorResultados) {
-        contadorResultados.innerHTML = `Mostrando <strong>${usuarios.length}</strong> de <strong>${todosUsuarios.length}</strong> usuarios`;
+        contadorResultados.innerHTML = `Mostrando <strong>${estudiantes.length}</strong> de <strong>${estudiantes.length}</strong> estudiantes`;
+    }
+}
+
+// Función para renderizar tabla de trabajadores
+function renderizarTablaTrabajadores(trabajadores) {
+    const cuerpoTabla = document.getElementById('cuerpoTablaTrabajadores');
+    const contadorResultados = document.getElementById('contadorResultadosTrabajadores');
+    const tablaTrabajadores = document.getElementById('tablaTrabajadores');
+    
+    if (!cuerpoTabla || !tablaTrabajadores) {
+        console.error('Elementos de la tabla no encontrados');
+        return;
+    }
+    
+    ocultarTodasLasTablas();
+    tablaTrabajadores.style.display = 'block';
+    
+    // Aplicar filtros
+    trabajadores = aplicarFiltrosTrabajadores(trabajadores);
+    
+    if (trabajadores.length === 0) {
+        cuerpoTabla.innerHTML = `
+            <tr>
+                <td colspan="8" class="no-users">
+                    <i class="fas fa-briefcase"></i>
+                    <h3>No hay trabajadores registrados</h3>
+                    <p>Registra nuevos trabajadores desde el sistema principal</p>
+                </td>
+            </tr>
+        `;
+        
+        if (contadorResultados) {
+            contadorResultados.innerHTML = `Mostrando <strong>0</strong> de <strong>0</strong> trabajadores`;
+        }
+        return;
+    }
+    
+    cuerpoTabla.innerHTML = '';
+    
+    trabajadores.forEach(trabajador => {
+        const fila = document.createElement('tr');
+        
+        // Icono y tipo
+        const iconoTipo = 'fas fa-briefcase';
+        const claseTipo = 'type-obrero';
+        
+        // Estado
+        const estado = trabajador.activo ? 'Activo' : 'Inactivo';
+        const claseEstado = trabajador.activo ? 'status-active' : 'status-inactive';
+        
+        // Condición y cargo
+        const condicion = trabajador.condicion || 'No especificada';
+        const cargo = trabajador.cargo || 'No especificado';
+        
+        // Ruta elegida
+        const ruta = trabajador.rutaNombre || trabajador.ruta || 'No asignada';
+        
+        fila.innerHTML = `
+            <td>
+                <span class="user-type ${claseTipo}">
+                    <i class="${iconoTipo}"></i>
+                    Trabajador
+                </span>
+            </td>
+            <td>${trabajador.cedula}</td>
+            <td>
+                <strong>${trabajador.nombre} ${trabajador.apellido}</strong>
+            </td>
+            <td>${condicion}</td>
+            <td>${cargo}</td>
+            <td>${ruta}</td>
+            <td>
+                <span class="user-status ${claseEstado}">${estado}</span>
+            </td>
+            <td>
+                <button class="btn-edit" onclick="editarUsuario('${trabajador.cedula}')">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button class="btn-delete" onclick="eliminarUsuario('${trabajador.cedula}')">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </td>
+        `;
+        
+        cuerpoTabla.appendChild(fila);
+    });
+    
+    if (contadorResultados) {
+        contadorResultados.innerHTML = `Mostrando <strong>${trabajadores.length}</strong> de <strong>${trabajadores.length}</strong> trabajadores`;
     }
 }
 
 // Función para renderizar tabla de conductores
-function renderConductoresTable(conductores) {
-    const tbody = document.getElementById('conductoresTableBody');
-    const contadorResultados = document.getElementById('conductoresResultsCount');
-    const tablaUsuarios = document.getElementById('tableUsuarios');
-    const tablaConductores = document.getElementById('tableConductores');
+function renderizarTablaConductores(conductores) {
+    const cuerpoTabla = document.getElementById('cuerpoTablaConductores');
+    const contadorResultados = document.getElementById('contadorResultadosConductores');
+    const tablaConductores = document.getElementById('tablaConductores');
     
-    if (!tbody || !tablaUsuarios || !tablaConductores) {
-        console.error('Elementos de la tabla de conductores no encontrados');
+    if (!cuerpoTabla || !tablaConductores) {
+        console.error('Elementos de la tabla no encontrados');
         return;
     }
     
-    // Mostrar tabla de conductores y ocultar tabla de usuarios
-    tablaUsuarios.style.display = 'none';
+    ocultarTodasLasTablas();
     tablaConductores.style.display = 'block';
     
+    // Aplicar filtros
+    conductores = aplicarFiltrosConductores(conductores);
+    
     if (conductores.length === 0) {
-        tbody.innerHTML = `
+        cuerpoTabla.innerHTML = `
             <tr>
-                <td colspan="8" class="no-users">
+                <td colspan="9" class="no-users"> <!-- Cambiado de 10 a 9 columnas -->
                     <i class="fas fa-bus"></i>
                     <h3>No hay conductores registrados</h3>
                     <p>Presiona "Nuevo Conductor" para registrar uno</p>
@@ -317,7 +436,7 @@ function renderConductoresTable(conductores) {
         return;
     }
     
-    tbody.innerHTML = '';
+    cuerpoTabla.innerHTML = '';
     
     conductores.forEach(conductor => {
         const fila = document.createElement('tr');
@@ -336,14 +455,12 @@ function renderConductoresTable(conductores) {
               ).join(' ')
             : '<span class="badge-turnos">No asignado</span>';
         
-        // Información de unidad
-        const unidadInfo = conductor.unidad 
-            ? `<span class="badge-unidad">${conductor.unidad.nombre.split(' - ')[0]}</span>`
-            : '<span class="badge-unidad">No asignada</span>';
-        
         // Estado
         const estado = conductor.activo ? 'Activo' : 'Inactivo';
         const claseEstado = conductor.activo ? 'status-active' : 'status-inactive';
+        
+        // Ruta asignada
+        const ruta = conductor.rutaNombre || conductor.ruta || 'No asignada';
         
         fila.innerHTML = `
             <td>
@@ -355,11 +472,10 @@ function renderConductoresTable(conductores) {
             <td>${conductor.cedula}</td>
             <td>
                 <strong>${conductor.nombre} ${conductor.apellido}</strong>
-                <br><small style="color: #666; font-size: 11px;">${conductor.rutaNombre || ''}</small>
             </td>
+            <td>${ruta}</td>
             <td>${diasFormateados}</td>
             <td>${turnosFormateados}</td>
-            <td>${unidadInfo}</td>
             <td>
                 <span class="user-status ${claseEstado}">${estado}</span>
             </td>
@@ -373,134 +489,151 @@ function renderConductoresTable(conductores) {
             </td>
         `;
         
-        tbody.appendChild(fila);
+        cuerpoTabla.appendChild(fila);
     });
     
     if (contadorResultados) {
-        contadorResultados.innerHTML = `Mostrando <strong>${conductores.length}</strong> de <strong>${todosConductores.length}</strong> conductores`;
+        contadorResultados.innerHTML = `Mostrando <strong>${conductores.length}</strong> de <strong>${conductores.length}</strong> conductores`;
     }
 }
 
-// Filtrar usuarios por tipo
-function filterUsersByType(tipo) {
-    console.log(`Filtrando por tipo: ${tipo}`);
+// Función para renderizar tabla de todos los usuarios
+function renderizarTablaTodosUsuarios(usuarios) {
+    const cuerpoTabla = document.getElementById('cuerpoTablaTodosUsuarios');
+    const contadorResultados = document.getElementById('contadorResultadosTodos');
+    const tablaTodosUsuarios = document.getElementById('tablaTodosUsuarios');
     
-    // Pequeño retraso para asegurar que el DOM esté listo
-    setTimeout(() => {
-        // Verificar que los elementos existan antes de proceder
-        const tablaUsuarios = document.getElementById('tableUsuarios');
-        const tablaConductores = document.getElementById('tableConductores');
+    if (!cuerpoTabla || !tablaTodosUsuarios) {
+        console.error('Elementos de la tabla no encontrados');
+        return;
+    }
+    
+    ocultarTodasLasTablas();
+    tablaTodosUsuarios.style.display = 'block';
+    
+    // Aplicar filtros
+    usuarios = aplicarFiltrosTodos(usuarios);
+    
+    if (usuarios.length === 0) {
+        cuerpoTabla.innerHTML = `
+            <tr>
+                <td colspan="6" class="no-users">
+                    <i class="fas fa-users"></i>
+                    <h3>No hay usuarios registrados</h3>
+                    <p>Registra nuevos usuarios desde el sistema principal</p>
+                </td>
+            </tr>
+        `;
         
-        console.log('Tabla usuarios encontrada:', !!tablaUsuarios);
-        console.log('Tabla conductores encontrada:', !!tablaConductores);
+        if (contadorResultados) {
+            contadorResultados.innerHTML = `Mostrando <strong>0</strong> de <strong>0</strong> usuarios`;
+        }
+        return;
+    }
+    
+    cuerpoTabla.innerHTML = '';
+    
+    usuarios.forEach(usuario => {
+        const fila = document.createElement('tr');
         
-        if (!tablaUsuarios || !tablaConductores) {
-            console.error('Tablas no encontradas. IDs buscados: tableUsuarios, tableConductores');
-            console.error('Elementos actuales en el DOM:');
-            console.error('tableUsuarios:', document.getElementById('tableUsuarios'));
-            console.error('tableConductores:', document.getElementById('tableConductores'));
-            return;
+        // Determinar icono según tipo
+        let iconoTipo = 'fas fa-user';
+        let claseTipo = '';
+        let tipoTexto = '';
+        
+        if (usuario.tipo === 'estudiante') {
+            iconoTipo = 'fas fa-user-graduate';
+            claseTipo = 'type-estudiante';
+            tipoTexto = 'Estudiante';
+        } else if (usuario.tipo === 'trabajador' || usuario.tipo === 'obrero') {
+            iconoTipo = 'fas fa-briefcase';
+            claseTipo = 'type-obrero';
+            tipoTexto = 'Trabajador';
+        } else if (usuario.tipo === 'conductor') {
+            iconoTipo = 'fas fa-user-tie';
+            claseTipo = 'type-conductor';
+            tipoTexto = 'Conductor';
         }
         
-        filtroActual = tipo;
+        // Estado
+        const estado = usuario.activo ? 'Activo' : 'Inactivo';
+        const claseEstado = usuario.activo ? 'status-active' : 'status-inactive';
         
-        // Resaltar el stat seleccionado
-        document.querySelectorAll('.stat-card').forEach(card => {
-            if (card && card.style) {
-                card.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
-            }
-        });
+        // Ruta elegida
+        const ruta = usuario.rutaNombre || usuario.ruta || 'No asignada';
         
-        if (tipo !== 'all') {
-            // Buscar la tarjeta que contiene el onclick con este tipo
-            const tarjetas = document.querySelectorAll('.stat-card');
-            let tarjetaSeleccionada = null;
-            
-            tarjetas.forEach(tarjeta => {
-                const onclickAttr = tarjeta.getAttribute('onclick');
-                if (onclickAttr && onclickAttr.includes(tipo)) {
-                    tarjetaSeleccionada = tarjeta;
-                }
-            });
-            
-            if (tarjetaSeleccionada && tarjetaSeleccionada.style) {
-                tarjetaSeleccionada.style.boxShadow = '0 0 0 3px rgba(26, 42, 108, 0.2)';
-            }
+        // Botones de acción según tipo
+        let acciones = '';
+        if (usuario.tipo === 'conductor') {
+            acciones = `
+                <button class="btn-edit" onclick="editarConductor('${usuario.cedula}')">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button class="btn-delete" onclick="eliminarConductor('${usuario.cedula}')">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            `;
         } else {
-            const tarjetaTotal = document.getElementById('total-users');
-            if (tarjetaTotal && tarjetaTotal.style) {
-                tarjetaTotal.style.boxShadow = '0 0 0 3px rgba(26, 42, 108, 0.2)';
-            }
+            acciones = `
+                <button class="btn-edit" onclick="editarUsuario('${usuario.cedula}')">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button class="btn-delete" onclick="eliminarUsuario('${usuario.cedula}')">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            `;
         }
         
-        console.log('Filtro actual:', filtroActual);
-        console.log('Todos usuarios:', todosUsuarios.length);
-        console.log('Todos conductores:', todosConductores.length);
+        fila.innerHTML = `
+            <td>
+                <span class="user-type ${claseTipo}">
+                    <i class="${iconoTipo}"></i>
+                    ${tipoTexto}
+                </span>
+            </td>
+            <td>${usuario.cedula}</td>
+            <td>
+                <strong>${usuario.nombre} ${usuario.apellido}</strong>
+            </td>
+            <td>${ruta}</td>
+            <td>
+                <span class="user-status ${claseEstado}">${estado}</span>
+            </td>
+            <td>${acciones}</td>
+        `;
         
-        if (tipo === 'conductor') {
-            // Mostrar conductores
-            let conductoresFiltrados = todosConductores;
-            console.log('Conductores antes de filtros:', conductoresFiltrados.length);
-            conductoresFiltrados = aplicarFiltrosColumnasConductores(conductoresFiltrados);
-            console.log('Conductores después de filtros:', conductoresFiltrados.length);
-            renderConductoresTable(conductoresFiltrados);
-        } else if (tipo === 'all') {
-            // Mostrar todos los usuarios (excepto conductores)
-            let usuariosFiltrados = todosUsuarios;
-            console.log('Usuarios antes de filtros:', usuariosFiltrados.length);
-            usuariosFiltrados = aplicarFiltrosColumnas(usuariosFiltrados);
-            console.log('Usuarios después de filtros:', usuariosFiltrados.length);
-            renderUsersTable(usuariosFiltrados);
-        } else {
-            // Mostrar por tipo específico (estudiante, obrero)
-            let usuariosFiltrados = todosUsuarios.filter(usuario => usuario.tipo === tipo);
-            console.log(`Usuarios tipo ${tipo}:`, usuariosFiltrados.length);
-            usuariosFiltrados = aplicarFiltrosColumnas(usuariosFiltrados);
-            renderUsersTable(usuariosFiltrados);
-        }
-    }, 100); // Pequeño retraso para asegurar que el DOM esté listo
+        cuerpoTabla.appendChild(fila);
+    });
+    
+    if (contadorResultados) {
+        contadorResultados.innerHTML = `Mostrando <strong>${usuarios.length}</strong> de <strong>${todosUsuarios.length}</strong> usuarios`;
+    }
 }
 
-// Filtrar por columna en tabla de usuarios
-function filterColumn(input) {
-    const indiceColumna = parseInt(input.dataset.column);
-    const valor = input.value.toLowerCase();
+// Funciones de filtrado
+function aplicarFiltrosEstudiantes(estudiantes) {
+    let filtrados = [...estudiantes];
     
-    filtrosColumnas[indiceColumna] = valor;
-    
-    aplicarTodosLosFiltros();
-}
-
-// Filtrar por columna en tabla de conductores
-function filterConductorColumn(input) {
-    const indiceColumna = parseInt(input.dataset.column);
-    const valor = input.value.toLowerCase();
-    
-    filtrosColumnasConductores[indiceColumna] = valor;
-    
-    aplicarTodosLosFiltrosConductores();
-}
-
-// Aplicar filtros de columna para usuarios
-function aplicarFiltrosColumnas(usuarios) {
-    let filtrados = [...usuarios];
-    
-    filtrosColumnas.forEach((filtro, indice) => {
+    filtrosEstudiantes.forEach((filtro, indice) => {
         if (filtro.trim() === '') return;
         
-        filtrados = filtrados.filter(usuario => {
+        filtrados = filtrados.filter(estudiante => {
             switch(indice) {
-                case 0: // Tipo
-                    return usuario.tipo.toLowerCase().includes(filtro);
+                case 0: // Tipo (siempre "estudiante")
+                    return 'estudiante'.includes(filtro);
                 case 1: // Cédula
-                    return usuario.cedula.toLowerCase().includes(filtro);
+                    return estudiante.cedula.toLowerCase().includes(filtro);
                 case 2: // Nombre
-                    const nombreCompleto = `${usuario.nombre} ${usuario.apellido}`.toLowerCase();
-                    return nombreCompleto.includes(filtro) || 
-                           usuario.nombre.toLowerCase().includes(filtro) || 
-                           usuario.apellido.toLowerCase().includes(filtro);
-                case 3: // Estado
-                    const estado = usuario.activo ? 'activo' : 'inactivo';
+                    const nombreCompleto = `${estudiante.nombre} ${estudiante.apellido}`.toLowerCase();
+                    return nombreCompleto.includes(filtro);
+                case 3: // Carrera
+                    const carrera = estudiante.carrera || 'No especificada';
+                    return carrera.toLowerCase().includes(filtro);
+                case 4: // Ruta
+                    const ruta = estudiante.rutaNombre || estudiante.ruta || 'No asignada';
+                    return ruta.toLowerCase().includes(filtro);
+                case 5: // Estado
+                    const estado = estudiante.activo ? 'activo' : 'inactivo';
                     return estado.includes(filtro);
                 default:
                     return true;
@@ -511,11 +644,46 @@ function aplicarFiltrosColumnas(usuarios) {
     return filtrados;
 }
 
-// Aplicar filtros de columna para conductores
-function aplicarFiltrosColumnasConductores(conductores) {
+function aplicarFiltrosTrabajadores(trabajadores) {
+    let filtrados = [...trabajadores];
+    
+    filtrosTrabajadores.forEach((filtro, indice) => {
+        if (filtro.trim() === '') return;
+        
+        filtrados = filtrados.filter(trabajador => {
+            switch(indice) {
+                case 0: // Tipo (siempre "trabajador")
+                    return 'trabajador'.includes(filtro) || 'obrero'.includes(filtro);
+                case 1: // Cédula
+                    return trabajador.cedula.toLowerCase().includes(filtro);
+                case 2: // Nombre
+                    const nombreCompleto = `${trabajador.nombre} ${trabajador.apellido}`.toLowerCase();
+                    return nombreCompleto.includes(filtro);
+                case 3: // Condición
+                    const condicion = trabajador.condicion || 'No especificada';
+                    return condicion.toLowerCase().includes(filtro);
+                case 4: // Cargo
+                    const cargo = trabajador.cargo || 'No especificado';
+                    return cargo.toLowerCase().includes(filtro);
+                case 5: // Ruta
+                    const ruta = trabajador.rutaNombre || trabajador.ruta || 'No asignada';
+                    return ruta.toLowerCase().includes(filtro);
+                case 6: // Estado
+                    const estado = trabajador.activo ? 'activo' : 'inactivo';
+                    return estado.includes(filtro);
+                default:
+                    return true;
+            }
+        });
+    });
+    
+    return filtrados;
+}
+
+function aplicarFiltrosConductores(conductores) {
     let filtrados = [...conductores];
     
-    filtrosColumnasConductores.forEach((filtro, indice) => {
+    filtrosConductores.forEach((filtro, indice) => {
         if (filtro.trim() === '') return;
         
         filtrados = filtrados.filter(conductor => {
@@ -526,25 +694,21 @@ function aplicarFiltrosColumnasConductores(conductores) {
                     return conductor.cedula.toLowerCase().includes(filtro);
                 case 2: // Nombre
                     const nombreCompleto = `${conductor.nombre} ${conductor.apellido}`.toLowerCase();
-                    return nombreCompleto.includes(filtro) || 
-                           conductor.nombre.toLowerCase().includes(filtro) || 
-                           conductor.apellido.toLowerCase().includes(filtro);
-                case 3: // Días
+                    return nombreCompleto.includes(filtro);
+                case 3: // Ruta
+                    const ruta = conductor.rutaNombre || conductor.ruta || 'No asignada';
+                    return ruta.toLowerCase().includes(filtro);
+                case 4: // Días
                     const dias = Array.isArray(conductor.diasTrabajo) 
                         ? conductor.diasTrabajo.join(' ').toLowerCase()
                         : '';
                     return dias.includes(filtro);
-                case 4: // Turno
+                case 5: // Turno
                     const turnos = Array.isArray(conductor.turnos) 
                         ? conductor.turnos.join(' ').toLowerCase()
                         : '';
                     return turnos.includes(filtro);
-                case 5: // Unidad Bus
-                    const unidad = conductor.unidad 
-                        ? conductor.unidad.nombre.toLowerCase()
-                        : '';
-                    return unidad.includes(filtro);
-                case 6: // Estado
+                case 6: // Estado (antes era 7, ahora es 6)
                     const estado = conductor.activo ? 'activo' : 'inactivo';
                     return estado.includes(filtro);
                 default:
@@ -556,100 +720,192 @@ function aplicarFiltrosColumnasConductores(conductores) {
     return filtrados;
 }
 
-// Aplicar todos los filtros para usuarios
-function aplicarTodosLosFiltros() {
-    if (filtroActual === 'conductor') {
-        // Si estamos viendo conductores, usar su lógica de filtros
-        let conductoresFiltrados = todosConductores;
-        conductoresFiltrados = aplicarFiltrosColumnasConductores(conductoresFiltrados);
-        renderConductoresTable(conductoresFiltrados);
-        return;
-    }
+function aplicarFiltrosTodos(usuarios) {
+    let filtrados = [...usuarios];
     
-    let usuariosFiltrados = todosUsuarios;
-    
-    // Filtro por tipo
-    if (filtroActual !== 'all') {
-        usuariosFiltrados = usuariosFiltrados.filter(usuario => usuario.tipo === filtroActual);
-    }
-    
-    // Filtros por columna
-    usuariosFiltrados = aplicarFiltrosColumnas(usuariosFiltrados);
-    
-    renderUsersTable(usuariosFiltrados);
-}
-
-// Aplicar todos los filtros para conductores
-function aplicarTodosLosFiltrosConductores() {
-    let conductoresFiltrados = todosConductores;
-    
-    // Filtros por columna
-    conductoresFiltrados = aplicarFiltrosColumnasConductores(conductoresFiltrados);
-    
-    renderConductoresTable(conductoresFiltrados);
-}
-
-// Limpiar todos los filtros de usuarios
-function clearFilters() {
-    filtroActual = 'all';
-    filtrosColumnas = ['', '', '', ''];
-    
-    // Limpiar inputs de filtros
-    document.querySelectorAll('.column-filter').forEach(input => {
-        if (input.tagName === 'INPUT') {
-            input.value = '';
-        } else if (input.tagName === 'SELECT') {
-            input.value = '';
-        }
+    filtrosTodos.forEach((filtro, indice) => {
+        if (filtro.trim() === '') return;
+        
+        filtrados = filtrados.filter(usuario => {
+            switch(indice) {
+                case 0: // Tipo
+                    const tipo = usuario.tipo === 'obrero' ? 'trabajador' : usuario.tipo;
+                    return tipo.includes(filtro);
+                case 1: // Cédula
+                    return usuario.cedula.toLowerCase().includes(filtro);
+                case 2: // Nombre
+                    const nombreCompleto = `${usuario.nombre} ${usuario.apellido}`.toLowerCase();
+                    return nombreCompleto.includes(filtro);
+                case 3: // Ruta
+                    const ruta = usuario.rutaNombre || usuario.ruta || 'No asignada';
+                    return ruta.toLowerCase().includes(filtro);
+                case 4: // Estado
+                    const estado = usuario.activo ? 'activo' : 'inactivo';
+                    return estado.includes(filtro);
+                default:
+                    return true;
+            }
+        });
     });
     
-    // Quitar resaltado de stats
+    return filtrados;
+}
+
+// Filtrar usuarios por tipo
+function filtrarUsuariosPorTipo(tipo) {
+    console.log(`Filtrando por tipo: ${tipo}`);
+    
+    filtroActual = tipo;
+    
+    // Mostrar u ocultar el botón "Nuevo Conductor"
+    const accionesConductor = document.getElementById('accionesConductor');
+    if (accionesConductor) {
+        if (tipo === 'conductor') {
+            accionesConductor.style.display = 'flex';
+        } else {
+            accionesConductor.style.display = 'none';
+        }
+    }
+    
+    // Resaltar el stat seleccionado
     document.querySelectorAll('.stat-card').forEach(card => {
-        card.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
-    });
-    
-    renderUsersTable(todosUsuarios);
-}
-
-// Limpiar todos los filtros de conductores
-function clearConductoresFilters() {
-    filtrosColumnasConductores = ['', '', '', '', '', '', ''];
-    
-    // Limpiar inputs de filtros de conductores
-    document.querySelectorAll('.column-filter-conductor').forEach(input => {
-        if (input.tagName === 'INPUT') {
-            input.value = '';
-        } else if (input.tagName === 'SELECT') {
-            input.value = '';
+        if (card && card.style) {
+            card.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
         }
     });
     
-    renderConductoresTable(todosConductores);
+    // Buscar la tarjeta que contiene el onclick con este tipo
+    const tarjetas = document.querySelectorAll('.stat-card');
+    let tarjetaSeleccionada = null;
+    
+    tarjetas.forEach(tarjeta => {
+        const onclickAttr = tarjeta.getAttribute('onclick');
+        if (onclickAttr && onclickAttr.includes(tipo)) {
+            tarjetaSeleccionada = tarjeta;
+        }
+    });
+    
+    if (tarjetaSeleccionada && tarjetaSeleccionada.style) {
+        tarjetaSeleccionada.style.boxShadow = '0 0 0 3px rgba(26, 42, 108, 0.2)';
+    }
+    
+    setTimeout(() => {
+        switch(tipo) {
+            case 'estudiante':
+                renderizarTablaEstudiantes(estudiantes);
+                break;
+            case 'trabajador':
+                renderizarTablaTrabajadores(trabajadores);
+                break;
+            case 'conductor':
+                renderizarTablaConductores(conductores);
+                break;
+            case 'todos':
+                renderizarTablaTodosUsuarios(todosUsuarios);
+                break;
+        }
+    }, 100);
+}
+
+// Filtrar por columna en tabla de estudiantes
+function filtrarColumna(input) {
+    const indiceColumna = parseInt(input.dataset.columna);
+    const valor = input.value.toLowerCase();
+    
+    // Determinar qué tabla está activa
+    if (filtroActual === 'estudiante') {
+        filtrosEstudiantes[indiceColumna] = valor;
+        renderizarTablaEstudiantes(estudiantes);
+    } else if (filtroActual === 'trabajador') {
+        filtrosTrabajadores[indiceColumna] = valor;
+        renderizarTablaTrabajadores(trabajadores);
+    }
+}
+
+// Filtrar por columna en tabla de conductores
+function filtrarColumnaConductor(input) {
+    const indiceColumna = parseInt(input.dataset.columna);
+    const valor = input.value.toLowerCase();
+    
+    filtrosConductores[indiceColumna] = valor;
+    renderizarTablaConductores(conductores);
+}
+
+// Filtrar por columna en tabla de todos
+function filtrarColumnaTodos(input) {
+    const indiceColumna = parseInt(input.dataset.columna);
+    const valor = input.value.toLowerCase();
+    
+    filtrosTodos[indiceColumna] = valor;
+    renderizarTablaTodosUsuarios(todosUsuarios);
+}
+
+// Limpiar filtros de estudiantes/trabajadores
+function limpiarFiltros() {
+    if (filtroActual === 'estudiante') {
+        filtrosEstudiantes = ['', '', '', '', '', ''];
+        document.querySelectorAll('#tablaEstudiantes .filtro-columna').forEach(input => {
+            if (input.tagName === 'INPUT') input.value = '';
+            if (input.tagName === 'SELECT') input.value = '';
+        });
+        renderizarTablaEstudiantes(estudiantes);
+    } else if (filtroActual === 'trabajador') {
+        filtrosTrabajadores = ['', '', '', '', '', '', ''];
+        document.querySelectorAll('#tablaTrabajadores .filtro-columna').forEach(input => {
+            if (input.tagName === 'INPUT') input.value = '';
+            if (input.tagName === 'SELECT') input.value = '';
+        });
+        renderizarTablaTrabajadores(trabajadores);
+    }
+}
+
+// Limpiar filtros de conductores
+function limpiarFiltrosConductores() {
+    filtrosConductores = ['', '', '', '', '', '', '', ''];
+    document.querySelectorAll('#tablaConductores .filtro-columna-conductor').forEach(input => {
+        if (input.tagName === 'INPUT') input.value = '';
+        if (input.tagName === 'SELECT') input.value = '';
+    });
+    renderizarTablaConductores(conductores);
+}
+
+// Limpiar filtros de todos los usuarios
+function limpiarFiltrosTodos() {
+    filtrosTodos = ['', '', '', '', ''];
+    document.querySelectorAll('#tablaTodosUsuarios .filtro-columna-todos').forEach(input => {
+        if (input.tagName === 'INPUT') input.value = '';
+        if (input.tagName === 'SELECT') input.value = '';
+    });
+    renderizarTablaTodosUsuarios(todosUsuarios);
 }
 
 // Actualizar estadísticas
-function updateStats() {
-    const estudiantes = todosUsuarios.filter(u => u.tipo === 'estudiante').length;
-    const obreros = todosUsuarios.filter(u => u.tipo === 'obrero').length;
-    const conductores = todosConductores.length;
-    const totalUsuarios = estudiantes + obreros; // Total sin conductores
-    const totalGeneral = estudiantes + obreros + conductores;
+function actualizarEstadisticas() {
+    const totalEstudiantes = estudiantes.length;
+    const totalTrabajadores = trabajadores.length;
+    const totalConductores = conductores.length;
+    const totalGeneral = totalEstudiantes + totalTrabajadores + totalConductores;
     
-    // Actualizar solo si los elementos existen
-    const estudiantesEl = document.getElementById('estudiantesCount');
-    const obrerosEl = document.getElementById('obrerosCount');
-    const conductoresEl = document.getElementById('conductoresCount');
-    const totalEl = document.getElementById('totalUsers');
+    // Actualizar contadores
+    const estudiantesEl = document.getElementById('contadorEstudiantes');
+    const trabajadoresEl = document.getElementById('contadorTrabajadores');
+    const conductoresEl = document.getElementById('contadorConductores');
+    const totalEl = document.getElementById('totalUsuarios');
     
-    if (estudiantesEl) estudiantesEl.textContent = estudiantes;
-    if (obrerosEl) obrerosEl.textContent = obreros;
-    if (conductoresEl) conductoresEl.textContent = conductores;
-    if (totalEl) totalEl.textContent = totalUsuarios; // Mostrar solo usuarios sin conductores
+    if (estudiantesEl) estudiantesEl.textContent = totalEstudiantes;
+    if (trabajadoresEl) trabajadoresEl.textContent = totalTrabajadores;
+    if (conductoresEl) conductoresEl.textContent = totalConductores;
+    if (totalEl) totalEl.textContent = totalGeneral;
     
-    console.log('Estadísticas actualizadas:', { estudiantes, obreros, conductores, totalUsuarios, totalGeneral });
+    console.log('Estadísticas actualizadas:', { 
+        estudiantes: totalEstudiantes, 
+        trabajadores: totalTrabajadores, 
+        conductores: totalConductores, 
+        total: totalGeneral 
+    });
 }
 
-// Función para eliminar usuario (tabla usuario)
+// Eliminar usuario
 function eliminarUsuario(cedula) {
     if (!confirm(`¿Está seguro de eliminar al usuario con cédula ${cedula}?`)) {
         return;
@@ -658,7 +914,7 @@ function eliminarUsuario(cedula) {
     eliminarUsuarioPorCedula(cedula, false);
 }
 
-// Función para eliminar conductor
+// Eliminar conductor
 function eliminarConductor(cedula) {
     if (!confirm(`¿Está seguro de eliminar al conductor con cédula ${cedula}?`)) {
         return;
@@ -667,20 +923,64 @@ function eliminarConductor(cedula) {
     eliminarUsuarioPorCedula(cedula, true);
 }
 
-// Función para editar conductor (placeholder por ahora)
+// Función principal para eliminar usuario por cédula
+function eliminarUsuarioPorCedula(cedula, esConductor = false) {
+    console.log(`Eliminando usuario con cédula: ${cedula}, es conductor: ${esConductor}`);
+    
+    try {
+        let usuariosDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+        let encontrado = false;
+        
+        for (const [userId, usuario] of Object.entries(usuariosDB)) {
+            if (usuario.cedula === cedula) {
+                console.log('Usuario encontrado:', usuario);
+                
+                if (esConductor && usuario.tipo !== 'conductor') {
+                    mostrarNotificacion('El usuario no es un conductor', 'error');
+                    return;
+                }
+                
+                delete usuariosDB[userId];
+                encontrado = true;
+                break;
+            }
+        }
+        
+        if (!encontrado) {
+            mostrarNotificacion('Usuario no encontrado', 'error');
+            return;
+        }
+        
+        localStorage.setItem('unellez_users', JSON.stringify(usuariosDB));
+        mostrarNotificacion(`${esConductor ? 'Conductor' : 'Usuario'} eliminado exitosamente`, 'success');
+        
+        setTimeout(() => {
+            cargarUsuarios();
+        }, 500);
+        
+    } catch (error) {
+        console.error('Error al eliminar usuario:', error);
+        mostrarNotificacion('Error al eliminar el usuario', 'error');
+    }
+}
+
+// Editar usuario (placeholder)
+function editarUsuario(cedula) {
+    mostrarNotificacion(`Editar usuario ${cedula} - Funcionalidad en desarrollo`, 'info');
+}
+
+// Editar conductor (placeholder)
 function editarConductor(cedula) {
-    showNotification(`Editar conductor ${cedula} - Funcionalidad en desarrollo`, 'info');
-    // Aquí podrías abrir un modal de edición similar al de registro
-    // openEditConductorModal(cedula);
+    mostrarNotificacion(`Editar conductor ${cedula} - Funcionalidad en desarrollo`, 'info');
 }
 
 // Cargar rutas
-function loadRoutes() {
+function cargarRutas() {
     console.log('Cargando rutas...');
     
-    let routesDB;
+    let rutasDB;
     try {
-        routesDB = JSON.parse(localStorage.getItem('unellez_routes')) || {
+        rutasDB = JSON.parse(localStorage.getItem('unellez_routes')) || {
             ruta1: { nombre: "Ciudad Varyna", activa: true, capacidad: 40 },
             ruta2: { nombre: "Redoma Industrial", activa: true, capacidad: 35 },
             ruta3: { nombre: "Raúl Leoni", activa: true, capacidad: 45 },
@@ -688,7 +988,7 @@ function loadRoutes() {
         };
     } catch (error) {
         console.error('Error al cargar rutas:', error);
-        routesDB = {
+        rutasDB = {
             ruta1: { nombre: "Ciudad Varyna", activa: true, capacidad: 40 },
             ruta2: { nombre: "Redoma Industrial", activa: true, capacidad: 35 },
             ruta3: { nombre: "Raúl Leoni", activa: true, capacidad: 45 },
@@ -696,86 +996,110 @@ function loadRoutes() {
         };
     }
     
-    // Guardar rutas si no existen o hubo error
     try {
-        localStorage.setItem('unellez_routes', JSON.stringify(routesDB));
+        localStorage.setItem('unellez_routes', JSON.stringify(rutasDB));
     } catch (error) {
         console.error('Error al guardar rutas:', error);
     }
     
-    const routesList = document.getElementById('routesList');
-    routesList.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando rutas...</div>';
+    const listaRutas = document.getElementById('listaRutas');
+    if (!listaRutas) return;
+    
+    listaRutas.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando rutas...</div>';
     
     setTimeout(() => {
-        routesList.innerHTML = '';
+        listaRutas.innerHTML = '';
         
-        // Calcular capacidad total
-        let totalCapacity = 0;
-        let activeRoutes = 0;
+        let capacidadTotal = 0;
+        let rutasActivas = 0;
         
-        Object.keys(routesDB).forEach(routeKey => {
-            const route = routesDB[routeKey];
-            totalCapacity += route.capacidad || 0;
-            if (route.activa) activeRoutes++;
+        Object.keys(rutasDB).forEach(claveRuta => {
+            const ruta = rutasDB[claveRuta];
+            capacidadTotal += ruta.capacidad || 0;
+            if (ruta.activa) rutasActivas++;
             
-            const routeItem = document.createElement('div');
-            routeItem.className = 'route-item';
+            const elementoRuta = document.createElement('div');
+            elementoRuta.className = 'route-item';
             
-            routeItem.innerHTML = `
+            elementoRuta.innerHTML = `
                 <div class="route-info">
-                    <h4 style="color: #1a2a6c;"><i class="fas fa-route" style="color: #1a2a6c;"></i> ${routeKey.toUpperCase()} - ${route.nombre}</h4>
-                    <p style="color:#666;"><strong>unidad:</strong> ${route.capacidad} pasajeros</p>
-                    <p style="color:#666;"><strong>Estado:</strong> ${route.activa ? 'Activa' : 'Inactiva'}</p>
+                    <h4 style="color: #1a2a6c;"><i class="fas fa-route" style="color: #1a2a6c;"></i> ${claveRuta.toUpperCase()} - ${ruta.nombre}</h4>
+                    <p style="color:#666;"><strong>unidad:</strong> ${ruta.capacidad} pasajeros</p>
+                    <p style="color:#666;"><strong>Estado:</strong> ${ruta.activa ? 'Activa' : 'Inactiva'}</p>
                 </div>
                 <div class="route-actions">
-                    <button class="btn btn-small" onclick="editRoute('${routeKey}')">
+                    <button class="btn btn-small" onclick="editarRuta('${claveRuta}')">
                         <i class="fas fa-edit"></i> Editar
                     </button>
                 </div>
             `;
             
-            routesList.appendChild(routeItem);
+            listaRutas.appendChild(elementoRuta);
         });
         
         // Actualizar estadísticas de rutas
-        document.getElementById('totalRoutes').textContent = activeRoutes;
-        document.getElementById('totalCapacity').textContent = totalCapacity;
+        document.getElementById('totalRutas').textContent = rutasActivas;
+        document.getElementById('totalCapacidad').textContent = capacidadTotal;
+        
+        // Cargar rutas en los selects de las tablas
+        cargarRutasEnSelects(rutasDB);
     }, 500);
 }
 
-// Abrir formulario de ruta
-function openRouteForm() {
-    showNotification('Funcionalidad de edición de rutas - En desarrollo', 'info');
+// Cargar rutas en los selects de filtro
+function cargarRutasEnSelects(rutasDB) {
+    const selectsRutas = document.querySelectorAll('select.filtro-columna[data-columna="4"], select.filtro-columna[data-columna="5"], select.filtro-columna-conductor[data-columna="3"], select.filtro-columna-todos[data-columna="3"]');
+    
+    selectsRutas.forEach(select => {
+        // Limpiar opciones existentes (excepto la primera)
+        while (select.options.length > 1) {
+            select.remove(1);
+        }
+        
+        // Agregar opciones de rutas
+        Object.keys(rutasDB).forEach(claveRuta => {
+            const ruta = rutasDB[claveRuta];
+            if (ruta.activa) {
+                const opcion = document.createElement('option');
+                opcion.value = ruta.nombre;
+                opcion.textContent = ruta.nombre;
+                select.appendChild(opcion);
+            }
+        });
+    });
+}
+
+// Abrir formulario de ruta (placeholder)
+function abrirFormularioRuta() {
+    mostrarNotificacion('Funcionalidad de edición de rutas - En desarrollo', 'info');
 }
 
 // Cerrar sesión admin
-function logoutAdmin() {
+function cerrarSesionAdmin() {
     if (confirm('¿Está seguro que desea cerrar sesión?')) {
         localStorage.removeItem('admin_session');
-        adminSession = null;
-        showNotification('Sesión cerrada exitosamente', 'success');
+        sesionAdmin = null;
+        mostrarNotificacion('Sesión cerrada exitosamente', 'success');
         
         setTimeout(() => {
-            showLoginModal();
+            mostrarModalLogin();
         }, 1000);
     }
 }
 
 // Mostrar notificación
-function showNotification(message, type) {
-    // Remover notificaciones anteriores
-    const existingNotifications = document.querySelectorAll('.custom-notification');
-    existingNotifications.forEach(notification => notification.remove());
+function mostrarNotificacion(mensaje, tipo) {
+    const notificacionesExistentes = document.querySelectorAll('.custom-notification');
+    notificacionesExistentes.forEach(notificacion => notificacion.remove());
     
-    // Crear notificación visual
-    const notification = document.createElement('div');
-    notification.className = 'custom-notification';
-    notification.style.cssText = `
+    const notificacion = document.createElement('div');
+    notificacion.className = 'custom-notification';
+    notificacion.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
         padding: 15px 20px;
-        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#1a2a6c'};
+        background: ${tipo === 'success' ? '#28a745' : tipo === 'error' ? '#dc3545' : '#1a2a6c'};
         color: white;
         border-radius: 5px;
         z-index: 10000;
@@ -787,22 +1111,20 @@ function showNotification(message, type) {
         max-width: 400px;
     `;
     
-    // Añadir icono según tipo
-    let icon = 'fas fa-check-circle';
-    if (type === 'error') icon = 'fas fa-exclamation-circle';
-    if (type === 'info') icon = 'fas fa-info-circle';
+    let icono = 'fas fa-check-circle';
+    if (tipo === 'error') icono = 'fas fa-exclamation-circle';
+    if (tipo === 'info') icono = 'fas fa-info-circle';
     
-    notification.innerHTML = `
-        <i class="${icon}" style="margin-right: 10px;"></i>
-        ${message}
+    notificacion.innerHTML = `
+        <i class="${icono}" style="margin-right: 10px;"></i>
+        ${mensaje}
     `;
     
-    document.body.appendChild(notification);
+    document.body.appendChild(notificacion);
     
-    // Eliminar después de 3 segundos
     setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
+        if (notificacion.parentNode) {
+            notificacion.parentNode.removeChild(notificacion);
         }
     }, 3000);
 }
@@ -836,32 +1158,31 @@ if (!document.querySelector('#notification-styles')) {
 }
 
 // Función para editar ruta (placeholder)
-function editRoute(routeKey) {
-    showNotification(`Editar ruta ${routeKey} - Funcionalidad en desarrollo`, 'info');
+function editarRuta(claveRuta) {
+    mostrarNotificacion(`Editar ruta ${claveRuta} - Funcionalidad en desarrollo`, 'info');
 }
 
-//----------------------------------------
-//-----------------------------------------
-//MODAL REGISTRO NUEVO CONDUCTOR
-//----------------------------------------
-//----------------------------------------
+// ========================================
+// FUNCIONES DEL MODAL DE CONDUCTOR (sin cambios importantes)
+// ========================================
 
+let escanerQR = null;
+let escanerQRActivo = false;
+let datosUsuarioEscaneado = null;
+let scanner = null;
 
 // Abrir modal para registrar conductor
 function openDirectConductorModal() {
     document.getElementById('modalDirectConductor').classList.add('active');
     resetModalSteps();
     
-    // Limpiar datos anteriores
-    scannedUserData = null;
+    datosUsuarioEscaneado = null;
     document.getElementById('directConductorForm').reset();
     
-    // Iniciar en paso 1 (escaneo QR)
-    showStep('stepScanQR');
+    mostrarPaso('stepScanQR');
     
-    // Iniciar escáner QR con botones por defecto
     setTimeout(() => {
-        startQRScanner();
+        iniciarEscaneoQR();
     }, 100);
 }
 
@@ -869,82 +1190,63 @@ function openDirectConductorModal() {
 function closeDirectConductorModal() {
     console.log("Cerrando modal registro nuevo conductor");
 
-    const qrReaderDiv = document.getElementById('qr-reader');
-    if (qrReaderDiv) {
-        qrReaderDiv.innerHTML = '';
+    const contenedorQR = document.getElementById('qr-reader');
+    if (contenedorQR) {
+        contenedorQR.innerHTML = '';
         console.log("✅ Contenedor QR limpiado");
     }
     
-    // 3. Resetear variables
-    qrScannerActive = false;
-    scannedUserData = null;
+    escanerQRActivo = false;
+    datosUsuarioEscaneado = null;
     
-    // 4. Cerrar el modal
     const modal = document.getElementById('modalDirectConductor');
     if (modal) {
         modal.classList.remove('active');
         console.log("✅ Modal cerrado");
     }
     
-    // 5. Opcional: Limpiar formulario
-    const form = document.getElementById('directConductorForm');
-    if (form) {
-        form.reset();
+    const formulario = document.getElementById('directConductorForm');
+    if (formulario) {
+        formulario.reset();
     }
 }
 
 // Resetear pasos del modal
 function resetModalSteps() {
-    // Ocultar todos los pasos
-    document.querySelectorAll('.modal-step').forEach(step => {
-        step.style.display = 'none';
-        step.classList.remove('active');
+    document.querySelectorAll('.modal-step').forEach(paso => {
+        paso.style.display = 'none';
+        paso.classList.remove('active');
     });
 }
 
 // Mostrar un paso específico
-function showStep(stepId) {
+function mostrarPaso(idPaso) {
     resetModalSteps();
-    const step = document.getElementById(stepId);
-    if (step) {
-        step.style.display = 'block';
-        step.classList.add('active');
+    const paso = document.getElementById(idPaso);
+    if (paso) {
+        paso.style.display = 'block';
+        paso.classList.add('active');
     }
 }
 
-//=========================================
-// ===== ESCÁNER QR CON html5-qrcode =====
-//===========================================
-
-// Variables para el modal de conductor
-let html5QrCode = null;
-let qrScannerActive = false;
-let scannedUserData = null;
-
-
 // Iniciar escáner QR
-let scanner = null;
-
-
-function startQRScanner() {
-    // Configuración mínima que funciona
-    const config = {
+function iniciarEscaneoQR() {
+    const configuracion = {
         qrbox: { width: 250, height: 250 },
         fps: 10,
         supportedScanTypes: [
             Html5QrcodeScanType.SCAN_TYPE_CAMERA,
-            Html5QrcodeScanType.SCAN_TYPE_FILE  // ← ESTO ES LO MÁS IMPORTANTE
+            Html5QrcodeScanType.SCAN_TYPE_FILE
         ]
     };
     
-    // Crear y renderizar
-    scanner = new Html5QrcodeScanner('qr-reader', config);
+    scanner = new Html5QrcodeScanner('qr-reader', configuracion);
     
     scanner.render(
-        (decodedText) => {
-            console.log("QR:", decodedText);
+        (textoDecodificado) => {
+            console.log("QR:", textoDecodificado);
             if (scanner) scanner.clear();
-            processQRData(decodedText);
+            procesarDatosQR(textoDecodificado);
         },
         (error) => {
             console.log("Escaneando...", error);
@@ -959,24 +1261,23 @@ function stopQRScanner() {
     if (scanner) {
         console.log("🔍 Scanner encontrado, limpiando...");
         scanner.clear().then(() => {
-            qrScannerActive = false;
+            escanerQRActivo = false;
             scanner = null;
             console.log("✅ Scanner detenido correctamente");
         }).catch(err => {
             console.warn("⚠️ Advertencia al limpiar scanner:", err);
-            qrScannerActive = false;
+            escanerQRActivo = false;
             scanner = null;
         });
     } else {
         console.log("ℹ️ No hay scanner activo para detener");
-        qrScannerActive = false;
+        escanerQRActivo = false;
     }
     
-    // Limpiar también si usabas html5QrCode (por si acaso)
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-            html5QrCode.clear();
-            html5QrCode = null;
+    if (escanerQR) {
+        escanerQR.stop().then(() => {
+            escanerQR.clear();
+            escanerQR = null;
         }).catch(err => {
             console.warn("Error al detener html5QrCode:", err);
         });
@@ -985,254 +1286,172 @@ function stopQRScanner() {
 
 // Volver al escaneo
 function goBackToScan() {
-    showStep('stepScanQR');
-    startQRScanner();
+    mostrarPaso('stepScanQR');
+    iniciarEscaneoQR();
 }
 
-// ===== PROCESAMIENTO DE DATOS DEL QR =====
-
 // Procesar datos del QR
-function processQRData(qrData) {
+async function procesarDatosQR(datosQR) {
     try {
-        // En producción, aquí enviarías los datos al backend
-        // Por ahora simulamos una respuesta del backend
-        
-        // Simular petición al backend
-        validateQRWithBackend(qrData).then(backendData => {
-            // Guardar datos recibidos
-            scannedUserData = backendData;
-            
-            // Mostrar resumen de datos
-            showDataSummary(backendData);
-            
-            // Cargar opciones de ruta
-            loadRutasOptions();
-            
-            // Generar credenciales por defecto
-            generateDefaultCredentials();
-            
-            // Mostrar formulario
-            showStep('stepForm');
-            
+        validarQRConBackend(datosQR).then(datosBackend => {
+            datosUsuarioEscaneado = datosBackend;
+            mostrarResumenDatos(datosBackend);
+            cargarOpcionesRutas();
+            generarCredencialesPorDefecto();
+            mostrarPaso('stepForm');
         }).catch(error => {
             console.error("Error del backend:", error);
-            showNotification('Error al validar datos con el sistema', 'error');
+            mostrarNotificacion('Error al validar datos con el sistema', 'error');
         });
         
     } catch (error) {
         console.error("Error procesando QR:", error);
-        showNotification('Error al procesar el código QR', 'error');
+        mostrarNotificacion('Error al procesar el código QR', 'error');
     }
 }
 
 // Simular validación con backend
-async function validateQRWithBackend(qrData) {
-    // Simular delay de red
+async function validarQRConBackend(datosQR) {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     try {
-        // Intentar parsear como JSON
-        const parsedData = JSON.parse(qrData);
+        const datosParseados = JSON.parse(datosQR);
         
-        // Validar datos mínimos
-        if (!parsedData.cedula || !parsedData.nombre) {
+        if (!datosParseados.cedula || !datosParseados.nombre) {
             throw new Error("Datos incompletos en el QR");
         }
         
         return {
-            nombre: parsedData.nombre || '',
-            apellido: parsedData.apellido || '',
-            cedula: parsedData.cedula || '',
-            condicion: parsedData.condicion || 'Conductor',
-            cargo: parsedData.cargo || 'Conductor UNELLEZ',
+            nombre: datosParseados.nombre || '',
+            apellido: datosParseados.apellido || '',
+            cedula: datosParseados.cedula || '',
+            condicion: datosParseados.condicion || 'Conductor',
+            cargo: datosParseados.cargo || 'Conductor UNELLEZ',
             tipo: 'conductor'
         };
         
     } catch (error) {
-        // Si no es JSON, parsear como string simple
-        const parts = qrData.split('|');
+        const partes = datosQR.split('|');
         return {
-            nombre: parts[0] || '',
-            apellido: parts[1] || '',
-            cedula: parts[2] || '',
-            condicion: parts[3] || 'Conductor',
-            cargo: parts[4] || 'Conductor UNELLEZ',
+            nombre: partes[0] || '',
+            apellido: partes[1] || '',
+            cedula: partes[2] || '',
+            condicion: partes[3] || 'Conductor',
+            cargo: partes[4] || 'Conductor UNELLEZ',
             tipo: 'conductor'
         };
     }
 }
 
-// Mostrar resumen de datos EN FILAS
-function showDataSummary(userData) {
-    const summaryGrid = document.getElementById('summaryGrid');
+// Mostrar resumen de datos
+function mostrarResumenDatos(datosUsuario) {
+    const resumenGrid = document.getElementById('summaryGrid');
     
-    summaryGrid.innerHTML = `
+    resumenGrid.innerHTML = `
         <div class="summary-row">
             <div class="summary-label"><i class="fas fa-user"></i> Nombre Completo:</div>
-            <div class="summary-value">${userData.nombre} ${userData.apellido}</div>
+            <div class="summary-value">${datosUsuario.nombre} ${datosUsuario.apellido}</div>
         </div>
         <div class="summary-row">
             <div class="summary-label"><i class="fas fa-id-card"></i> Cédula:</div>
-            <div class="summary-value">${userData.cedula}</div>
+            <div class="summary-value">${datosUsuario.cedula}</div>
         </div>
         <div class="summary-row">
             <div class="summary-label"><i class="fas fa-user-tag"></i> Condición:</div>
-            <div class="summary-value">${userData.condicion}</div>
+            <div class="summary-value">${datosUsuario.condicion}</div>
         </div>
         <div class="summary-row">
             <div class="summary-label"><i class="fas fa-briefcase"></i> Cargo:</div>
-            <div class="summary-value">${userData.cargo}</div>
+            <div class="summary-value">${datosUsuario.cargo}</div>
         </div>
     `;
 }
 
-//====================================
-// ===== FORMULARIO Y VALIDACIONES =====
-//====================================
-
 // Cargar opciones de rutas
-function loadRutasOptions() {
-    const select = document.getElementById('directRuta');
-    select.innerHTML = '<option value="">Seleccione una ruta</option>';
+function cargarOpcionesRutas() {
+    const selectRuta = document.getElementById('directRuta');
+    
+    selectRuta.innerHTML = '<option value="">Seleccione una ruta</option>';
     
     try {
-        const routesDB = JSON.parse(localStorage.getItem('unellez_routes')) || {
+        const rutasDB = JSON.parse(localStorage.getItem('unellez_routes')) || {
             ruta1: { nombre: "Ciudad Varyna", activa: true, capacidad: 40 },
             ruta2: { nombre: "Redoma Industrial", activa: true, capacidad: 35 },
             ruta3: { nombre: "Raúl Leoni", activa: true, capacidad: 45 },
             ruta4: { nombre: "Juan Pablo", activa: true, capacidad: 30 }
         };
         
-        Object.keys(routesDB).forEach(key => {
-            if (routesDB[key].activa) {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = `Ruta ${key.slice(-1)} - ${routesDB[key].nombre}`;
-                select.appendChild(option);
+        Object.keys(rutasDB).forEach(clave => {
+            if (rutasDB[clave].activa) {
+                const opcion = document.createElement('option');
+                opcion.value = clave;
+                opcion.textContent = `Ruta ${clave.slice(-1)} - ${rutasDB[clave].nombre}`;
+                selectRuta.appendChild(opcion);
             }
         });
+        
     } catch (error) {
         console.error("Error cargando rutas:", error);
     }
 }
 
-// NUEVAS FUNCIONES PARA LOS CHECKBOXES
 
-// Seleccionar todos los días
+// Funciones para checkboxes
 function seleccionarTodosDias(checkbox) {
-    const diasCheckboxes = document.querySelectorAll('input[name="dias"]');
-    diasCheckboxes.forEach(diaCheckbox => {
-        diaCheckbox.checked = checkbox.checked;
+    const checkboxesDias = document.querySelectorAll('input[name="dias"]');
+    checkboxesDias.forEach(checkboxDia => {
+        checkboxDia.checked = checkbox.checked;
     });
 }
 
-// Seleccionar todos los turnos
 function seleccionarTodosTurnos(checkbox) {
-    const turnosCheckboxes = document.querySelectorAll('input[name="turnos"]');
-    turnosCheckboxes.forEach(turnoCheckbox => {
-        turnoCheckbox.checked = checkbox.checked;
+    const checkboxesTurnos = document.querySelectorAll('input[name="turnos"]');
+    checkboxesTurnos.forEach(checkboxTurno => {
+        checkboxTurno.checked = checkbox.checked;
     });
 }
 
-// MODIFICA la función loadRutasOptions() para también cargar unidades:
-function loadRutasOptions() {
-    const selectRuta = document.getElementById('directRuta');
-    const selectUnidad = document.getElementById('directUnidad');
-    
-    // Limpiar selects
-    selectRuta.innerHTML = '<option value="">Seleccione una ruta</option>';
-    selectUnidad.innerHTML = '<option value="">Seleccione una unidad</option>';
-    
-    try {
-        // Cargar rutas
-        const routesDB = JSON.parse(localStorage.getItem('unellez_routes')) || {
-            ruta1: { nombre: "Ciudad Varyna", activa: true, capacidad: 40 },
-            ruta2: { nombre: "Redoma Industrial", activa: true, capacidad: 35 },
-            ruta3: { nombre: "Raúl Leoni", activa: true, capacidad: 45 },
-            ruta4: { nombre: "Juan Pablo", activa: true, capacidad: 30 }
-        };
-        
-        Object.keys(routesDB).forEach(key => {
-            if (routesDB[key].activa) {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = `Ruta ${key.slice(-1)} - ${routesDB[key].nombre}`;
-                selectRuta.appendChild(option);
-            }
-        });
-        
-        // Cargar unidades (buses)
-        // En un sistema real, esto vendría de una base de datos
-        // Por ahora, creamos unidades de ejemplo basadas en las rutas
-        const unidades = [
-            { id: 'bus_001', nombre: 'Bus 001 - Mercedes Benz', placa: 'ABC-123', capacidad: 40, estado: 'disponible' },
-            { id: 'bus_002', nombre: 'Bus 002 - Volvo', placa: 'DEF-456', capacidad: 35, estado: 'disponible' },
-            { id: 'bus_003', nombre: 'Bus 003 - Yutong', placa: 'GHI-789', capacidad: 45, estado: 'disponible' },
-            { id: 'bus_004', nombre: 'Bus 004 - Higer', placa: 'JKL-012', capacidad: 30, estado: 'disponible' },
-            { id: 'bus_005', nombre: 'Bus 005 - Mercedes Benz', placa: 'MNO-345', capacidad: 40, estado: 'disponible' }
-        ];
-        
-        unidades.forEach(unidad => {
-            if (unidad.estado === 'disponible') {
-                const option = document.createElement('option');
-                option.value = unidad.id;
-                option.textContent = `${unidad.nombre} (Placa: ${unidad.placa})`;
-                selectUnidad.appendChild(option);
-            }
-        });
-        
-    } catch (error) {
-        console.error("Error cargando rutas y unidades:", error);
-    }
-}
-
-// MODIFICA la función validateConductorForm() para validar los nuevos campos:
-function validateConductorForm() {
+// Validar formulario de conductor
+function validarFormularioConductor() {
     const campos = [
         { id: 'directRuta', nombre: 'Ruta' },
-        { id: 'directUnidad', nombre: 'Unidad' },
         { id: 'directUsuario', nombre: 'Nombre de usuario' },
         { id: 'directPassword', nombre: 'Contraseña' },
         { id: 'directConfirmPassword', nombre: 'Confirmar contraseña' }
     ];
     
-    // Validar campos requeridos
     for (const campo of campos) {
         const elemento = document.getElementById(campo.id);
         if (!elemento.value.trim()) {
-            showNotification(`El campo "${campo.nombre}" es requerido`, 'error');
+            mostrarNotificacion(`El campo "${campo.nombre}" es requerido`, 'error');
             elemento.focus();
             return false;
         }
     }
     
-    // Validar que se haya seleccionado al menos un día
     const diasSeleccionados = document.querySelectorAll('input[name="dias"]:checked');
     if (diasSeleccionados.length === 0) {
-        showNotification('Debe seleccionar al menos un día de trabajo', 'error');
+        mostrarNotificacion('Debe seleccionar al menos un día de trabajo', 'error');
         return false;
     }
     
-    // Validar que se haya seleccionado al menos un turno
     const turnosSeleccionados = document.querySelectorAll('input[name="turnos"]:checked');
     if (turnosSeleccionados.length === 0) {
-        showNotification('Debe seleccionar al menos un turno', 'error');
+        mostrarNotificacion('Debe seleccionar al menos un turno', 'error');
         return false;
     }
     
-    // Validar que las contraseñas coincidan
     const contraseña = document.getElementById('directPassword').value;
     const confirmarContraseña = document.getElementById('directConfirmPassword').value;
     
     if (contraseña !== confirmarContraseña) {
-        showNotification('Las contraseñas no coinciden', 'error');
+        mostrarNotificacion('Las contraseñas no coinciden', 'error');
         document.getElementById('directConfirmPassword').focus();
         return false;
     }
     
-    // Validar longitud de contraseña
     if (contraseña.length < 6) {
-        showNotification('La contraseña debe tener al menos 6 caracteres', 'error');
+        mostrarNotificacion('La contraseña debe tener al menos 6 caracteres', 'error');
         document.getElementById('directPassword').focus();
         return false;
     }
@@ -1240,126 +1459,93 @@ function validateConductorForm() {
     return true;
 }
 
-// MODIFICA la función registerDirectConductor() para guardar los nuevos datos:
-function registerDirectConductor(event) {
+// Registrar conductor
+function registrarConductorDirecto(event) {
     if (event) event.preventDefault();
     
-    // Validar datos del formulario
-    if (!validateConductorForm()) {
+    if (!validarFormularioConductor()) {
         return;
     }
     
-    // Obtener días seleccionados
     const diasSeleccionados = Array.from(document.querySelectorAll('input[name="dias"]:checked'))
         .map(checkbox => checkbox.value);
     
-    // Obtener turnos seleccionados
     const turnosSeleccionados = Array.from(document.querySelectorAll('input[name="turnos"]:checked'))
         .map(checkbox => checkbox.value);
     
-    // Obtener información de la unidad seleccionada
-    const selectUnidad = document.getElementById('directUnidad');
-    const unidadSeleccionada = {
-        id: selectUnidad.value,
-        nombre: selectUnidad.options[selectUnidad.selectedIndex].text
-    };
-    
-    // Crear objeto con datos del conductor
     const datosConductor = {
-        ...scannedUserData,
+        ...datosUsuarioEscaneado,
         ruta: document.getElementById('directRuta').value,
         rutaNombre: document.getElementById('directRuta').options[document.getElementById('directRuta').selectedIndex].text,
-        unidad: unidadSeleccionada,
         diasTrabajo: diasSeleccionados,
         turnos: turnosSeleccionados,
         nombreUsuario: document.getElementById('directUsuario').value.trim(),
         contraseña: document.getElementById('directPassword').value,
         activo: true,
-        detalles: `Conductor | Ruta: ${document.getElementById('directRuta').options[document.getElementById('directRuta').selectedIndex].text} | Unidad: ${unidadSeleccionada.nombre}`,
+        detalles: `Conductor | Ruta: ${document.getElementById('directRuta').options[document.getElementById('directRuta').selectedIndex].text}`,
         horarioDetalles: `Días: ${diasSeleccionados.join(', ')} | Turnos: ${turnosSeleccionados.join(', ')}`,
         fechaRegistro: new Date().toISOString(),
-        registradoPor: adminSession ? adminSession.nombreUsuario : 'admin'
+        registradoPor: sesionAdmin ? sesionAdmin.username : 'admin'
     };
     
-    // Validar que no exista ya el usuario
     let usuariosDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
     
-    // Verificar si ya existe la cédula
     const cedulaExiste = Object.values(usuariosDB).find(usuario => usuario.cedula === datosConductor.cedula);
     if (cedulaExiste) {
-        showNotification('Ya existe un conductor con esta cédula', 'error');
+        mostrarNotificacion('Ya existe un conductor con esta cédula', 'error');
         return;
     }
     
-    // Verificar si ya existe el nombre de usuario
     const usuarioExiste = Object.values(usuariosDB).find(usuario => usuario.nombreUsuario === datosConductor.nombreUsuario);
     if (usuarioExiste) {
-        showNotification('El nombre de usuario ya está en uso', 'error');
+        mostrarNotificacion('El nombre de usuario ya está en uso', 'error');
         return;
     }
     
-    // Guardar en localStorage
     const usuarioId = 'cond_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
     usuariosDB[usuarioId] = datosConductor;
     
     try {
         localStorage.setItem('unellez_users', JSON.stringify(usuariosDB));
-        
-        // Mostrar éxito y cerrar modal
-        showNotification('Conductor registrado exitosamente', 'success');
-        
-        // También actualizar el estado de la unidad a "asignada"
-        actualizarEstadoUnidad(unidadSeleccionada.id, 'asignada');
+        mostrarNotificacion('Conductor registrado exitosamente', 'success');
         
         setTimeout(() => {
             closeDirectConductorModal();
-            loadUsers(); // Actualizar tabla
+            cargarUsuarios();
         }, 1000);
         
     } catch (error) {
         console.error("Error al guardar conductor:", error);
-        showNotification('Error al guardar el conductor', 'error');
+        mostrarNotificacion('Error al guardar el conductor', 'error');
     }
 }
 
-// Función para actualizar el estado de la unidad
 function actualizarEstadoUnidad(idUnidad, nuevoEstado) {
     try {
-        // En un sistema real, esto actualizaría en la base de datos
-        // Por ahora, solo mostramos un log
         console.log(`Actualizando unidad ${idUnidad} a estado: ${nuevoEstado}`);
-        
-        // Aquí podrías tener un localStorage para unidades
-        // localStorage.setItem('unellez_unidades', JSON.stringify(unidadesActualizadas));
-        
     } catch (error) {
         console.error("Error actualizando estado de unidad:", error);
     }
 }
 
-// MODIFICA initializeConductorModal() para inicializar los checkboxes:
-function initializeConductorModal() {
-    // Configurar formulario
+function inicializarModalConductor() {
     const formulario = document.getElementById('directConductorForm');
     if (formulario) {
-        formulario.addEventListener('submit', registerDirectConductor);
+        formulario.addEventListener('submit', registrarConductorDirecto);
     }
     
-    // Configurar validación de contraseñas en tiempo real
     const inputsContraseña = ['directPassword', 'directConfirmPassword'];
     inputsContraseña.forEach(id => {
         const input = document.getElementById(id);
         if (input) {
-            input.addEventListener('input', checkPasswordMatch);
+            input.addEventListener('input', verificarCoincidenciaContraseña);
         }
     });
     
-    // Configurar eventos para los checkboxes
     configurarEventosCheckboxes();
 }
 
 function configurarEventosCheckboxes() {
-    // Cuando se desmarque "seleccionar todos" de días, desmarcar el checkbox principal
     const checkboxesDias = document.querySelectorAll('input[name="dias"]');
     checkboxesDias.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
@@ -1370,7 +1556,6 @@ function configurarEventosCheckboxes() {
         });
     });
     
-    // Cuando se desmarque "seleccionar todos" de turnos, desmarcar el checkbox principal
     const checkboxesTurnos = document.querySelectorAll('input[name="turnos"]');
     checkboxesTurnos.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
@@ -1382,183 +1567,53 @@ function configurarEventosCheckboxes() {
     });
 }
 
-// Generar credenciales por defecto
-function generateDefaultCredentials() {
-    if (!scannedUserData) return;
+function generarCredencialesPorDefecto() {
+    if (!datosUsuarioEscaneado) return;
     
-    const { nombre, apellido, cedula } = scannedUserData;
+    const { nombre, apellido, cedula } = datosUsuarioEscaneado;
     
-    // Generar usuario (primera letra nombre + apellido + últimos 3 dígitos cédula)
     const username = `${nombre.charAt(0).toLowerCase()}${apellido.toLowerCase().replace(/\s+/g, '')}${cedula.slice(-3)}`;
     document.getElementById('directUsuario').value = username;
     
-    // Generar contraseña temporal
-    const tempPassword = generateTempPassword();
-    document.getElementById('directPassword').value = tempPassword;
-    document.getElementById('directConfirmPassword').value = tempPassword;
+    const contraseñaTemporal = generarContraseñaTemporal();
+    document.getElementById('directPassword').value = contraseñaTemporal;
+    document.getElementById('directConfirmPassword').value = contraseñaTemporal;
     
-    // Verificar coincidencia de contraseñas
-    checkPasswordMatch();
+    verificarCoincidenciaContraseña();
 }
 
-// Generar contraseña temporal
-function generateTempPassword() {
-    const length = 8;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let password = "";
+function generarContraseñaTemporal() {
+    const longitud = 8;
+    const caracteres = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let contraseña = "";
     
-    for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * charset.length);
-        password += charset[randomIndex];
+    for (let i = 0; i < longitud; i++) {
+        const indiceAleatorio = Math.floor(Math.random() * caracteres.length);
+        contraseña += caracteres[indiceAleatorio];
     }
     
-    return password;
+    return contraseña;
 }
 
-// Verificar que las contraseñas coincidan
-function checkPasswordMatch() {
-    const password = document.getElementById('directPassword').value;
-    const confirmPassword = document.getElementById('directConfirmPassword').value;
-    const messageElement = document.getElementById('passwordMatchMessage') || createPasswordMatchElement();
+function verificarCoincidenciaContraseña() {
+    const contraseña = document.getElementById('directPassword').value;
+    const confirmarContraseña = document.getElementById('directConfirmPassword').value;
+    const elementoMensaje = document.getElementById('passwordMatchMessage') || crearElementoMensajeContraseña();
     
-    if (password && confirmPassword) {
-        if (password === confirmPassword) {
-            messageElement.className = 'password-match';
-            messageElement.innerHTML = '<i class="fas fa-check-circle"></i> Las contraseñas coinciden';
+    if (contraseña && confirmarContraseña) {
+        if (contraseña === confirmarContraseña) {
+            elementoMensaje.className = 'password-match';
+            elementoMensaje.innerHTML = '<i class="fas fa-check-circle"></i> Las contraseñas coinciden';
         } else {
-            messageElement.className = 'password-mismatch';
-            messageElement.innerHTML = '<i class="fas fa-times-circle"></i> Las contraseñas no coinciden';
+            elementoMensaje.className = 'password-mismatch';
+            elementoMensaje.innerHTML = '<i class="fas fa-times-circle"></i> Las contraseñas no coinciden';
         }
     }
 }
 
-// Crear elemento para mensaje de contraseña
-function createPasswordMatchElement() {
-    const messageElement = document.createElement('div');
-    messageElement.id = 'passwordMatchMessage';
-    document.getElementById('directConfirmPassword').parentNode.appendChild(messageElement);
-    return messageElement;
-}
-
-//================================================
-// ================= REGISTRO FINAL =================
-//================================================
-
-// Registrar conductor
-function registerDirectConductor(event) {
-    if (event) event.preventDefault();
-    
-    // Validar datos del formulario
-    if (!validateConductorForm()) {
-        return;
-    }
-    
-    // Crear objeto con datos del conductor
-    const conductorData = {
-        ...scannedUserData,
-        ruta: document.getElementById('directRuta').value,
-        username: document.getElementById('directUsuario').value.trim(),
-        password: document.getElementById('directPassword').value,
-        activo: true,
-        detalles: `Conductor | Ruta: ${document.getElementById('directRuta').selectedOptions[0].text}`,
-        fechaRegistro: new Date().toISOString(),
-        registradoPor: adminSession ? adminSession.username : 'admin'
-    };
-    
-    // Validar que no exista ya el usuario
-    let usersDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
-    
-    // Verificar si ya existe la cédula
-    const cedulaExists = Object.values(usersDB).find(user => user.cedula === conductorData.cedula);
-    if (cedulaExists) {
-        showNotification('Ya existe un conductor con esta cédula', 'error');
-        return;
-    }
-    
-    // Verificar si ya existe el username
-    const usernameExists = Object.values(usersDB).find(user => user.username === conductorData.username);
-    if (usernameExists) {
-        showNotification('El nombre de usuario ya está en uso', 'error');
-        return;
-    }
-    
-    // Guardar en localStorage
-    const userId = 'cond_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-    usersDB[userId] = conductorData;
-    
-    try {
-        localStorage.setItem('unellez_users', JSON.stringify(usersDB));
-        
-        // Mostrar éxito y cerrar modal
-        showNotification('Conductor registrado exitosamente', 'success');
-        setTimeout(() => {
-            closeDirectConductorModal();
-            loadUsers(); // Actualizar tabla
-        }, 1000);
-        
-    } catch (error) {
-        console.error("Error al guardar conductor:", error);
-        showNotification('Error al guardar el conductor', 'error');
-    }
-}
-
-// Validar formulario de conductor
-function validateConductorForm() {
-    const campos = [
-        { id: 'directRuta', name: 'Ruta' },
-        { id: 'directUsuario', name: 'Nombre de usuario' },
-        { id: 'directPassword', name: 'Contraseña' },
-        { id: 'directConfirmPassword', name: 'Confirmar contraseña' }
-    ];
-    
-    // Validar campos requeridos
-    for (const campo of campos) {
-        const element = document.getElementById(campo.id);
-        if (!element.value.trim()) {
-            showNotification(`El campo "${campo.name}" es requerido`, 'error');
-            element.focus();
-            return false;
-        }
-    }
-    
-    // Validar que las contraseñas coincidan
-    const password = document.getElementById('directPassword').value;
-    const confirmPassword = document.getElementById('directConfirmPassword').value;
-    
-    if (password !== confirmPassword) {
-        showNotification('Las contraseñas no coinciden', 'error');
-        document.getElementById('directConfirmPassword').focus();
-        return false;
-    }
-    
-    // Validar longitud de contraseña
-    if (password.length < 6) {
-        showNotification('La contraseña debe tener al menos 6 caracteres', 'error');
-        document.getElementById('directPassword').focus();
-        return false;
-    }
-    
-    return true;
-}
-
-// ===== INICIALIZACIÓN =====
-
-// Inicializar el modal de conductor
-function initializeConductorModal() {
-    // Configurar formulario
-    const form = document.getElementById('directConductorForm');
-    if (form) {
-        form.addEventListener('submit', registerDirectConductor);
-    }
-    
-    // Configurar validación de contraseñas en tiempo real
-    const passwordInputs = ['directPassword', 'directConfirmPassword'];
-    passwordInputs.forEach(id => {
-        const input = document.getElementById(id);
-        if (input) {
-            input.addEventListener('input', checkPasswordMatch);
-        }
-    });
-    
-    // El botón ya está en el HTML, no necesitamos crearlo dinámicamente
+function crearElementoMensajeContraseña() {
+    const elementoMensaje = document.createElement('div');
+    elementoMensaje.id = 'passwordMatchMessage';
+    document.getElementById('directConfirmPassword').parentNode.appendChild(elementoMensaje);
+    return elementoMensaje;
 }
