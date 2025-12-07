@@ -1,20 +1,24 @@
+// ========================================
+// ADMIN.JS - Funciones principales del panel
+// ========================================
+
 // Variables globales para administración
 let sesionAdmin = JSON.parse(localStorage.getItem('admin_session')) || null;
 
-// Variables para las tablas
+// Variables para las tablas de usuarios
 let todosUsuarios = [];
 let estudiantes = [];
 let trabajadores = [];
 let conductores = [];
 let filtroActual = 'todos';
-let filtrosEstudiantes = ['', '', '', '', '', ''];
-let filtrosTrabajadores = ['', '', '', '', '', '', ''];
-let filtrosConductores = ['', '', '', '', '', '', ''];
-let filtrosTodos = ['', '', '', '', ''];
+
+// Variables para rutas (compartidas con admin-rutas.js)
+let rutas = [];
+let filtrosRutas = ['', '', '', ''];
 
 // Verificar sesión al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM cargado, verificando sesión...');
+function inicializarSistema() {
+    console.log('Inicializando sistema...');
     
     if (sesionAdmin && sesionAdmin.loggedIn) {
         mostrarContenidoAdmin();
@@ -22,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         mostrarModalLogin();
     }
-});
+}
 
 // Mostrar modal de login
 function mostrarModalLogin() {
@@ -31,23 +35,18 @@ function mostrarModalLogin() {
     document.body.classList.remove('admin-logged-in');
     document.getElementById('loginForm').reset();
     
+    // Configurar evento del formulario de login
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.onsubmit = function(e) {
+            e.preventDefault();
+            adminLogin();
+        };
+    }
+    
     setTimeout(() => {
         document.getElementById('adminUsername').focus();
     }, 300);
-}
-
-// Mostrar contenido admin
-function mostrarContenidoAdmin() {
-    console.log('Mostrando contenido admin...');
-    
-    document.getElementById('loginModal').classList.remove('active');
-    document.body.classList.add('admin-logged-in');
-    
-    if (sesionAdmin && sesionAdmin.username) {
-        document.getElementById('adminName').textContent = sesionAdmin.username;
-    }
-    
-    inicializarPanelAdmin();
 }
 
 // Función de login
@@ -83,32 +82,83 @@ function adminLogin() {
     }
 }
 
+// Mostrar contenido admin
+function mostrarContenidoAdmin() {
+    console.log('Mostrando contenido admin...');
+    
+    document.getElementById('loginModal').classList.remove('active');
+    document.body.classList.add('admin-logged-in');
+    
+    if (sesionAdmin && sesionAdmin.username) {
+        document.getElementById('adminName').textContent = sesionAdmin.username;
+    }
+    
+    inicializarPanelAdmin();
+}
+
+// Inicializar panel admin
+function inicializarPanelAdmin() {
+    console.log('Inicializando panel admin...');
+    
+    // Configurar navegación
+    document.querySelectorAll('.btn-admin').forEach(btn => {
+        btn.onclick = function() {
+            const seccion = this.getAttribute('onclick').match(/mostrarSeccion\('(\w+)'\)/)[1];
+            mostrarSeccion(seccion);
+        };
+    });
+
+    inicializarModalConductor();
+    
+    // Cargar datos iniciales
+    setTimeout(() => {
+        cargarUsuarios();
+        if (typeof cargarRutas === 'function') cargarRutas();
+        actualizarEstadisticas();
+    }, 300);
+}
+
+// Mostrar sección
+function mostrarSeccion(seccion) {
+    console.log(`Mostrando sección: ${seccion}`);
+    
+    // Ocultar todas las secciones
+    document.querySelectorAll('.admin-section').forEach(sec => {
+        sec.classList.remove('active');
+    });
+    
+    // Mostrar sección seleccionada
+    const seccionObjetivo = document.getElementById(seccion + 'Section');
+    if (seccionObjetivo) {
+        seccionObjetivo.classList.add('active');
+        
+        // Acciones específicas por sección
+        if (seccion === 'rutas') {
+            mostrarContenidoRutas();
+        } else if (seccion === 'usuarios') {
+            // Mostrar tabla de usuarios
+            const accionesConductor = document.getElementById('accionesConductor');
+            if (accionesConductor) accionesConductor.style.display = 'none';
+            filtrarUsuariosPorTipo('todos');
+        }
+    }
+}
+
 // Alternar visibilidad de contraseña
 function togglePasswordVisibility(buttonElement) {
-    console.log('togglePasswordVisibility llamado:', buttonElement);
-    
     let passwordInput, toggleButton;
     
     if (buttonElement && buttonElement.classList.contains('toggle-password')) {
-        // Llamado desde formulario de conductor (se pasó 'this')
         toggleButton = buttonElement;
-        passwordInput = toggleButton.previousElementSibling; // El input está antes del botón
+        passwordInput = toggleButton.previousElementSibling;
     } else {
-        // Llamado desde login admin (sin parámetros)
         passwordInput = document.getElementById('adminPassword');
-        const toggleButtonContainer = document.querySelector('.toggle-password');
-        toggleButton = toggleButtonContainer ? toggleButtonContainer.querySelector('i') : null;
+        toggleButton = document.querySelector('.toggle-password');
     }
     
-    if (!passwordInput) {
-        console.error('No se pudo encontrar el input de contraseña');
-        return;
-    }
+    if (!passwordInput) return;
     
-    let icon = toggleButton;
-    if (toggleButton && toggleButton.tagName === 'BUTTON') {
-        icon = toggleButton.querySelector('i');
-    }
+    let icon = toggleButton.tagName === 'BUTTON' ? toggleButton.querySelector('i') : toggleButton;
     
     if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
@@ -125,53 +175,88 @@ function togglePasswordVisibility(buttonElement) {
     }
 }
 
-// Inicializar panel admin
-function inicializarPanelAdmin() {
-    console.log('Inicializando panel admin...');
-    
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            adminLogin();
-        });
+// Cerrar sesión admin
+function cerrarSesionAdmin() {
+    if (confirm('¿Está seguro que desea cerrar sesión?')) {
+        localStorage.removeItem('admin_session');
+        sesionAdmin = null;
+        mostrarNotificacion('Sesión cerrada exitosamente', 'success');
+        
+        setTimeout(() => {
+            mostrarModalLogin();
+        }, 1000);
     }
+}
+
+// Mostrar notificación
+function mostrarNotificacion(mensaje, tipo) {
+    const notificacionesExistentes = document.querySelectorAll('.custom-notification');
+    notificacionesExistentes.forEach(notificacion => notificacion.remove());
     
-    inicializarModalConductor();
+    const notificacion = document.createElement('div');
+    notificacion.className = 'custom-notification';
+    notificacion.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        background: ${tipo === 'success' ? '#28a745' : tipo === 'error' ? '#dc3545' : '#1a2a6c'};
+        color: white;
+        border-radius: 5px;
+        z-index: 10000;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+        animation-fill-mode: forwards;
+        min-width: 300px;
+        max-width: 400px;
+    `;
+    
+    let icono = 'fas fa-check-circle';
+    if (tipo === 'error') icono = 'fas fa-exclamation-circle';
+    if (tipo === 'info') icono = 'fas fa-info-circle';
+    
+    notificacion.innerHTML = `
+        <i class="${icono}" style="margin-right: 10px;"></i>
+        ${mensaje}
+    `;
+    
+    document.body.appendChild(notificacion);
     
     setTimeout(() => {
-        cargarUsuarios();
-        cargarRutas();
-        actualizarEstadisticas();
-    }, 300);
-    
-    setTimeout(() => {
-        const adminUsername = document.getElementById('adminUsername');
-        if (adminUsername && !sesionAdmin) {
-            adminUsername.focus();
+        if (notificacion.parentNode) {
+            notificacion.parentNode.removeChild(notificacion);
         }
-    }, 100);
+    }, 3000);
 }
 
-// Mostrar sección
-function mostrarSeccion(seccion) {
-    document.querySelectorAll('.admin-section').forEach(sec => {
-        sec.classList.remove('active');
-    });
-    
-    const seccionObjetivo = document.getElementById(seccion + 'Section');
-    if (seccionObjetivo) {
-        seccionObjetivo.classList.add('active');
-    }
+// Añadir estilos CSS para animaciones si no existen
+if (!document.querySelector('#notification-styles')) {
+    const style = document.createElement('style');
+    style.id = 'notification-styles';
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
 }
 
-// Ocultar todas las tablas
-function ocultarTodasLasTablas() {
-    document.getElementById('tablaEstudiantes').style.display = 'none';
-    document.getElementById('tablaTrabajadores').style.display = 'none';
-    document.getElementById('tablaConductores').style.display = 'none';
-    document.getElementById('tablaTodosUsuarios').style.display = 'none';
-}
+
+// ========================================
+// FUNCIONES PARA GESTIÓN DE USUARIOS
+// ========================================
+
+// Variables para filtros de usuarios
+let filtrosEstudiantes = ['', '', '', '', '', ''];
+let filtrosTrabajadores = ['', '', '', '', '', '', ''];
+let filtrosConductores = ['', '', '', '', '', '', ''];
+let filtrosTodos = ['', '', '', '', ''];
 
 // Cargar usuarios y actualizar estadísticas
 function cargarUsuarios() {
@@ -223,6 +308,32 @@ function cargarUsuarios() {
         renderizarTablaConductores([]);
         renderizarTablaTodosUsuarios([]);
     }
+}
+
+// Actualizar estadísticas
+function actualizarEstadisticas() {
+    const totalEstudiantes = estudiantes.length;
+    const totalTrabajadores = trabajadores.length;
+    const totalConductores = conductores.length;
+    const totalGeneral = totalEstudiantes + totalTrabajadores + totalConductores;
+    
+    // Actualizar contadores
+    const estudiantesEl = document.getElementById('contadorEstudiantes');
+    const trabajadoresEl = document.getElementById('contadorTrabajadores');
+    const conductoresEl = document.getElementById('contadorConductores');
+    const totalEl = document.getElementById('totalUsuarios');
+    
+    if (estudiantesEl) estudiantesEl.textContent = totalEstudiantes;
+    if (trabajadoresEl) trabajadoresEl.textContent = totalTrabajadores;
+    if (conductoresEl) conductoresEl.textContent = totalConductores;
+    if (totalEl) totalEl.textContent = totalGeneral;
+    
+    console.log('Estadísticas actualizadas:', { 
+        estudiantes: totalEstudiantes, 
+        trabajadores: totalTrabajadores, 
+        conductores: totalConductores, 
+        total: totalGeneral 
+    });
 }
 
 // Función para renderizar tabla de estudiantes
@@ -422,7 +533,7 @@ function renderizarTablaConductores(conductores) {
     if (conductores.length === 0) {
         cuerpoTabla.innerHTML = `
             <tr>
-                <td colspan="9" class="no-users"> <!-- Cambiado de 10 a 9 columnas -->
+                <td colspan="9" class="no-users">
                     <i class="fas fa-bus"></i>
                     <h3>No hay conductores registrados</h3>
                     <p>Presiona "Nuevo Conductor" para registrar uno</p>
@@ -610,6 +721,14 @@ function renderizarTablaTodosUsuarios(usuarios) {
     }
 }
 
+// Ocultar todas las tablas
+function ocultarTodasLasTablas() {
+    document.getElementById('tablaEstudiantes').style.display = 'none';
+    document.getElementById('tablaTrabajadores').style.display = 'none';
+    document.getElementById('tablaConductores').style.display = 'none';
+    document.getElementById('tablaTodosUsuarios').style.display = 'none';
+}
+
 // Funciones de filtrado
 function aplicarFiltrosEstudiantes(estudiantes) {
     let filtrados = [...estudiantes];
@@ -708,7 +827,7 @@ function aplicarFiltrosConductores(conductores) {
                         ? conductor.turnos.join(' ').toLowerCase()
                         : '';
                     return turnos.includes(filtro);
-                case 6: // Estado (antes era 7, ahora es 6)
+                case 6: // Estado
                     const estado = conductor.activo ? 'activo' : 'inactivo';
                     return estado.includes(filtro);
                 default:
@@ -807,7 +926,7 @@ function filtrarUsuariosPorTipo(tipo) {
     }, 100);
 }
 
-// Filtrar por columna en tabla de estudiantes
+// Filtrar por columna en tabla de estudiantes/trabajadores
 function filtrarColumna(input) {
     const indiceColumna = parseInt(input.dataset.columna);
     const valor = input.value.toLowerCase();
@@ -879,32 +998,6 @@ function limpiarFiltrosTodos() {
     renderizarTablaTodosUsuarios(todosUsuarios);
 }
 
-// Actualizar estadísticas
-function actualizarEstadisticas() {
-    const totalEstudiantes = estudiantes.length;
-    const totalTrabajadores = trabajadores.length;
-    const totalConductores = conductores.length;
-    const totalGeneral = totalEstudiantes + totalTrabajadores + totalConductores;
-    
-    // Actualizar contadores
-    const estudiantesEl = document.getElementById('contadorEstudiantes');
-    const trabajadoresEl = document.getElementById('contadorTrabajadores');
-    const conductoresEl = document.getElementById('contadorConductores');
-    const totalEl = document.getElementById('totalUsuarios');
-    
-    if (estudiantesEl) estudiantesEl.textContent = totalEstudiantes;
-    if (trabajadoresEl) trabajadoresEl.textContent = totalTrabajadores;
-    if (conductoresEl) conductoresEl.textContent = totalConductores;
-    if (totalEl) totalEl.textContent = totalGeneral;
-    
-    console.log('Estadísticas actualizadas:', { 
-        estudiantes: totalEstudiantes, 
-        trabajadores: totalTrabajadores, 
-        conductores: totalConductores, 
-        total: totalGeneral 
-    });
-}
-
 // Eliminar usuario
 function eliminarUsuario(cedula) {
     if (!confirm(`¿Está seguro de eliminar al usuario con cédula ${cedula}?`)) {
@@ -974,202 +1067,12 @@ function editarConductor(cedula) {
     mostrarNotificacion(`Editar conductor ${cedula} - Funcionalidad en desarrollo`, 'info');
 }
 
-// Cargar rutas
-function cargarRutas() {
-    console.log('Cargando rutas...');
-    
-    let rutasDB;
-    try {
-        rutasDB = JSON.parse(localStorage.getItem('unellez_routes')) || {
-            ruta1: { nombre: "Ciudad Varyna", activa: true, capacidad: 40 },
-            ruta2: { nombre: "Redoma Industrial", activa: true, capacidad: 35 },
-            ruta3: { nombre: "Raúl Leoni", activa: true, capacidad: 45 },
-            ruta4: { nombre: "Juan Pablo", activa: true, capacidad: 30 }
-        };
-    } catch (error) {
-        console.error('Error al cargar rutas:', error);
-        rutasDB = {
-            ruta1: { nombre: "Ciudad Varyna", activa: true, capacidad: 40 },
-            ruta2: { nombre: "Redoma Industrial", activa: true, capacidad: 35 },
-            ruta3: { nombre: "Raúl Leoni", activa: true, capacidad: 45 },
-            ruta4: { nombre: "Juan Pablo", activa: true, capacidad: 30 }
-        };
-    }
-    
-    try {
-        localStorage.setItem('unellez_routes', JSON.stringify(rutasDB));
-    } catch (error) {
-        console.error('Error al guardar rutas:', error);
-    }
-    
-    const listaRutas = document.getElementById('listaRutas');
-    if (!listaRutas) return;
-    
-    listaRutas.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando rutas...</div>';
-    
-    setTimeout(() => {
-        listaRutas.innerHTML = '';
-        
-        let capacidadTotal = 0;
-        let rutasActivas = 0;
-        
-        Object.keys(rutasDB).forEach(claveRuta => {
-            const ruta = rutasDB[claveRuta];
-            capacidadTotal += ruta.capacidad || 0;
-            if (ruta.activa) rutasActivas++;
-            
-            const elementoRuta = document.createElement('div');
-            elementoRuta.className = 'route-item';
-            
-            elementoRuta.innerHTML = `
-                <div class="route-info">
-                    <h4 style="color: #1a2a6c;"><i class="fas fa-route" style="color: #1a2a6c;"></i> ${claveRuta.toUpperCase()} - ${ruta.nombre}</h4>
-                    <p style="color:#666;"><strong>unidad:</strong> ${ruta.capacidad} pasajeros</p>
-                    <p style="color:#666;"><strong>Estado:</strong> ${ruta.activa ? 'Activa' : 'Inactiva'}</p>
-                </div>
-                <div class="route-actions">
-                    <button class="btn btn-small" onclick="editarRuta('${claveRuta}')">
-                        <i class="fas fa-edit"></i> Editar
-                    </button>
-                </div>
-            `;
-            
-            listaRutas.appendChild(elementoRuta);
-        });
-        
-        // Actualizar estadísticas de rutas
-        document.getElementById('totalRutas').textContent = rutasActivas;
-        document.getElementById('totalCapacidad').textContent = capacidadTotal;
-        
-        // Cargar rutas en los selects de las tablas
-        cargarRutasEnSelects(rutasDB);
-    }, 500);
-}
-
-// Cargar rutas en los selects de filtro
-function cargarRutasEnSelects(rutasDB) {
-    const selectsRutas = document.querySelectorAll('select.filtro-columna[data-columna="4"], select.filtro-columna[data-columna="5"], select.filtro-columna-conductor[data-columna="3"], select.filtro-columna-todos[data-columna="3"]');
-    
-    selectsRutas.forEach(select => {
-        // Limpiar opciones existentes (excepto la primera)
-        while (select.options.length > 1) {
-            select.remove(1);
-        }
-        
-        // Agregar opciones de rutas
-        Object.keys(rutasDB).forEach(claveRuta => {
-            const ruta = rutasDB[claveRuta];
-            if (ruta.activa) {
-                const opcion = document.createElement('option');
-                opcion.value = ruta.nombre;
-                opcion.textContent = ruta.nombre;
-                select.appendChild(opcion);
-            }
-        });
-    });
-}
-
-// Abrir formulario de ruta (placeholder)
-function abrirFormularioRuta() {
-    mostrarNotificacion('Funcionalidad de edición de rutas - En desarrollo', 'info');
-}
-
-// Cerrar sesión admin
-function cerrarSesionAdmin() {
-    if (confirm('¿Está seguro que desea cerrar sesión?')) {
-        localStorage.removeItem('admin_session');
-        sesionAdmin = null;
-        mostrarNotificacion('Sesión cerrada exitosamente', 'success');
-        
-        setTimeout(() => {
-            mostrarModalLogin();
-        }, 1000);
-    }
-}
-
-// Mostrar notificación
-function mostrarNotificacion(mensaje, tipo) {
-    const notificacionesExistentes = document.querySelectorAll('.custom-notification');
-    notificacionesExistentes.forEach(notificacion => notificacion.remove());
-    
-    const notificacion = document.createElement('div');
-    notificacion.className = 'custom-notification';
-    notificacion.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        background: ${tipo === 'success' ? '#28a745' : tipo === 'error' ? '#dc3545' : '#1a2a6c'};
-        color: white;
-        border-radius: 5px;
-        z-index: 10000;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
-        animation-fill-mode: forwards;
-        min-width: 300px;
-        max-width: 400px;
-    `;
-    
-    let icono = 'fas fa-check-circle';
-    if (tipo === 'error') icono = 'fas fa-exclamation-circle';
-    if (tipo === 'info') icono = 'fas fa-info-circle';
-    
-    notificacion.innerHTML = `
-        <i class="${icono}" style="margin-right: 10px;"></i>
-        ${mensaje}
-    `;
-    
-    document.body.appendChild(notificacion);
-    
-    setTimeout(() => {
-        if (notificacion.parentNode) {
-            notificacion.parentNode.removeChild(notificacion);
-        }
-    }, 3000);
-}
-
-// Añadir estilos CSS para animaciones si no existen
-if (!document.querySelector('#notification-styles')) {
-    const style = document.createElement('style');
-    style.id = 'notification-styles';
-    style.textContent = `
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// Función para editar ruta (placeholder)
-function editarRuta(claveRuta) {
-    mostrarNotificacion(`Editar ruta ${claveRuta} - Funcionalidad en desarrollo`, 'info');
-}
-
 // ========================================
-// FUNCIONES DEL MODAL DE CONDUCTOR (sin cambios importantes)
+// FUNCIONES DEL MODAL DE CONDUCTOR
 // ========================================
 
-let escanerQR = null;
-let escanerQRActivo = false;
-let datosUsuarioEscaneado = null;
 let scanner = null;
+let datosUsuarioEscaneado = null;
 
 // Abrir modal para registrar conductor
 function openDirectConductorModal() {
@@ -1196,7 +1099,6 @@ function closeDirectConductorModal() {
         console.log("✅ Contenedor QR limpiado");
     }
     
-    escanerQRActivo = false;
     datosUsuarioEscaneado = null;
     
     const modal = document.getElementById('modalDirectConductor');
@@ -1254,36 +1156,6 @@ function iniciarEscaneoQR() {
     );
 }
 
-// Detener escáner QR
-function stopQRScanner() {
-    console.log("🛑 Intentando detener scanner...");
-    
-    if (scanner) {
-        console.log("🔍 Scanner encontrado, limpiando...");
-        scanner.clear().then(() => {
-            escanerQRActivo = false;
-            scanner = null;
-            console.log("✅ Scanner detenido correctamente");
-        }).catch(err => {
-            console.warn("⚠️ Advertencia al limpiar scanner:", err);
-            escanerQRActivo = false;
-            scanner = null;
-        });
-    } else {
-        console.log("ℹ️ No hay scanner activo para detener");
-        escanerQRActivo = false;
-    }
-    
-    if (escanerQR) {
-        escanerQR.stop().then(() => {
-            escanerQR.clear();
-            escanerQR = null;
-        }).catch(err => {
-            console.warn("Error al detener html5QrCode:", err);
-        });
-    }
-}
-
 // Volver al escaneo
 function goBackToScan() {
     mostrarPaso('stepScanQR');
@@ -1293,16 +1165,13 @@ function goBackToScan() {
 // Procesar datos del QR
 async function procesarDatosQR(datosQR) {
     try {
-        validarQRConBackend(datosQR).then(datosBackend => {
-            datosUsuarioEscaneado = datosBackend;
-            mostrarResumenDatos(datosBackend);
-            cargarOpcionesRutas();
-            generarCredencialesPorDefecto();
-            mostrarPaso('stepForm');
-        }).catch(error => {
-            console.error("Error del backend:", error);
-            mostrarNotificacion('Error al validar datos con el sistema', 'error');
-        });
+        // Simular validación con backend
+        const datosBackend = await validarQRConBackend(datosQR);
+        datosUsuarioEscaneado = datosBackend;
+        mostrarResumenDatos(datosBackend);
+        cargarOpcionesRutas();
+        generarCredencialesPorDefecto();
+        mostrarPaso('stepForm');
         
     } catch (error) {
         console.error("Error procesando QR:", error);
@@ -1347,6 +1216,8 @@ async function validarQRConBackend(datosQR) {
 function mostrarResumenDatos(datosUsuario) {
     const resumenGrid = document.getElementById('summaryGrid');
     
+    if (!resumenGrid) return;
+    
     resumenGrid.innerHTML = `
         <div class="summary-row">
             <div class="summary-label"><i class="fas fa-user"></i> Nombre Completo:</div>
@@ -1370,19 +1241,15 @@ function mostrarResumenDatos(datosUsuario) {
 // Cargar opciones de rutas
 function cargarOpcionesRutas() {
     const selectRuta = document.getElementById('directRuta');
+    if (!selectRuta) return;
     
     selectRuta.innerHTML = '<option value="">Seleccione una ruta</option>';
     
     try {
-        const rutasDB = JSON.parse(localStorage.getItem('unellez_routes')) || {
-            ruta1: { nombre: "Ciudad Varyna", activa: true, capacidad: 40 },
-            ruta2: { nombre: "Redoma Industrial", activa: true, capacidad: 35 },
-            ruta3: { nombre: "Raúl Leoni", activa: true, capacidad: 45 },
-            ruta4: { nombre: "Juan Pablo", activa: true, capacidad: 30 }
-        };
+        const rutasDB = JSON.parse(localStorage.getItem('unellez_routes')) || {};
         
         Object.keys(rutasDB).forEach(clave => {
-            if (rutasDB[clave].activa) {
+            if (rutasDB[clave].estado === 'Activa') {
                 const opcion = document.createElement('option');
                 opcion.value = clave;
                 opcion.textContent = `Ruta ${clave.slice(-1)} - ${rutasDB[clave].nombre}`;
@@ -1394,7 +1261,6 @@ function cargarOpcionesRutas() {
         console.error("Error cargando rutas:", error);
     }
 }
-
 
 // Funciones para checkboxes
 function seleccionarTodosDias(checkbox) {
@@ -1520,20 +1386,14 @@ function registrarConductorDirecto(event) {
     }
 }
 
-function actualizarEstadoUnidad(idUnidad, nuevoEstado) {
-    try {
-        console.log(`Actualizando unidad ${idUnidad} a estado: ${nuevoEstado}`);
-    } catch (error) {
-        console.error("Error actualizando estado de unidad:", error);
-    }
-}
-
+// Inicializar modal conductor
 function inicializarModalConductor() {
     const formulario = document.getElementById('directConductorForm');
     if (formulario) {
         formulario.addEventListener('submit', registrarConductorDirecto);
     }
     
+    // Configurar eventos para validación de contraseñas
     const inputsContraseña = ['directPassword', 'directConfirmPassword'];
     inputsContraseña.forEach(id => {
         const input = document.getElementById(id);
@@ -1542,9 +1402,11 @@ function inicializarModalConductor() {
         }
     });
     
+    // Configurar eventos para checkboxes
     configurarEventosCheckboxes();
 }
 
+// Configurar eventos de checkboxes
 function configurarEventosCheckboxes() {
     const checkboxesDias = document.querySelectorAll('input[name="dias"]');
     checkboxesDias.forEach(checkbox => {
@@ -1567,6 +1429,7 @@ function configurarEventosCheckboxes() {
     });
 }
 
+// Generar credenciales por defecto
 function generarCredencialesPorDefecto() {
     if (!datosUsuarioEscaneado) return;
     
@@ -1582,6 +1445,7 @@ function generarCredencialesPorDefecto() {
     verificarCoincidenciaContraseña();
 }
 
+// Generar contraseña temporal
 function generarContraseñaTemporal() {
     const longitud = 8;
     const caracteres = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -1595,6 +1459,7 @@ function generarContraseñaTemporal() {
     return contraseña;
 }
 
+// Verificar coincidencia de contraseñas
 function verificarCoincidenciaContraseña() {
     const contraseña = document.getElementById('directPassword').value;
     const confirmarContraseña = document.getElementById('directConfirmPassword').value;
@@ -1611,9 +1476,17 @@ function verificarCoincidenciaContraseña() {
     }
 }
 
+// Crear elemento para mensaje de contraseña
 function crearElementoMensajeContraseña() {
     const elementoMensaje = document.createElement('div');
     elementoMensaje.id = 'passwordMatchMessage';
     document.getElementById('directConfirmPassword').parentNode.appendChild(elementoMensaje);
     return elementoMensaje;
 }
+
+
+// Exportar variables globales para usar en otros archivos
+window.sesionAdmin = sesionAdmin;
+window.rutas = rutas;
+window.filtrosRutas = filtrosRutas;
+window.mostrarNotificacion = mostrarNotificacion;

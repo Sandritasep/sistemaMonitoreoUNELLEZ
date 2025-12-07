@@ -788,39 +788,21 @@ body.admin-logged-in .admin-content {
 }
 
 /* Sección RUTAS */
-.rutas-lista {
-    margin-top: 20px;
+
+/* Estilos para inputs de solo letras en filtros */
+input[oninput*="replace"][oninput*="A-Za-z"] {
+    text-transform: uppercase;
 }
 
-.rutas-lista .route-item {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.rutas-lista .route-item:hover {
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.rutas-lista .route-info h4 {
-    font-size: 16px;
-    margin-bottom: 10px;
-}
-
-.rutas-lista .route-info p {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.rutas-lista .route-actions .btn-small {
-    padding: 8px 16px;
-    font-size: 14px;
+/* Asegurar que la sección de rutas sea responsive */
+@media (max-width: 768px) {
+    #tablaRutas {
+        overflow-x: auto;
+    }
+    
+    #tablaRutas .users-table {
+        min-width: 800px;
+    }
 }
 
 /* MODALES GENERALES */
@@ -1551,5 +1533,389 @@ body.admin-logged-in .admin-content {
     .btn-login {
         padding: 10px 16px;
         font-size: 0.9rem;
+    }
+}
+
+/* =========================================== */
+/* ESTILOS PARA FORMULARIO DE RUTA CON MAPA */
+/* =========================================== */
+
+.formulario-ruta-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin-top: 20px;
+}
+
+.formulario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #eef2f7;
+}
+
+.formulario-header h3 {
+    color: #1a2a6c;
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.formulario-ruta {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+    color: #333;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #1a2a6c;
+    box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* Instrucciones del mapa */
+.instrucciones-mapa {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #1a2a6c;
+}
+
+.instrucciones-mapa ol {
+    margin: 10px 0 10px 20px;
+}
+
+.instrucciones-mapa li {
+    margin-bottom: 8px;
+    padding-left: 5px;
+}
+
+.punto-inicio {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.punto-cruce {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.punto-destino {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.punto-parada {
+    color: #fd7e14;
+    font-weight: bold;
+}
+
+.leyenda-mapa {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #dee2e6;
+}
+
+.leyenda-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+}
+
+.color-inicio,
+.color-cruce,
+.color-destino,
+.color-parada {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.color-inicio { background-color: #28a745; }
+.color-cruce { background-color: #007bff; }
+.color-destino { background-color: #dc3545; }
+.color-parada { background-color: #fd7e14; }
+
+/* Controles del mapa */
+.controles-mapa {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.controles-mapa .btn {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+}
+
+/* Resumen de puntos */
+.resumen-puntos {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+}
+
+.resumen-puntos h4 {
+    color: #1a2a6c;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.lista-puntos {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.punto-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border-left: 4px solid #007bff;
+}
+
+.punto-item.inicio {
+    border-left-color: #28a745;
+}
+
+.punto-item.cruce {
+    border-left-color: #007bff;
+}
+
+.punto-item.destino {
+    border-left-color: #dc3545;
+}
+
+.punto-item.parada {
+    border-left-color: #fd7e14;
+}
+
+.punto-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.punto-numero {
+    background: #1a2a6c;
+    color: white;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.punto-descripcion {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.punto-coordenadas {
+    font-size: 0.8rem;
+    color: #666;
+    font-family: monospace;
+}
+
+.btn-eliminar-punto {
+    background: #ffeaea;
+    color: #d93025;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.btn-eliminar-punto:hover {
+    background: #ffd1d1;
+    transform: scale(1.1);
+}
+
+/* Estilos para el mapa de Leaflet */
+.leaflet-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .controles-mapa {
+        flex-direction: column;
+    }
+    
+    .controles-mapa .btn {
+        width: 100%;
+    }
+    
+    .leyenda-mapa {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .formulario-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+}
+
+
+/* Estilos para controles del mapa */
+.control-mapa {
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    margin-bottom: 10px;
+}
+
+.control-mapa button {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.control-mapa button:hover {
+    background: #f0f0f0;
+    color: #1a2a6c;
+}
+
+.control-mapa button.active {
+    background: #1a2a6c;
+    color: white;
+}
+
+.control-mapa button:focus {
+    outline: none;
+}
+
+/* Controles de mapa personalizados */
+.controles-mapa button.active {
+    background: #1a2a6c;
+    color: white;
+    border-color: #1a2a6c;
+}
+
+/* Indicador de modo activo */
+.modo-activo {
+    background: #1a2a6c !important;
+    color: white !important;
+    border-color: #1a2a6c !important;
+}
+
+/* Estado de los botones de control */
+.controles-mapa button {
+    position: relative;
+}
+
+.controles-mapa button.active::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 10px;
+    height: 10px;
+    background: #28a745;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+/* Estilos para los botones de controles del mapa en móviles */
+@media (max-width: 768px) {
+    .control-mapa {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .control-mapa button {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
     }
 }

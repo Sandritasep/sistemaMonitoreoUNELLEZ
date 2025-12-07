@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Administrativo - Transporte UNELLEZ</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="css/admin.css">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/admin-rutas.js"></script>
+    <script src="js/admin-mapa.js"></script>
+    
 </head>
 <body>
     <!-- Header Principal (visible siempre) -->
@@ -75,27 +81,27 @@
     <!-- Contenido del Panel Administrativo (oculto inicialmente) -->
     <div class="admin-content" id="adminContent">
         <!-- Header Admin -->
-    <div class="admin-header">
-        <div class="header-content">
-            <div class="logo">
-                <h1><i class="fas fa-cogs"></i> Panel Administrativo</h1>
-                <p class="admin-welcome">Bienvenido, <span id="adminName">Administrador</span></p>
-            </div>
-            <div class="admin-nav">
-                <button class="btn-admin" onclick="mostrarSeccion('usuarios')">
-                    <i class="fas fa-users"></i> Gestionar Usuarios
-                </button>
-                <button class="btn-admin" onclick="mostrarSeccion('rutas')">
-                    <i class="fas fa-route"></i> Gestionar Rutas
-                </button>
-                <button class="btn-admin" onclick="cerrarSesionAdmin()" id="btn-logout">
-                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                </button>
+        <div class="admin-header">
+            <div class="header-content">
+                <div class="logo">
+                    <h1><i class="fas fa-cogs"></i> Panel Administrativo</h1>
+                    <p class="admin-welcome">Bienvenido, <span id="adminName">Administrador</span></p>
+                </div>
+                <div class="admin-nav">
+                    <button class="btn-admin" onclick="mostrarSeccion('usuarios')">
+                        <i class="fas fa-users"></i> Gestionar Usuarios
+                    </button>
+                    <button class="btn-admin" onclick="mostrarSeccion('rutas')">
+                        <i class="fas fa-route"></i> Gestionar Rutas
+                    </button>
+                    <button class="btn-admin" onclick="cerrarSesionAdmin()" id="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Contenido Principal Admin -->
+        <!-- Contenido Principal Admin -->
         <div class="admin-container">
 
             <!-- Sección USUARIOS -->
@@ -451,12 +457,12 @@
                 <h2><i class="fas fa-route"></i> Gestión de Rutas</h2>
                 
                 <div class="admin-stats">
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="cargarRutas()">
                         <div class="stat-icon">
                             <i class="fas fa-route"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 id="totalRoutes">4</h3>
+                            <h3 id="totalRoutes">0</h3>
                             <p>Rutas Activas</p>
                         </div>
                     </div>
@@ -465,25 +471,189 @@
                             <i class="fas fa-bus"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 id="totalCapacity">150</h3>
+                            <h3 id="totalUnidades">0</h3>
                             <p>Unidades bus</p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="admin-actions">
-                    <button class="btn btn-primary" onclick="openRouteForm()">
+                <!-- Boton de nueva ruta (oculto inicialmente) -->
+                <div class="admin-actions" id="accionesRuta" style="display: none;">
+                    <button class="btn btn-primary" onclick="mostrarFormularioRuta()">
                         <i class="fas fa-plus"></i> Nueva Ruta
                     </button>
                 </div>
 
-                <div class="routes-list" id="routesList">
-                    <div class="loading-message">
-                        <i class="fas fa-spinner fa-spin"></i> Cargando rutas...
+                <!-- Tabla de Rutas (inicialmente oculta) -->
+                <div class="table-container" id="tablaRutas" style="display: none;">
+                    <div class="table-header">
+                        <div class="table-title">
+                            <i class="fas fa-route"></i> Lista de Rutas
+                        </div>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary" onclick="limpiarFiltrosRutas()">
+                                <i class="fas fa-filter"></i> Limpiar Filtros
+                            </button>
+                            <button class="btn btn-secondary" onclick="cargarRutasDesdeStorage()">
+                                <i class="fas fa-sync"></i> Actualizar Lista
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th width="10%">
+                                    <strong>N° Ruta</strong>
+                                    <input type="text" placeholder="001-010" class="filtro-columna-ruta" data-columna="0" onkeyup="filtrarColumnaRuta(this)" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                </th>
+                                <th width="20%">
+                                    <strong>Nombre de Ruta</strong>
+                                    <input type="text" class="filtro-columna-ruta" placeholder="Filtrar nombre..." data-columna="1" onkeyup="filtrarColumnaRuta(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Unidad</strong>
+                                    <input type="text" class="filtro-columna-ruta" placeholder="Filtrar unidad..." 
+                                        data-columna="2" onkeyup="filtrarColumnaRuta(this)">
+                                </th>
+                                <th width="25%">
+                                    <strong>Conductor</strong>
+                                    <input type="text" class="filtro-columna-ruta" placeholder="Filtrar conductor..." 
+                                        data-columna="3" onkeyup="filtrarColumnaRuta(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Estado</strong>
+                                    <select class="filtro-columna-ruta" data-columna="4" onchange="filtrarColumnaRuta(this)">
+                                        <option value="">Todos</option>
+                                        <option value="Activa">Activa</option>
+                                        <option value="Inactiva">Inactiva</option>
+                                    </select>
+                                </th>
+                                <th width="25%">
+                                    <strong>Acciones</strong>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaRutas">
+                            <!-- Las rutas se cargarán aquí -->
+                        </tbody>
+                    </table>
+                    
+                    <div class="contador-resultados" id="contadorResultadosRutas">
+                        Mostrando <strong>0</strong> de <strong>0</strong> rutas
                     </div>
                 </div>
+
+                <!-- Formulario de Nueva Ruta (inicialmente oculto) -->
+                <div class="formulario-ruta-container" id="formularioRuta" style="display: none;">
+                    <div class="formulario-header">
+                        <h3><i class="fas fa-plus-circle"></i> Crear Nueva Ruta</h3>
+                    </div>
+                    
+                    <form id="formNuevaRutaCompleta" class="formulario-ruta">
+                        <div class="form-section">
+                            <h3><i class="fas fa-info-circle"></i> Información Básica</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="numeroRuta">Número de Ruta *</label>
+                                    <input type="text" id="numeroRuta" required 
+                                        placeholder="Ej: 001" 
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                        maxlength="3">
+                                    <small>Solo números, máximo 3 dígitos</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="nombreRuta">Nombre de la Ruta *</label>
+                                    <input type="text" id="nombreRuta" required 
+                                        placeholder="Ej: Ciudad Varyna"
+                                        oninput="this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑ\s]/g, '')">
+                                    <small>Solo letras y espacios</small>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="unidadesRuta">Unidades Disponibles *</label>
+                                <div class="checkbox-group-grid" id="contenedorUnidades">
+                                    <!-- Las unidades se cargarán dinámicamente -->
+                                </div>
+                                <small>Seleccione una o más unidades</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="descripcionRuta">Descripción del Recorrido *</label>
+                                <textarea id="descripcionRuta" rows="3" required 
+                                    placeholder="Sea lo más específico posible en la descripción del recorrido de la ruta. Ej: Inicia en la Plaza Bolívar, pasa por la Avenida Principal, luego por el Mercado Municipal, etc."></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="estadoRuta">Estado</label>
+                                <select id="estadoRuta">
+                                    <option value="Activa">Activa</option>
+                                    <option value="Inactiva">Inactiva</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3><i class="fas fa-map-marked-alt"></i> Mapa del Recorrido</h3>
+                            <div class="instrucciones-mapa">
+                                <p><i class="fas fa-info-circle"></i> <strong>Instrucciones:</strong></p>
+                                <ol>
+                                    <li>Haz clic en el mapa para marcar el <strong class="punto-inicio">INICIO</strong> de la ruta</li>
+                                    <li>Haz clic para agregar <strong class="punto-cruce">Puntos de Cruce</strong> (avenidas, calles, etc.)</li>
+                                    <li>Haz clic para marcar la <strong class="punto-destino">UNELLEZ (DESTINO)</strong></li>
+                                    <li>Luego haz clic para marcar los <strong class="punto-parada">Puntos de Parada</strong></li>
+                                </ol>
+                                <div class="leyenda-mapa">
+                                    <span class="leyenda-item"><span class="color-inicio"></span> Inicio de Ruta</span>
+                                    <span class="leyenda-item"><span class="color-cruce"></span> Puntos de Cruce</span>
+                                    <span class="leyenda-item"><span class="color-destino"></span> UNELLEZ (Destino)</span>
+                                    <span class="leyenda-item"><span class="color-parada"></span> Puntos de Parada</span>
+                                </div>
+                            </div>
+                            
+                            <div class="controles-mapa">
+                                <button type="button" class="btn btn-secondary" onclick="iniciarMarcadoInicio()">
+                                    <i class="fas fa-map-marker-alt"></i> Marcar INICIO
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="iniciarMarcadoCruce()">
+                                    <i class="fas fa-road"></i> Agregar Punto Cruce
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="iniciarMarcadoDestino()">
+                                    <i class="fas fa-university"></i> Marcar UNELLEZ (Destino)
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="iniciarMarcadoParada()">
+                                    <i class="fas fa-bus-stop"></i> Agregar Punto Parada
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="limpiarMapa()">
+                                    <i class="fas fa-trash"></i> Limpiar Mapa
+                                </button>
+                            </div>
+                            
+                            <div id="map" style="height: 500px; width: 100%; border-radius: 8px; margin-top: 15px;"></div>
+                            
+                            <div class="resumen-puntos">
+                                <h4><i class="fas fa-list"></i> Puntos Marcados:</h4>
+                                <div class="lista-puntos" id="listaPuntos">
+                                    <!-- Aquí se mostrarán los puntos marcados -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="mostrarContenidoRutas()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Ruta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
             </div>
         </div>
+    </div>
 
     <!-- Modal Registro Conductor Directo -->
     <div class="modal" id="modalDirectConductor">
@@ -664,7 +834,7 @@
                 </form>
             </div>
         </div>
+    </div>
 
-    <script src="js/admin.js"></script>
 </body>
 </html>
