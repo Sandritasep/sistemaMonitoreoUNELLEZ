@@ -1919,3 +1919,222 @@ input[oninput*="replace"][oninput*="A-Za-z"] {
         font-size: 14px;
     }
 }
+
+/* Agregar al final del archivo admin.css */
+
+/* Estilos para la línea seleccionable */
+.linea-seleccionable {
+    cursor: crosshair !important;
+}
+
+.linea-seleccionable:hover {
+    stroke: #ff9800 !important;
+    stroke-width: 8px !important;
+    stroke-opacity: 0.3 !important;
+}
+
+/* Estilos para marcadores draggables */
+.inicio-draggable div:hover,
+.cruce-draggable div:hover,
+.destino-draggable div:hover,
+.parada-draggable div:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Indicador en la lista de puntos */
+.punto-acciones {
+    margin-top: 5px;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.punto-acciones i {
+    margin-right: 5px;
+    color: #1a2a6c;
+}
+
+/* Instrucciones mejoradas */
+.instrucciones-mapa ul {
+    margin: 10px 0 10px 20px;
+}
+
+.instrucciones-mapa li {
+    margin-bottom: 8px;
+    padding-left: 5px;
+}
+
+.instrucciones-mapa .instruccion-especial {
+    background: #fff3cd;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    border-left: 4px solid #ffc107;
+}
+
+.instruccion-especial i {
+    color: #ff9800;
+    margin-right: 5px;
+}
+
+/* Agregar al final del archivo admin.css */
+
+/* Estilos para la línea seleccionable */
+.linea-seleccionable {
+    cursor: crosshair !important;
+    pointer-events: auto !important;
+}
+
+.linea-seleccionable:hover {
+    stroke: #ff9800 !important;
+    stroke-width: 8px !important;
+    stroke-opacity: 0.3 !important;
+}
+
+/* Estilos para marcadores draggables */
+.inicio-draggable div:hover,
+.cruce-draggable div:hover,
+.destino-draggable div:hover,
+.parada-draggable div:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Indicador en la lista de puntos */
+.punto-acciones {
+    margin-top: 5px;
+    font-size: 0.8rem;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.punto-acciones i {
+    color: #1a2a6c;
+}
+
+/* Instrucciones mejoradas */
+.instrucciones-mapa ol,
+.instrucciones-mapa ul {
+    margin: 10px 0 10px 20px;
+}
+
+.instrucciones-mapa li {
+    margin-bottom: 8px;
+    padding-left: 5px;
+    line-height: 1.4;
+}
+
+.instrucciones-mapa .instruccion-especial {
+    background: #fff3cd;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    border-left: 4px solid #ffc107;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.instruccion-especial p:first-child {
+    margin-top: 0;
+    font-weight: 600;
+    color: #856404;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.instruccion-especial i.fa-lightbulb {
+    color: #ffc107;
+    font-size: 1.2rem;
+}
+
+.instruccion-especial ul {
+    margin: 10px 0 10px 15px;
+}
+
+.instruccion-especial li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.instruccion-especial li i {
+    color: #1a2a6c;
+    margin-top: 2px;
+    min-width: 16px;
+}
+
+.instruccion-especial .hint {
+    margin-top: 10px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 4px;
+    border-left: 3px solid #17a2b8;
+}
+
+.instruccion-especial .hint i {
+    color: #17a2b8;
+    margin-right: 5px;
+}
+
+/* Instrucciones de botones */
+.instrucciones-mapa ol li strong {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.instrucciones-mapa ol li strong.punto-inicio {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.instrucciones-mapa ol li strong.punto-cruce {
+    background-color: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+}
+
+.instrucciones-mapa ol li strong.punto-destino {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.instrucciones-mapa ol li strong.punto-parada {
+    background-color: rgba(253, 126, 20, 0.1);
+    color: #fd7e14;
+}
+
+/* Estado de los controles */
+.controles-mapa button {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.controles-mapa button.active {
+    background: #1a2a6c;
+    color: white;
+    border-color: #1a2a6c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(26, 42, 108, 0.3);
+}
+
+.controles-mapa button.active::after {
+    content: '✓';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    background: #28a745;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}

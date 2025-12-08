@@ -1,5 +1,5 @@
 // ========================================
-// ADMIN-MAPA.JS - Lógica del mapa Leaflet
+// Lógica del mapa Leaflet
 // ========================================
 
 // Variables para el mapa
@@ -7,15 +7,16 @@ let mapa = null;
 let puntosRecorrido = [];
 let puntosParada = [];
 let modoMarcado = null;
-let modoArrastre = false;
-let modoMoverPunto = false;
 let puntoSeleccionado = null;
 let polilineaRecorrido = null;
 let marcadores = [];
 let lineaSeleccionable = null;
+let clickEnLineaActivo = false;
 
 // Inicializar mapa
 function inicializarMapa() {
+    console.log("Iniciando mapa...");
+
     // Destruir mapa existente
     if (mapa) {
         mapa.remove();
@@ -33,43 +34,46 @@ function inicializarMapa() {
         maxZoom: 19
     }).addTo(mapa);
 
-    // Controles de zoom
-    L.control.zoom({
-        position: 'topright'
-    }).addTo(mapa);
-    
-    // Añadir evento de clic al mapa
-    mapa.on('click', function(e) {
-        if (!modoArrastre) {
-            manejarClicMapa(e.latlng.lat, e.latlng.lng);
-        }
-    });
-
-    // Control para mover el mapa (hand)
-    const moverControl = L.control({ position: 'topright' });
-    moverControl.onAdd = function() {
-        const div = L.DomUtil.create('div', 'control-mapa mover-control');
-        div.innerHTML = `
-            <button title="Mover mapa (Haz clic y arrastra)" onclick="activarModoArrastre()">
-                <i class="fas fa-hand-paper"></i>
-            </button>
-        `;
-        return div;
-    };
-    moverControl.addTo(mapa);
-
-    // Control para marcar puntos
-    const marcarControl = L.control({ position: 'topright' });
+    // Control para mostrar ubicacion actual
+    const marcarControl = L.control({ position: 'topleft' });
     marcarControl.onAdd = function() {
         const div = L.DomUtil.create('div', 'control-mapa marcar-control');
         div.innerHTML = `
-            <button title="Marcar puntos (Haz clic en el mapa)" onclick="desactivarModoArrastre()">
+            <button title="Mostrar ubicacion actual" onclick="">
                 <i class="fas fa-map-marker-alt"></i>
             </button>
         `;
         return div;
     };
     marcarControl.addTo(mapa);
+
+     // Inicializar línea seleccionable
+    if (lineaSeleccionable) {
+        mapa.removeLayer(lineaSeleccionable);
+    }
+
+    // Crear línea seleccionable para la polilínea
+    lineaSeleccionable = L.polyline([], {
+        color: 'transparent',
+        weight: 15,
+        opacity: 0.5,
+        className: 'linea-seleccionable'
+    }).addTo(mapa);
+
+    // Evento para hacer clic en la línea y añadir punto
+    lineaSeleccionable.on('click', function(e) {
+        // Solo procesar si hay al menos 2 puntos en el recorrido
+        if (puntosRecorrido.length >= 2) {
+            clickEnLineaActivo = true;
+            agregarPuntoEnLinea(e.latlng);
+            clickEnLineaActivo = false;
+        }
+    });
+
+    // Evento de clic en el mapa
+    mapa.on('click', function(e) {
+        manejarClicMapa(e.latlng.lat, e.latlng.lng);
+    });
 
     // Forzar redibujado del mapa
     setTimeout(() => {
@@ -83,7 +87,8 @@ function inicializarMapa() {
     puntosParada = [];
     marcadores = [];
     modoMarcado = null;
-    modoArrastre = false;
+    puntoSeleccionado = null;
+    clickEnLineaActivo = false;
     
     // Actualizar lista de puntos
     actualizarListaPuntos();
@@ -91,31 +96,12 @@ function inicializarMapa() {
     // Exportar para usar en admin-rutas.js
     window.puntosRecorrido = puntosRecorrido;
     window.puntosParada = puntosParada;
-
-    console.log("Mapa inicializado correctamente");
-}
-
-// Activar modo arrastre del mapa
-function activarModoArrastre() {
-    modoArrastre = true;
-    modoMarcado = null;
-    document.querySelector('.marcar-control button').classList.remove('active');
-    document.querySelector('.mover-control button').classList.add('active');
-    mostrarNotificacion('Modo mover activado: Haz clic y arrastra el mapa', 'info');
-}
-
-// Desactivar modo arrastre del mapa
-function desactivarModoArrastre() {
-    modoArrastre = false;
-    document.querySelector('.mover-control button').classList.remove('active');
-    document.querySelector('.marcar-control button').classList.add('active');
-    mostrarNotificacion('Modo marcar activado: Haz clic en el mapa para añadir puntos', 'info');
 }
 
 // Manejar clic en el mapa con validaciones
-function manejarClicMapa(lat, lng) {
-    if (!modoMarcado || modoArrastre) return;
-    
+function manejarClicMapa(lat, lng) {    
+    if (!modoMarcado) return;
+
     const coordenadas = { lat: lat, lng: lng };
     
     // Validaciones según las reglas
@@ -157,8 +143,6 @@ function manejarClicMapa(lat, lng) {
                 coordenadas: coordenadas,
                 descripcion: `Punto de cruce ${puntosRecorrido.filter(p => p.tipo === 'cruce').length + 1}`
             });
-            
-            mostrarNotificacion('Punto de cruce añadido. Puede seguir añadiendo más puntos de cruce.', 'info');
             break;
             
         case 'destino':
@@ -176,7 +160,7 @@ function manejarClicMapa(lat, lng) {
             
             // Validación: Solo puede haber un punto de destino
             if (puntosRecorrido.some(p => p.tipo === 'destino')) {
-                mostrarNotificacion('Ya existe un punto de destino. Elimine el actual para añadir otro.', 'error');
+                mostrarNotificacion('Ya existe un punto de destino.', 'error');
                 return;
             }
             
@@ -187,7 +171,6 @@ function manejarClicMapa(lat, lng) {
             });
             
             mostrarNotificacion('Punto de destino añadido. Ahora puede añadir puntos de parada.', 'success');
-            // No desactivar modoMarcado para permitir seguir en modo destino si hay error
             break;
             
         case 'parada':
@@ -205,8 +188,6 @@ function manejarClicMapa(lat, lng) {
                 coordenadas: coordenadas,
                 descripcion: `Punto de parada ${puntosParada.length + 1}`
             });
-            
-            mostrarNotificacion(`Punto de parada ${puntosParada.length} añadido. Puede seguir añadiendo más paradas.`, 'info');
             break;
     }
     
@@ -226,6 +207,101 @@ function manejarClicMapa(lat, lng) {
             });
         }
     }
+}
+
+// Función para agregar punto en la línea entre dos puntos
+function agregarPuntoEnLinea(latlng) {
+    if (puntosRecorrido.length < 2) return;
+    
+    // Encontrar el segmento más cercano
+    let minDistance = Infinity;
+    let insertIndex = -1;
+    let closestSegment = null;
+    
+    for (let i = 0; i < puntosRecorrido.length - 1; i++) {
+        const puntoA = puntosRecorrido[i].coordenadas;
+        const puntoB = puntosRecorrido[i + 1].coordenadas;
+        
+        // Calcular distancia del punto clicado al segmento
+        const distance = distanceToSegment(
+            latlng.lat, latlng.lng,
+            puntoA.lat, puntoA.lng,
+            puntoB.lat, puntoB.lng
+        );
+        
+        if (distance < minDistance) {
+            minDistance = distance;
+            insertIndex = i + 1;
+        }
+    }
+    
+    // Solo agregar si la distancia es razonable (menos de 50 metros en escala de mapa)
+    if (insertIndex > 0 && minDistance < 0.0005) {
+        // Verificar que no estamos insertando después del destino (si ya existe)
+        if (puntosRecorrido[insertIndex - 1].tipo === 'destino') {
+            mostrarNotificacion('No puede agregar puntos después del destino final', 'error');
+            return;
+        }
+        
+        // Verificar que no estamos insertando entre inicio y el primer cruce si no hay cruces
+        if (insertIndex === 1 && puntosRecorrido[0].tipo === 'inicio' && 
+            puntosRecorrido[1] && puntosRecorrido[1].tipo !== 'cruce') {
+            // Está bien, es entre inicio y el primer punto
+        }
+        
+        // Insertar nuevo punto de cruce
+        const nuevoPunto = {
+            tipo: 'cruce',
+            coordenadas: { lat: latlng.lat, lng: latlng.lng },
+            descripcion: `Punto de cruce ${puntosRecorrido.filter(p => p.tipo === 'cruce').length + 1}`
+        };
+        
+        puntosRecorrido.splice(insertIndex, 0, nuevoPunto);
+        
+        mostrarNotificacion('Punto de cruce añadido en la línea del recorrido.', 'success');
+        actualizarMapa();
+        actualizarListaPuntos();
+        
+        // Desactivar el modo de marcado después de agregar en línea
+        modoMarcado = null;
+        document.querySelectorAll('.controles-mapa button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+    }
+}
+
+// Función auxiliar para calcular distancia a segmento
+function distanceToSegment(px, py, x1, y1, x2, y2) {
+    const A = px - x1;
+    const B = py - y1;
+    const C = x2 - x1;
+    const D = y2 - y1;
+
+    const dot = A * C + B * D;
+    const lenSq = C * C + D * D;
+    let param = -1;
+    
+    if (lenSq !== 0) {
+        param = dot / lenSq;
+    }
+
+    let xx, yy;
+
+    if (param < 0) {
+        xx = x1;
+        yy = y1;
+    } else if (param > 1) {
+        xx = x2;
+        yy = y2;
+    } else {
+        xx = x1 + param * C;
+        yy = y1 + param * D;
+    }
+
+    const dx = px - xx;
+    const dy = py - yy;
+    
+    return Math.sqrt(dx * dx + dy * dy);
 }
 
 // Actualizar mapa
@@ -250,6 +326,13 @@ function actualizarMapa() {
             opacity: 0.7,
             dashArray: '5, 10'
         }).addTo(mapa);
+
+        // Actualizar línea seleccionable SOLO si hay al menos 2 puntos
+        if (coordenadasRecorrido.length >= 2) {
+            lineaSeleccionable.setLatLngs(coordenadasRecorrido);
+        } else {
+            lineaSeleccionable.setLatLngs([]);
+        }
     }
     
     // Añadir marcadores
@@ -259,8 +342,8 @@ function actualizarMapa() {
         switch(punto.tipo) {
             case 'inicio':
                 icono = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: `<div style="background-color: #28a745; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">I</div>`,
+                    className: 'custom-div-icon inicio-draggable',
+                    html: `<div style="background-color: #28a745; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3); cursor: move;">I</div>`,
                     iconSize: [36, 36],
                     iconAnchor: [18, 18]
                 });
@@ -268,8 +351,8 @@ function actualizarMapa() {
                 
             case 'destino':
                 icono = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: `<div style="background-color: #dc3545; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">F</div>`,
+                    className: 'custom-div-icon destino-draggable',
+                    html: `<div style="background-color: #dc3545; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3); cursor: move;">F</div>`,
                     iconSize: [36, 36],
                     iconAnchor: [18, 18]
                 });
@@ -277,17 +360,31 @@ function actualizarMapa() {
                 
             default: // cruce
                 icono = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: `<div style="background-color: #007bff; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">${index}</div>`,
+                    className: 'custom-div-icon cruce-draggable',
+                    html: `<div style="background-color: #007bff; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3); cursor: move;">${index}</div>`,
                     iconSize: [29, 29],
                     iconAnchor: [14.5, 14.5]
                 });
         }
         
-        const marker = L.marker([punto.coordenadas.lat, punto.coordenadas.lng], { icon: icono })
+        const marker = L.marker([punto.coordenadas.lat, punto.coordenadas.lng], { icon: icono, draggable: true})
             .addTo(mapa)
-            .bindPopup(`<strong>${punto.descripcion}</strong><br>Lat: ${punto.coordenadas.lat.toFixed(6)}<br>Lng: ${punto.coordenadas.lng.toFixed(6)}`);
-        
+            .bindPopup(`<strong>${punto.descripcion}</strong><br>Lat: ${punto.coordenadas.lat.toFixed(6)}<br>Lng: ${punto.coordenadas.lng.toFixed(6)}`)
+            .on('dragstart', function() {
+                // Desactivar clics en línea mientras se arrastra
+                clickEnLineaActivo = true;
+            })
+            .on('dragend', function(e) {
+                const newLatLng = e.target.getLatLng();
+                punto.coordenadas = { lat: newLatLng.lat, lng: newLatLng.lng };
+                actualizarMapa();
+                actualizarListaPuntos();
+                mostrarNotificacion('Punto movido correctamente', 'info');
+                // Reactivar clics en línea después de un pequeño delay
+                setTimeout(() => {
+                    clickEnLineaActivo = false;
+                }, 100);
+            });
         marcadores.push(marker);
     });
     
@@ -300,10 +397,25 @@ function actualizarMapa() {
             iconAnchor: [12, 12]
         });
         
-        const marker = L.marker([punto.coordenadas.lat, punto.coordenadas.lng], { icon: icono })
+        const marker = L.marker([punto.coordenadas.lat, punto.coordenadas.lng], { icon: icono, draggable: true })
             .addTo(mapa)
-            .bindPopup(`<strong>${punto.descripcion}</strong><br>Lat: ${punto.coordenadas.lat.toFixed(6)}<br>Lng: ${punto.coordenadas.lng.toFixed(6)}`);
-        
+            .bindPopup(`<strong>${punto.descripcion}</strong><br>Lat: ${punto.coordenadas.lat.toFixed(6)}<br>Lng: ${punto.coordenadas.lng.toFixed(6)}`)
+            .on('dragstart', function() {
+                // Desactivar clics en línea mientras se arrastra
+                clickEnLineaActivo = true;
+            })
+            .on('dragend', function(e) {
+                const newLatLng = e.target.getLatLng();
+                punto.coordenadas = { lat: newLatLng.lat, lng: newLatLng.lng };
+                actualizarMapa();
+                actualizarListaPuntos();
+                mostrarNotificacion('Punto de parada movido correctamente', 'info');
+                // Reactivar clics en línea después de un pequeño delay
+                setTimeout(() => {
+                    clickEnLineaActivo = false;
+                }, 100);
+            });
+
         marcadores.push(marker);
     });
     
@@ -350,6 +462,9 @@ function actualizarListaPuntos() {
                     <div class="punto-coordenadas">
                         Lat: ${punto.coordenadas.lat.toFixed(6)}, Lng: ${punto.coordenadas.lng.toFixed(6)}
                     </div>
+                    <div class="punto-acciones">
+                        <small><i class="fas fa-arrows-alt"></i> Arrastre en el mapa para mover</small>
+                    </div>
                 </div>
             </div>
             <button type="button" class="btn-eliminar-punto" onclick="eliminarPunto('recorrido', ${index})">
@@ -373,6 +488,9 @@ function actualizarListaPuntos() {
                     <div class="punto-coordenadas">
                         Lat: ${punto.coordenadas.lat.toFixed(6)}, Lng: ${punto.coordenadas.lng.toFixed(6)}
                     </div>
+                    <div class="punto-acciones">
+                        <small><i class="fas fa-arrows-alt"></i> Arrastre en el mapa para mover</small>
+                    </div>
                 </div>
             </div>
             <button type="button" class="btn-eliminar-punto" onclick="eliminarPunto('parada', ${index})">
@@ -389,7 +507,6 @@ function actualizarListaPuntos() {
 
 // Funciones para modos de marcado
 function iniciarMarcadoInicio() {
-    desactivarModoArrastre();
     modoMarcado = 'inicio';
     document.querySelectorAll('.controles-mapa button').forEach(btn => {
         btn.classList.remove('active');
@@ -399,7 +516,6 @@ function iniciarMarcadoInicio() {
 }
 
 function iniciarMarcadoCruce() {
-    desactivarModoArrastre();
     modoMarcado = 'cruce';
     document.querySelectorAll('.controles-mapa button').forEach(btn => {
         btn.classList.remove('active');
@@ -409,7 +525,6 @@ function iniciarMarcadoCruce() {
 }
 
 function iniciarMarcadoDestino() {
-    desactivarModoArrastre();
     modoMarcado = 'destino';
     document.querySelectorAll('.controles-mapa button').forEach(btn => {
         btn.classList.remove('active');
@@ -419,7 +534,6 @@ function iniciarMarcadoDestino() {
 }
 
 function iniciarMarcadoParada() {
-    desactivarModoArrastre();
     modoMarcado = 'parada';
     document.querySelectorAll('.controles-mapa button').forEach(btn => {
         btn.classList.remove('active');
@@ -471,7 +585,6 @@ function limpiarMapa() {
     puntosRecorrido = [];
     puntosParada = [];
     modoMarcado = null;
-    modoArrastre = false;
     
     if (mapa) {
         marcadores.forEach(marker => mapa.removeLayer(marker));
@@ -479,6 +592,10 @@ function limpiarMapa() {
         
         if (polilineaRecorrido) mapa.removeLayer(polilineaRecorrido);
         polilineaRecorrido = null;
+
+        if (lineaSeleccionable) {
+            lineaSeleccionable.setLatLngs([]);
+        }
         
         // Restablecer controles
         document.querySelectorAll('.controles-mapa button, .control-mapa button').forEach(btn => {
@@ -491,6 +608,13 @@ function limpiarMapa() {
     mostrarNotificacion('Mapa limpiado correctamente', 'info');
 }
 
+// Función para verificar si se puede agregar puntos en línea
+function puedeAgregarEnLinea() {
+    return puntosRecorrido.length >= 2 && 
+           puntosRecorrido.some(p => p.tipo === 'inicio') && 
+           puntosRecorrido.some(p => p.tipo === 'destino');
+}
+
 // Exportar funciones
 window.inicializarMapa = inicializarMapa;
 window.iniciarMarcadoInicio = iniciarMarcadoInicio;
@@ -499,5 +623,4 @@ window.iniciarMarcadoDestino = iniciarMarcadoDestino;
 window.iniciarMarcadoParada = iniciarMarcadoParada;
 window.limpiarMapa = limpiarMapa;
 window.eliminarPunto = eliminarPunto;
-window.activarModoArrastre = activarModoArrastre;
-window.desactivarModoArrastre = desactivarModoArrastre;
+window.puedeAgregarEnLinea = puedeAgregarEnLinea;

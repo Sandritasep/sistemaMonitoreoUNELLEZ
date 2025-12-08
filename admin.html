@@ -597,13 +597,24 @@
                         <div class="form-section">
                             <h3><i class="fas fa-map-marked-alt"></i> Mapa del Recorrido</h3>
                             <div class="instrucciones-mapa">
-                                <p><i class="fas fa-info-circle"></i> <strong>Instrucciones:</strong></p>
+                                <p><i class="fas fa-info-circle"></i> <strong>Instrucciones principales:</strong></p>
                                 <ol>
-                                    <li>Haz clic en el mapa para marcar el <strong class="punto-inicio">INICIO</strong> de la ruta</li>
-                                    <li>Haz clic para agregar <strong class="punto-cruce">Puntos de Cruce</strong> (avenidas, calles, etc.)</li>
-                                    <li>Haz clic para marcar la <strong class="punto-destino">UNELLEZ (DESTINO)</strong></li>
-                                    <li>Luego haz clic para marcar los <strong class="punto-parada">Puntos de Parada</strong></li>
+                                    <li><strong class="punto-inicio">INICIO</strong> para añadir el inicio de la ruta</li>
+                                    <li><strong class="punto-cruce">CRUCE</strong> para añadir el recorrido de la ruta</li>
+                                    <li><strong class="punto-destino">DESTINO</strong> para añadir el final de la ruta (UNELLEZ)</li>
+                                    <li><strong class="punto-parada">PARADAS</strong> para añadir las paradas de la ruta</li>
                                 </ol>
+                                
+                                <div class="instruccion-especial">
+                                    <p><i class="fas fa-lightbulb"></i> <strong>Funcionalidades adicionales:</strong></p>
+                                    <ul>
+                                        <li><i class="fas fa-arrows-alt"></i> <strong>Mover puntos:</strong> Arrastre cualquier punto en el mapa para reubicarlo</li>
+                                        <li><i class="fas fa-plus-circle"></i> <strong>Agregar en línea:</strong> Si ya terminó de marcar los puntos de la ruta (tiene inicio y destino), haga clic sobre la línea del recorrido para agregar puntos adicionales</li>
+                                        <li><i class="fas fa-times"></i> <strong>Eliminar:</strong> Use el botón <i class="fas fa-times" style="color: #dc3545;"></i> en la lista para eliminar puntos</li>
+                                    </ul>
+                                    <p class="hint"><small><i class="fas fa-exclamation-triangle"></i> <strong>Nota:</strong> Para agregar puntos en línea, asegúrese de tener al menos el inicio y destino marcados, y haga clic directamente sobre la línea azul del recorrido.</small></p>
+                                </div>
+                                
                                 <div class="leyenda-mapa">
                                     <span class="leyenda-item"><span class="color-inicio"></span> Inicio de Ruta</span>
                                     <span class="leyenda-item"><span class="color-cruce"></span> Puntos de Cruce</span>
@@ -614,16 +625,16 @@
                             
                             <div class="controles-mapa">
                                 <button type="button" class="btn btn-secondary" onclick="iniciarMarcadoInicio()">
-                                    <i class="fas fa-map-marker-alt"></i> Marcar INICIO
+                                    <i class="fas fa-map-marker-alt"></i> INICIO
                                 </button>
                                 <button type="button" class="btn btn-secondary" onclick="iniciarMarcadoCruce()">
-                                    <i class="fas fa-road"></i> Agregar Punto Cruce
+                                    <i class="fas fa-road"></i> Cruce
                                 </button>
                                 <button type="button" class="btn btn-secondary" onclick="iniciarMarcadoDestino()">
-                                    <i class="fas fa-university"></i> Marcar UNELLEZ (Destino)
+                                    <i class="fas fa-university"></i> Destino
                                 </button>
                                 <button type="button" class="btn btn-secondary" onclick="iniciarMarcadoParada()">
-                                    <i class="fas fa-bus-stop"></i> Agregar Punto Parada
+                                    <i class="fas fa-bus"></i> Paradas
                                 </button>
                                 <button type="button" class="btn btn-danger" onclick="limpiarMapa()">
                                     <i class="fas fa-trash"></i> Limpiar Mapa
