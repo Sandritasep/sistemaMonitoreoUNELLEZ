@@ -12,6 +12,8 @@ let polilineaRecorrido = null;
 let marcadores = [];
 let lineaSeleccionable = null;
 let clickEnLineaActivo = false;
+let ubicacionUsuario = null;
+let marcadorUbicacion = null;
 
 // Inicializar mapa
 function inicializarMapa() {
@@ -39,7 +41,7 @@ function inicializarMapa() {
     marcarControl.onAdd = function() {
         const div = L.DomUtil.create('div', 'control-mapa marcar-control');
         div.innerHTML = `
-            <button title="Mostrar ubicacion actual" onclick="">
+            <button title="Mostrar ubicacion actual" onclick="mostrarUbicacionActual()">
                 <i class="fas fa-map-marker-alt"></i>
             </button>
         `;
@@ -89,6 +91,13 @@ function inicializarMapa() {
     modoMarcado = null;
     puntoSeleccionado = null;
     clickEnLineaActivo = false;
+    ubicacionUsuario = null;
+
+    // Eliminar marcador de ubicación anterior si existe
+    if (marcadorUbicacion) {
+        mapa.removeLayer(marcadorUbicacion);
+        marcadorUbicacion = null;
+    }
     
     // Actualizar lista de puntos
     actualizarListaPuntos();
@@ -96,6 +105,122 @@ function inicializarMapa() {
     // Exportar para usar en admin-rutas.js
     window.puntosRecorrido = puntosRecorrido;
     window.puntosParada = puntosParada;
+}
+
+// Función para mostrar la ubicación actual del usuario
+function mostrarUbicacionActual() {
+    if (!mapa) return;
+    
+    // Verificar si el navegador soporta geolocalización
+    if (!navigator.geolocation) {
+        mostrarNotificacion('Tu navegador no soporta geolocalización', 'error');
+        return;
+    }
+    
+    // Mostrar mensaje de carga
+    mostrarNotificacion('Obteniendo tu ubicación...', 'info');
+    
+    // Solicitar ubicación
+    navigator.geolocation.getCurrentPosition(
+        // Éxito
+        function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+            
+            // Guardar ubicación
+            ubicacionUsuario = { lat, lng, accuracy };
+            
+            // Eliminar marcador anterior si existe
+            if (marcadorUbicacion) {
+                mapa.removeLayer(marcadorUbicacion);
+            }
+            
+            // Crear marcador para la ubicación del usuario
+            marcadorUbicacion = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: 'custom-div-icon ubicacion-actual',
+                    html: `<div style="background-color: #9c27b0; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(156, 39, 176, 0.5);">
+                        <i class="fas fa-user"></i>
+                    </div>`,
+                    iconSize: [31, 31],
+                    iconAnchor: [15.5, 15.5]
+                }),
+                zIndexOffset: 1000 // Asegurar que esté encima de otros marcadores
+            }).addTo(mapa);
+            
+            // Crear círculo para mostrar precisión
+            const circle = L.circle([lat, lng], {
+                color: '#9c27b0',
+                fillColor: '#9c27b0',
+                fillOpacity: 0.1,
+                radius: accuracy
+            }).addTo(mapa);
+            
+            // Agregar popup informativo
+            marcadorUbicacion.bindPopup(`
+                <div style="text-align: center;">
+                    <strong><i class="fas fa-user"></i> Tu ubicación actual</strong><br>
+                    Lat: ${lat.toFixed(6)}<br>
+                    Lng: ${lng.toFixed(6)}<br>
+                    <small>Precisión: ${Math.round(accuracy)} metros</small>
+                </div>
+            `).openPopup();
+            
+            // Centrar mapa en la ubicación del usuario
+            mapa.setView([lat, lng], 16);
+            
+            // Mostrar notificación de éxito
+            mostrarNotificacion('Ubicación encontrada correctamente', 'success');
+            
+            // Remover el círculo de precisión después de 5 segundos
+            setTimeout(() => {
+                if (circle && mapa.hasLayer(circle)) {
+                    mapa.removeLayer(circle);
+                }
+            }, 5000);
+        },
+        // Error
+        function(error) {
+            let mensajeError = 'No se pudo obtener tu ubicación. ';
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    mensajeError += 'Permiso denegado. Por favor, permite el acceso a tu ubicación.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    mensajeError += 'La información de ubicación no está disponible.';
+                    break;
+                case error.TIMEOUT:
+                    mensajeError += 'Tiempo de espera agotado.';
+                    break;
+                default:
+                    mensajeError += 'Error desconocido.';
+            }
+            
+            mostrarNotificacion(mensajeError, 'error');
+            
+            // Si hay una ubicación guardada anteriormente, centrar ahí
+            if (ubicacionUsuario) {
+                mapa.setView([ubicacionUsuario.lat, ubicacionUsuario.lng], 13);
+                mostrarNotificacion('Usando ubicación anterior', 'info');
+            }
+        },
+        // Opciones
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+        }
+    );
+}
+
+// Función para centrar en Barinas (ubicación por defecto)
+function centrarEnBarinas() {
+    if (mapa) {
+        mapa.setView([8.630485, -70.209908], 13);
+        mostrarNotificacion('Centrado en Barinas, Venezuela', 'info');
+    }
 }
 
 // Manejar clic en el mapa con validaciones
@@ -585,6 +710,7 @@ function limpiarMapa() {
     puntosRecorrido = [];
     puntosParada = [];
     modoMarcado = null;
+    clickEnLineaActivo = false;
     
     if (mapa) {
         marcadores.forEach(marker => mapa.removeLayer(marker));
@@ -596,11 +722,21 @@ function limpiarMapa() {
         if (lineaSeleccionable) {
             lineaSeleccionable.setLatLngs([]);
         }
+
+        // Limpiar marcador de ubicación
+        if (marcadorUbicacion) {
+            mapa.removeLayer(marcadorUbicacion);
+            marcadorUbicacion = null;
+        }
         
         // Restablecer controles
         document.querySelectorAll('.controles-mapa button, .control-mapa button').forEach(btn => {
             btn.classList.remove('active');
         });
+
+        // Centrar en Barinas
+        centrarEnBarinas();
+
         document.querySelector('.marcar-control button').classList.add('active');
     }
     
@@ -624,3 +760,4 @@ window.iniciarMarcadoParada = iniciarMarcadoParada;
 window.limpiarMapa = limpiarMapa;
 window.eliminarPunto = eliminarPunto;
 window.puedeAgregarEnLinea = puedeAgregarEnLinea;
+window.mostrarUbicacionActual = mostrarUbicacionActual;
