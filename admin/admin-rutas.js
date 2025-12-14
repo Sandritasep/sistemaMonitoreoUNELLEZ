@@ -73,18 +73,26 @@ function cargarUnidadesParaRuta() {
 
 // Mostrar contenido de rutas (tabla + botón)
 function mostrarContenidoRutas() {
+    console.log('mostrando tabla de rutas...');
+
     const accionesRuta = document.getElementById('accionesRuta');
+    const accionesUnidad = document.getElementById('accionesUnidad');
     const tablaRutas = document.getElementById('tablaRutas');
+    const tablaUnid = document.getElementById('tablaUnidades');
+    const formularioUnidad = document.getElementById('formularioUnidad');
     const formularioRuta = document.getElementById('formularioRuta');
     const statsRutas = document.querySelector('#rutasSection .admin-stats');
     
-    // Mostrar: stats, botón y tabla
+    // Mostrar
     if (statsRutas) statsRutas.style.display = 'grid';
     if (accionesRuta) accionesRuta.style.display = 'flex';
     if (tablaRutas) tablaRutas.style.display = 'block';
     
-    // Ocultar formulario
+    // Ocultar
+    if (tablaUnid) tablaUnid.style.display = 'none';
+    if (formularioUnidad) formularioUnidad.style.display = 'none';
     if (formularioRuta) formularioRuta.style.display = 'none';
+    if (accionesUnidad) accionesUnidad.style.display = 'none';
     
     cargarRutas();
 }

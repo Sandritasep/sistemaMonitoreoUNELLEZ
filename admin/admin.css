@@ -804,29 +804,7 @@ body.admin-logged-in .admin-content {
     flex: 1;
 }
 
-/* Estilos para el botón de ir a unidades */
-.btn-go-unidades {
-    background: #9c27b0;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-top: 10px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.3s ease;
-}
-
-.btn-go-unidades:hover {
-    background: #7b1fa2;
-    transform: translateY(-2px);
-}
-
-/* 
-.formulario-unidad-container input[type="number"] {
+/* .formulario-unidad-container input[type="number"] {
     -moz-appearance: textfield;
 } */
 

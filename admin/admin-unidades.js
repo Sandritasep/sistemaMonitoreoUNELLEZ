@@ -7,22 +7,42 @@ let unidadesBus = [];
 
 // Función para mostrar tabla de unidades
 function mostrarTablaUnidades() {
+    console.log('mostrando tabla unidades...');
+
     // Ocultar otras secciones
-    document.getElementById('tablaRutas').style.display = 'none';
-    document.getElementById('formularioRuta').style.display = 'none';
-    document.getElementById('formularioUnidad').style.display = 'none';
+    const tablaRutas = document.getElementById('tablaRutas');
+    const formularioRuta = document.getElementById('formularioRuta');
+    const formularioUnidad = document.getElementById('formularioUnidad');
+    const accionesUnid = document.getElementById('accionesUnidad');
+    const accionesRuta = document.getElementById('accionesRuta');
+    const statsUnid = document.querySelector('#rutasSection .admin-stats');
+    
+    if (accionesRuta) accionesRuta.style.display = 'none';
+    if (tablaRutas) tablaRutas.style.display = 'none';
+    if (formularioRuta) formularioRuta.style.display = 'none';
+    if (formularioUnidad) formularioUnidad.style.display = 'none';
+    if (accionesUnid) accionesUnid.style.display = 'block';
+    if (statsUnid) statsUnid.style.display = 'grid';
     
     // Mostrar tabla de unidades
-    document.getElementById('accionesUnidad').style.display = 'block';
     document.getElementById('tablaUnidades').style.display = 'block';
     document.getElementById('accionesRuta').style.display = 'none';
-    
-    // Actualizar estado activo del stat
-    document.querySelectorAll('.stat-card').forEach(card => {
-        card.classList.remove('active');
-    });
 
-    document.getElementById('statUnidades').classList.add('active');
+    // Actualizar estado activo del stat
+    const statUnidades = document.getElementById('statUnidades');
+    if (statUnidades) {
+        // Remover active de todos los stats primero
+        document.querySelectorAll('.stat-card').forEach(card => {
+            if (card.classList) {
+                card.classList.remove('active');
+            }
+        });
+        statUnidades.classList.add('active');
+    }
+
+    // Mostrar tabla de unidades
+    const tablaUnidades = document.getElementById('tablaUnidades');
+    if (tablaUnidades) tablaUnidades.style.display = 'block';
     
     // Cargar unidades si no están cargadas
     if (unidadesBus.length === 0) {
@@ -285,6 +305,12 @@ function guardarNuevaUnidad(event) {
 // Función para ver detalles de unidad
 function verDetallesUnidad(index) {
     const unidad = unidadesBus[index];
+
+    // Verificar si el modal ya existe y removerlo
+    const modalExistente = document.getElementById('modalDetallesUnidad');
+    if (modalExistente) {
+        modalExistente.remove();
+    }
     
     // Crear modal de detalles
     const detallesHTML = `
@@ -393,7 +419,10 @@ function verDetallesUnidad(index) {
     
     // Mostrar modal
     setTimeout(() => {
-        document.getElementById('modalDetallesUnidad').classList.add('active');
+        const modal = document.getElementById('modalDetallesUnidad');
+        if (modal) {
+            modal.classList.add('active');
+        }
     }, 10);
 }
 
@@ -424,7 +453,9 @@ function cerrarModalDetalles() {
     if (modal) {
         modal.classList.remove('active');
         setTimeout(() => {
-            modal.remove();
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
         }, 300);
     }
 }
