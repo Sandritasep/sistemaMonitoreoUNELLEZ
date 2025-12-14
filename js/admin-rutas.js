@@ -3,14 +3,73 @@
 // ========================================
 
 // Variables específicas de rutas
-let unidadesDisponibles = [
-    { id: 'bus-001', nombre: 'Bus-001', estado: 'disponible' },
-    { id: 'bus-002', nombre: 'Bus-002', estado: 'disponible' },
-    { id: 'bus-003', nombre: 'Bus-003', estado: 'disponible' },
-    { id: 'bus-004', nombre: 'Bus-004', estado: 'disponible' },
-    { id: 'bus-005', nombre: 'Bus-005', estado: 'disponible' },
-    { id: 'bus-006', nombre: 'Bus-006', estado: 'disponible' }
-];
+let unidadesDisponibles = [];
+
+// Función para cargar unidades desde el sistema de unidades
+function cargarUnidadesParaRuta() {
+    if (typeof window.unidadesBus !== 'undefined' && Array.isArray(window.unidadesBus)) {
+        // Transformar las unidades del sistema al formato que necesita el formulario
+        unidadesDisponibles = window.unidadesBus.map(unidad => ({
+            id: unidad.id,
+            nombre: `${unidad.id} - ${unidad.placa}`,
+            estado: unidad.estado,
+            modelo: unidad.modelo,
+            capacidad: unidad.capacidad
+        }));
+    }
+    
+    const contenedorUnidades = document.getElementById('contenedorUnidades');
+    if (!contenedorUnidades) return;
+    
+    contenedorUnidades.innerHTML = '';
+    
+    if (unidadesDisponibles.length === 0) {
+        contenedorUnidades.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #666;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>No hay unidades registradas. Primero registre unidades en la sección "Unidades bus"</p>
+                <button type="button" class="btn btn-secondary" onclick="mostrarTablaUnidades()" 
+                    style="margin-top: 10px;">
+                    <i class="fas fa-bus"></i> Ir a Unidades
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    unidadesDisponibles.forEach(unidad => {
+        // Determinar clase de estado
+        let claseEstado = '';
+        switch(unidad.estado) {
+            case 'Disponible':
+                claseEstado = 'estado-disponible';
+                break;
+            case 'En Mantenimiento':
+                claseEstado = 'estado-mantenimiento';
+                break;
+            case 'En Ruta':
+                claseEstado = 'estado-enruta';
+                break;
+            case 'Inactivo':
+                claseEstado = 'estado-inactivo';
+                break;
+            default:
+                claseEstado = 'estado-inactivo';
+        }
+        
+        const checkboxItem = document.createElement('div');
+        checkboxItem.className = 'checkbox-item';
+        checkboxItem.innerHTML = `
+            <input type="checkbox" id="${unidad.id}" name="unidades" value="${unidad.id}">
+            <label for="${unidad.id}">
+                <strong>${unidad.nombre}</strong><br>
+                <small>${unidad.modelo || 'Sin modelo'} | ${unidad.capacidad || 'N/A'} pax</small><br>
+                <span class="estado-unidad ${claseEstado}">${unidad.estado}</span>
+            </label>
+        `;
+        contenedorUnidades.appendChild(checkboxItem);
+    });
+}
 
 // Mostrar contenido de rutas (tabla + botón)
 function mostrarContenidoRutas() {
@@ -54,8 +113,10 @@ function mostrarFormularioRuta() {
         document.getElementById('descripcionRuta').value = '';
         document.getElementById('estadoRuta').value = 'Activa';
         
-        // Cargar unidades disponibles
-        cargarUnidadesDisponibles();
+        // Cargar unidades disponibles desde el sistema
+        if (typeof cargarUnidadesParaRuta === 'function') {
+            cargarUnidadesParaRuta();
+        }
         
         // Inicializar mapa
         if (typeof inicializarMapa === 'function') {
@@ -85,6 +146,11 @@ function cargarRutas() {
     }));
     
     console.log('Rutas cargadas:', window.rutas.length);
+
+    // Cargar unidades para mostrar en la tabla
+    if (typeof cargarUnidadesParaRuta === 'function') {
+        cargarUnidadesParaRuta();
+    }
     
     // Actualizar estadísticas
     actualizarEstadisticasRutas(window.rutas);
@@ -292,8 +358,17 @@ function guardarNuevaRutaCompleta(event) {
         mostrarNotificacion('La descripción del recorrido es requerida', 'error');
         return;
     }
+
+    // Verificar que las unidades seleccionadas estén disponibles
+    const unidadesNoDisponibles = unidadesSeleccionadas.filter(unidadId => {
+        const unidad = unidadesDisponibles.find(u => u.id === unidadId);
+        return unidad && unidad.estado !== 'Disponible' && unidad.estado !== 'En Ruta';
+    });
     
-    // Verificar si hay puntos de recorrido (validación en admin-mapa.js)
+    if (unidadesNoDisponibles.length > 0) {
+        mostrarNotificacion('Algunas unidades seleccionadas no están disponibles', 'error');
+        return;
+    }
     
     // Verificar si ya existe una ruta con el mismo número
     let rutasDB = JSON.parse(localStorage.getItem('unellez_routes')) || {};

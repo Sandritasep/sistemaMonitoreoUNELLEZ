@@ -12,6 +12,7 @@
     <script src="js/admin.js"></script>
     <script src="js/admin-rutas.js"></script>
     <script src="js/admin-mapa.js"></script>
+    <script src="js/admin-unidades.js"></script>
     
 </head>
 <body>
@@ -188,15 +189,8 @@
                                 </th>
                                 <th width="15%">
                                     <strong>Carrera</strong>
-                                    <select class="filtro-columna" data-columna="3" onchange="filtrarColumna(this)">
-                                        <option value="">Todas</option>
-                                        <option value="Ingeniería">Ingeniería</option>
-                                        <option value="Medicina">Medicina</option>
-                                        <option value="Derecho">Derecho</option>
-                                        <option value="Administración">Administración</option>
-                                        <option value="Educación">Educación</option>
-                                        <option value="Arquitectura">Arquitectura</option>
-                                    </select>
+                                    <input type="text" class="filtro-columna" placeholder="Filtrar por carrera..."
+                                        data-columna="3" onkeyup="filtrarColumna(this)">
                                 </th>
                                 <th width="15%">
                                     <strong>Ruta Elegida</strong>
@@ -466,7 +460,7 @@
                             <p>Rutas Activas</p>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="mostrarTablaUnidades()">
                         <div class="stat-icon">
                             <i class="fas fa-bus"></i>
                         </div>
@@ -481,6 +475,11 @@
                 <div class="admin-actions" id="accionesRuta" style="display: none;">
                     <button class="btn btn-primary" onclick="mostrarFormularioRuta()">
                         <i class="fas fa-plus"></i> Nueva Ruta
+                    </button>
+                </div>
+                <div class="admin-actions" id="accionesUnidad" style="display: none;">
+                    <button class="btn btn-primary" onclick="mostrarFormularioUnidad()">
+                        <i class="fas fa-plus"></i> Nueva Unidad
                     </button>
                 </div>
 
@@ -517,9 +516,7 @@
                                         data-columna="2" onkeyup="filtrarColumnaRuta(this)">
                                 </th>
                                 <th width="25%">
-                                    <strong>Conductor</strong>
-                                    <input type="text" class="filtro-columna-ruta" placeholder="Filtrar conductor..." 
-                                        data-columna="3" onkeyup="filtrarColumnaRuta(this)">
+                                    <strong>Recorrido</strong>
                                 </th>
                                 <th width="15%">
                                     <strong>Estado</strong>
@@ -542,6 +539,213 @@
                     <div class="contador-resultados" id="contadorResultadosRutas">
                         Mostrando <strong>0</strong> de <strong>0</strong> rutas
                     </div>
+                </div>
+
+                <!-- Tabla de Unidades Bus (inicialmente oculta) -->
+                <div class="table-container" id="tablaUnidades" style="display: none;">
+                    <div class="table-header">
+                        <div class="table-title">
+                            <i class="fas fa-bus"></i> Lista de Unidades de Bus
+                        </div>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary" onclick="limpiarFiltrosUnidades()">
+                                <i class="fas fa-filter"></i> Limpiar Filtros
+                            </button>
+                            <button class="btn btn-secondary" onclick="cargarUnidadesDesdeStorage()">
+                                <i class="fas fa-sync"></i> Actualizar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th width="10%">
+                                    <strong>ID Unidad</strong>
+                                    <input type="text" class="filtro-columna-unidad" placeholder="Filtrar ID..." 
+                                        data-columna="0" onkeyup="filtrarColumnaUnidad(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Placa</strong>
+                                    <input type="text" class="filtro-columna-unidad" placeholder="Filtrar placa..." 
+                                        data-columna="1" onkeyup="filtrarColumnaUnidad(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Modelo</strong>
+                                    <input type="text" class="filtro-columna-unidad" placeholder="Filtrar modelo..." 
+                                        data-columna="2" onkeyup="filtrarColumnaUnidad(this)">
+                                </th>
+                                <th width="10%">
+                                    <strong>Año</strong>
+                                    <input type="text" class="filtro-columna-unidad" placeholder="Filtrar año..." 
+                                        data-columna="3" onkeyup="filtrarColumnaUnidad(this)">
+                                </th>
+                                <th width="15%">
+                                    <strong>Capacidad</strong>
+                                    <input type="text" class="filtro-columna-unidad" placeholder="Filtrar capacidad..." 
+                                        data-columna="4" onkeyup="filtrarColumnaUnidad(this)">
+                                </th>
+                                <th width="10%">
+                                    <strong>Estado</strong>
+                                    <select class="filtro-columna-unidad" data-columna="5" onchange="filtrarColumnaUnidad(this)">
+                                        <option value="">Todos</option>
+                                        <option value="Disponible">Disponible</option>
+                                        <option value="En Mantenimiento">Mantenimiento</option>
+                                        <option value="En Ruta">En Ruta</option>
+                                        <option value="Inactivo">Inactivo</option>
+                                    </select>
+                                </th>
+                                <th width="20%">
+                                    <strong>Acciones</strong>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaUnidades">
+                            <!-- Las unidades se cargarán aquí -->
+                        </tbody>
+                    </table>
+                    
+                    <div class="contador-resultados" id="contadorResultadosUnidades">
+                        Mostrando <strong>0</strong> de <strong>0</strong> unidades
+                    </div>
+                </div>
+
+                <!-- Formulario de Nueva Unidad (inicialmente oculto) -->
+                <div class="formulario-ruta-container" id="formularioUnidad" style="display: none;">
+                    <div class="formulario-header">
+                        <h3><i class="fas fa-bus"></i> Registrar Nueva Unidad de Bus</h3>
+                        <button type="button" class="btn btn-secondary" onclick="mostrarTablaUnidades()">
+                            <i class="fas fa-arrow-left"></i> Volver a la lista
+                        </button>
+                    </div>
+                    
+                    <form id="formNuevaUnidad" class="formulario-ruta" onsubmit="guardarNuevaUnidad(event)">
+                        <div class="form-section">
+                            <h3><i class="fas fa-info-circle"></i> Información Básica</h3>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="idUnidad">ID de Unidad *</label>
+                                    <input type="text" id="idUnidad" required 
+                                        placeholder="Ej: BUS-001"
+                                        maxlength="20"
+                                        oninput="this.value = this.value.toUpperCase()">
+                                    <small>Identificador único de la unidad (ej: BUS-001)</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="placaUnidad">Placa *</label>
+                                    <input type="text" id="placaUnidad" required 
+                                        placeholder="Ej: ABC-123"
+                                        maxlength="10"
+                                        oninput="this.value = this.value.toUpperCase()">
+                                    <small>Placa del vehículo (ej: ABC-123)</small>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="modeloUnidad">Modelo *</label>
+                                    <input type="text" id="modeloUnidad" required 
+                                        placeholder="Ej: Yutong ZK6128HGA"
+                                        maxlength="50">
+                                    <small>Modelo del bus (ej: Yutong ZK6128HGA)</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="anoUnidad">Año *</label>
+                                    <input type="number" id="anoUnidad" required 
+                                        placeholder="Ej: 2022"
+                                        min="2000"
+                                        max="2025"
+                                        step="1">
+                                    <small>Año de fabricación</small>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="capacidadUnidad">Capacidad de Pasajeros *</label>
+                                    <input type="number" id="capacidadUnidad" required 
+                                        placeholder="Ej: 40"
+                                        min="10"
+                                        max="100"
+                                        step="1">
+                                    <small>Número máximo de pasajeros</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="colorUnidad">Color</label>
+                                    <input type="text" id="colorUnidad" 
+                                        placeholder="Ej: Blanco con franjas azules"
+                                        maxlength="30">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3><i class="fas fa-cogs"></i> Especificaciones Técnicas</h3>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="combustibleUnidad">Tipo de Combustible</label>
+                                    <select id="combustibleUnidad">
+                                        <option value="Diesel">Diesel</option>
+                                        <option value="Gasolina">Gasolina</option>
+                                        <option value="Eléctrico">Eléctrico</option>
+                                        <option value="Híbrido">Híbrido</option>
+                                        <option value="Gas Natural">Gas Natural</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="kilometrajeUnidad">Kilometraje Inicial</label>
+                                    <input type="number" id="kilometrajeUnidad" 
+                                        placeholder="Ej: 15000"
+                                        min="0"
+                                        step="1">
+                                    <small>Kilómetros recorridos</small>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="caracteristicasUnidad">Características Especiales</label>
+                                <textarea id="caracteristicasUnidad" rows="3" 
+                                    placeholder="Ej: Aire acondicionado, WiFi, USB, rampa para discapacitados, etc."></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3><i class="fas fa-clipboard-check"></i> Estado y Mantenimiento</h3>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="estadoUnidad">Estado Actual *</label>
+                                    <select id="estadoUnidad" required>
+                                        <option value="Disponible">Disponible</option>
+                                        <option value="En Mantenimiento">En Mantenimiento</option>
+                                        <option value="En Ruta">En Ruta</option>
+                                        <option value="Inactivo">Inactivo</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fechaAdquisicion">Fecha de Adquisición</label>
+                                    <input type="date" id="fechaAdquisicion">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="observacionesUnidad">Observaciones</label>
+                                <textarea id="observacionesUnidad" rows="2" 
+                                    placeholder="Observaciones importantes sobre el estado o mantenimiento"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="mostrarTablaUnidades()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Unidad
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
                 <!-- Formulario de Nueva Ruta (inicialmente oculto) -->
@@ -582,7 +786,7 @@
                             <div class="form-group">
                                 <label for="descripcionRuta">Descripción del Recorrido *</label>
                                 <textarea id="descripcionRuta" rows="3" required 
-                                    placeholder="Sea lo más específico posible en la descripción del recorrido de la ruta. Ej: Inicia en la Plaza Bolívar, pasa por la Avenida Principal, luego por el Mercado Municipal, etc."></textarea>
+                                    placeholder="Se recomienda crear la ruta en el mapa primero, y luego detallar cada punto de cruce aca, incluyendo inicio y fin de la ruta."></textarea>
                             </div>
                             
                             <div class="form-group">

@@ -509,7 +509,7 @@ body.admin-logged-in .admin-content {
     gap: 1rem;
 }
 
-/* ===== ESTILOS PARA TABLAS DE USUARIOS ===== */
+/* ===== ESTILOS PARA TABLAS ===== */
 .table-container {
     background: white;
     border-radius: 12px;
@@ -571,6 +571,8 @@ body.admin-logged-in .admin-content {
 
 /* Filtros de columna */
 .filtro-columna,
+.filtro-columna-ruta,
+.filtro-columna-unidad,
 .filtro-columna-conductor,
 .filtro-columna-todos {
     color: white !important;
@@ -584,12 +586,16 @@ body.admin-logged-in .admin-content {
 }
 
 .filtro-columna::placeholder,
+.filtro-columna-ruta::placeholder,
+.filtro-columna-unidad::placeholder,
 .filtro-columna-conductor::placeholder,
 .filtro-columna-todos::placeholder {
     color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .filtro-columna:focus,
+.filtro-columna-ruta:focus,
+.filtro-columna-unidad:focus,
 .filtro-columna-conductor:focus,
 .filtro-columna-todos:focus {
     background: rgba(255, 255, 255, 0.2) !important;
@@ -599,6 +605,8 @@ body.admin-logged-in .admin-content {
 
 /* Estilos para los select */
 .filtro-columna option,
+.filtro-columna-ruta option,
+.filtro-columna-unidad option,
 .filtro-columna-conductor option,
 .filtro-columna-todos option {
     background: white !important;
@@ -608,6 +616,8 @@ body.admin-logged-in .admin-content {
 }
 
 .filtro-columna option[value=""],
+.filtro-columna-ruta option[value=""],
+.filtro-columna-unidad option[value=""],
 .filtro-columna-conductor option[value=""],
 .filtro-columna-todos option[value=""] {
     color: #666 !important;
@@ -715,6 +725,173 @@ body.admin-logged-in .admin-content {
     background: #ffd1d1;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(217, 48, 37, 0.2);
+}
+
+/* estilos para tabla unidades */
+/* Estado de las unidades */
+.estado-unidad {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 100px;
+    text-align: center;
+}
+
+.estado-disponible {
+    background: #d4f7e2;
+    color: #0d8b3e;
+}
+
+.estado-mantenimiento {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.estado-enruta {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.estado-inactivo {
+    background: #f5f5f5;
+    color: #757575;
+}
+
+/* Iconos para acciones de unidades */
+.btn-view {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.btn-view:hover {
+    background: #c8e6c9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(46, 125, 50, 0.2);
+}
+
+.btn-edit-unidad {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.btn-edit-unidad:hover {
+    background: #bbdefb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(21, 101, 192, 0.2);
+}
+
+.btn-delete-unidad {
+    background: #ffeaea;
+    color: #d93025;
+}
+
+.btn-delete-unidad:hover {
+    background: #ffd1d1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(217, 48, 37, 0.2);
+}
+
+/* Estilos para formulario de unidad */
+.formulario-unidad-container .form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.formulario-unidad-container .form-row .form-group {
+    flex: 1;
+}
+
+/* Estilos para el botón de ir a unidades */
+.btn-go-unidades {
+    background: #9c27b0;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+.btn-go-unidades:hover {
+    background: #7b1fa2;
+    transform: translateY(-2px);
+}
+
+/* 
+.formulario-unidad-container input[type="number"] {
+    -moz-appearance: textfield;
+} */
+
+.formulario-unidad-container input[type="number"]::-webkit-outer-spin-button,
+.formulario-unidad-container input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Responsive para formulario de unidad */
+@media (max-width: 768px) {
+    .formulario-unidad-container .form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .table-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .table-actions button {
+        width: 100%;
+    }
+}
+
+/* Animación para mostrar/ocultar secciones */
+.admin-section .table-container,
+.admin-section .formulario-ruta-container {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estilo para el stat-card activo */
+.stat-card.active {
+    border: 2px solid #1a2a6c;
+    background: rgba(26, 42, 108, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 42, 108, 0.1);
+}
+
+.stat-card.active .stat-icon {
+    background: rgba(26, 42, 108, 0.2);
+}
+
+.stat-card.active .stat-icon i {
+    color: #1a2a6c;
+}
+
+/* Estilo para hover en stat de unidades */
+#statUnidades:hover {
+    cursor: pointer;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
 }
 
 /* Mensaje cuando no hay usuarios */

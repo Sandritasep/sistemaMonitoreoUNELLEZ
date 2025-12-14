@@ -114,6 +114,7 @@ function inicializarPanelAdmin() {
     setTimeout(() => {
         cargarUsuarios();
         if (typeof cargarRutas === 'function') cargarRutas();
+        if (typeof cargarUnidadesDesdeStorage === 'function') cargarUnidadesDesdeStorage();
         actualizarEstadisticas();
     }, 300);
 }
@@ -200,7 +201,7 @@ function mostrarNotificacion(mensaje, tipo) {
         top: 20px;
         right: 20px;
         padding: 15px 20px;
-        background: ${tipo === 'success' ? '#28a745' : tipo === 'error' ? '#dc3545' : '#1a2a6c'};
+        background: ${tipo === 'success' ? '#28a745' : tipo === 'error' ? '#dc3545' : '#6c757d'};
         color: white;
         border-radius: 5px;
         z-index: 10000;
