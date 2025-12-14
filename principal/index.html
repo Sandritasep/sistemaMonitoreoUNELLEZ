@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transporte UNELLEZ</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="multimedia/iconoBus.ico" type="image/x-icon">
+    <script src="script.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -70,12 +71,12 @@
             
             <div class="login-footer">
                 <div class="login-links">
-                    <a href="register.html" class="link">¿No está registrado?</a>
-                    <a href="recuperarDatos.html" class="link">¿Olvidó sus datos?</a>
+                    <a href="/registro/register.html" class="link">¿No está registrado?</a>
+                    <a href="/recuperacion/recuperarDatos.html" class="link">¿Olvidó sus datos?</a>
                 </div>
                 <div class="admin-links">
                     <a href="#" onclick="showRegistrationInfo()" class="link admin">Registro para Chofer</a>
-                    <a href="admin.html" class="link admin">Acceso Administrativo</a>
+                    <a href="/admin/admin.html" class="link admin">Acceso Administrativo</a>
                 </div>
             </div>
         </div>
@@ -90,14 +91,13 @@
                 <h2>Información de Registro</h2>
             </div>
             <div class="modal-body">
-                <p>Para obtener acceso al sistema, debe solicitar su registro a través del administrador.</p>
-                <p>El administrador generará un enlace de registro temporal que tendrá una validez de 1 hora.</p>
+                <p>Para obtener acceso al sistema, el administrador de registrarlo en el sistema.</p>
+                <p>El administrador generará sus credenciales de acceso unicas.</p>
                 <p>Una vez registrado, podrá acceder al sistema con sus credenciales.</p>
             </div>
             <button class="btn btn-secondary btn-block" onclick="closeRegistroInfo()">Entendido</button>
         </div>
     </div>
 
-    <script src="js/script.js"></script>
 </body>
 </html>

@@ -142,7 +142,7 @@ function goToLogin() {
     showModal(null);
 
     // Redirigir al index.html solo cuando el usuario haga clic
-    window.location.href = 'index.html';
+    window.location.href = '/principal/index.html';
 }
 
 // ===============================================
@@ -1157,7 +1157,7 @@ function showRegistrationSuccess() {
 }
 
 function redirigir(){
-    window.location.href = "index.html";   
+    window.location.href = "/principal/index.html";   
 };
 
 function advertenciaDeInicializacion(err) {

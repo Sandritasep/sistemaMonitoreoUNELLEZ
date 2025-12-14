@@ -692,17 +692,16 @@ body.admin-logged-in .admin-content {
 
 /* Botones de acción */
 .btn-edit, .btn-delete {
+    padding: 6px 12px;
     border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    transition: all 0.3s ease;
-    margin: 2px;
+    gap: 5px;
 }
 
 .btn-edit {

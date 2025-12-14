@@ -216,13 +216,13 @@ function actualizarTablaUnidades() {
                 <span class="estado-unidad ${claseEstado}">${unidad.estado}</span>
             </td>
             <td>
-                <button type="button" class="btn btn-view" onclick="verDetallesUnidad(${index})" title="Ver detalles">
+                <button class="btn-edit" onclick="verDetallesUnidad(${index})">
                     <i class="fas fa-eye"></i> Ver
                 </button>
-                <button type="button" class="btn btn-edit-unidad" onclick="editarUnidad(${index})" title="Editar">
+                <button class="btn-edit" onclick="editarUnidad(${index})">
                     <i class="fas fa-edit"></i> Editar
                 </button>
-                <button type="button" class="btn btn-delete-unidad" onclick="eliminarUnidad(${index})" title="Eliminar">
+                <button class="btn-delete" onclick="eliminarUnidad(${index})">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
             </td>
@@ -304,7 +304,16 @@ function guardarNuevaUnidad(event) {
 
 // Función para ver detalles de unidad
 function verDetallesUnidad(index) {
+    console.log('mostrando detalles unidad - indice: ', index);
+    console.log('Unidad indice ', index, ': ', unidadesBus[index]);
+
     const unidad = unidadesBus[index];
+
+    if (!unidad) {
+        console.error('Unidad no encontrada en índice:', index);
+        mostrarNotificacion('Error: Unidad no encontrada', 'error');
+        return;
+    }
 
     // Verificar si el modal ya existe y removerlo
     const modalExistente = document.getElementById('modalDetallesUnidad');
@@ -404,7 +413,7 @@ function verDetallesUnidad(index) {
                     <button type="button" class="btn btn-secondary" onclick="cerrarModalDetalles()">
                         <i class="fas fa-times"></i> Cerrar
                     </button>
-                    <button type="button" class="btn btn-primary" onclick="editarUnidad(${index}); cerrarModalDetalles()">
+                    <button type="button" class="btn-edit" onclick="editarUnidad(${index}); cerrarModalDetalles()">
                         <i class="fas fa-edit"></i> Editar Unidad
                     </button>
                 </div>
@@ -422,6 +431,9 @@ function verDetallesUnidad(index) {
         const modal = document.getElementById('modalDetallesUnidad');
         if (modal) {
             modal.classList.add('active');
+            console.log('Modal mostrado correctamente');
+        } else {
+            console.error('Modal no encontrado después de crear');
         }
     }, 10);
 }
