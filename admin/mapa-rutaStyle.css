@@ -1,0 +1,291 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f5f5;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #1a2a6c 0%, #20478b 100%);
+    color: white;
+    padding: 15px 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.badge-estado {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.estado-activa {
+    background: #28a745;
+}
+
+.estado-inactiva {
+    background: #6c757d;
+}
+
+.controls {
+    background: white;
+    padding: 15px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.controls-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: #1a2a6c;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #20478b;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+.map-container {
+    height: calc(100vh - 130px);
+    width: 100%;
+    position: relative;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+}
+
+.sidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 100%;
+    background: white;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.sidebar h3 {
+    margin-bottom: 15px;
+    color: #1a2a6c;
+    border-bottom: 2px solid #1a2a6c;
+    padding-bottom: 5px;
+}
+
+.puntos-lista {
+    margin-bottom: 20px;
+}
+
+.punto-item {
+    padding: 10px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #6c757d;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.punto-item:hover {
+    background: #e9ecef;
+    transform: translateX(-5px);
+}
+
+.punto-item.inicio {
+    border-left-color: #28a745;
+}
+
+.punto-item.destino {
+    border-left-color: #17a2b8;
+}
+
+.punto-item.cruce {
+    border-left-color: #6c757d;
+}
+
+.punto-item.parada {
+    border-left-color: #ffc107;
+}
+
+.punto-tipo {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.tipo-inicio {
+    background: #28a745;
+}
+
+.tipo-destino {
+    background: #17a2b8;
+}
+
+.tipo-cruce {
+    background: #6c757d;
+}
+
+.tipo-parada {
+    background: #ffc107;
+    color: #212529;
+}
+
+.coordenadas {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 5px;
+    font-family: monospace;
+}
+
+.leyenda {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 20px;
+}
+
+.leyenda-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.color-muestra {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.loading i {
+    margin-right: 10px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: 40%;
+        top: auto;
+        bottom: 0;
+    }
+    
+    .map-container {
+        height: calc(100vh - 130px - 40%);
+    }
+}
+
+/* Estilos para los íconos personalizados de Leaflet */
+.custom-icon {
+    background: none !important;
+    border: none !important;
+}
+
+/* Asegurar que el mapa sea no editable */
+.leaflet-container {
+    cursor: default !important;
+}
+
+.leaflet-dragging .leaflet-container {
+    cursor: move !important;
+}
+
+/* Estilos para el popup */
+.leaflet-popup-content {
+    font-size: 14px;
+    min-width: 200px;
+}
+
+.leaflet-popup-content strong {
+    color: #1a2a6c;
+}
+
+/* Deshabilitar algunos controles */
+.leaflet-control-container .leaflet-top,
+.leaflet-control-container .leaflet-bottom {
+    pointer-events: none;
+}
+
+.leaflet-control-container .leaflet-control {
+    pointer-events: auto;
+}

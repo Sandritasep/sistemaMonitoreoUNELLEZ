@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Ruta - Transporte UNELLEZ</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="mapa-rutaStyle.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="mapa-rutaScript.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-route"></i> Mapa de Ruta</h1>
+        <div class="header-info">
+            <div id="infoRuta">
+                <strong id="nombreRuta">Cargando...</strong>
+                <span id="estadoRuta" class="badge-estado">Cargando...</span>
+            </div>
+            <button class="btn btn-secondary" onclick="window.close()">
+                <i class="fas fa-times"></i> Cerrar
+            </button>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <div class="controls-buttons">
+            <button class="btn btn-primary" onclick="zoomInicio()">
+                <i class="fas fa-home"></i> Ver Inicio
+            </button>
+            <button class="btn btn-primary" onclick="zoomDestino()">
+                <i class="fas fa-university"></i> Ver Destino
+            </button>
+            <button class="btn btn-success" onclick="zoomCompleto()">
+                <i class="fas fa-expand-alt"></i> Ver Todo
+            </button>
+        </div>
+        <div id="contadores">
+            <span id="contadorPuntos">0 puntos</span>
+        </div>
+    </div>
+    
+    <div class="map-container">
+        <div id="map"></div>
+        <div class="sidebar">
+            <h3><i class="fas fa-list"></i> Puntos del Recorrido</h3>
+            <div class="puntos-lista" id="listaPuntos">
+                <!-- Los puntos se cargarán aquí -->
+            </div>
+            
+            <h3><i class="fas fa-bus"></i> Paradas</h3>
+            <div class="puntos-lista" id="listaParadas">
+                <!-- Las paradas se cargarán aquí -->
+            </div>
+            
+            <div class="leyenda">
+                <h3><i class="fas fa-key"></i> Leyenda</h3>
+                <div class="leyenda-item">
+                    <div class="color-muestra" style="background: #28a745;"></div>
+                    <span>Inicio de Ruta</span>
+                </div>
+                <div class="leyenda-item">
+                    <div class="color-muestra" style="background: #17a2b8;"></div>
+                    <span>Destino (UNELLEZ)</span>
+                </div>
+                <div class="leyenda-item">
+                    <div class="color-muestra" style="background: #6c757d;"></div>
+                    <span>Puntos de Cruce</span>
+                </div>
+                <div class="leyenda-item">
+                    <div class="color-muestra" style="background: #ffc107;"></div>
+                    <span>Paradas de Bus</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

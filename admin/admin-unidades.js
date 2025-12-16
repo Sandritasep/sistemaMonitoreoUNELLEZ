@@ -309,12 +309,6 @@ function verDetallesUnidad(index) {
 
     const unidad = unidadesBus[index];
 
-    if (!unidad) {
-        console.error('Unidad no encontrada en índice:', index);
-        mostrarNotificacion('Error: Unidad no encontrada', 'error');
-        return;
-    }
-
     // Verificar si el modal ya existe y removerlo
     const modalExistente = document.getElementById('modalDetallesUnidad');
     if (modalExistente) {
@@ -421,21 +415,26 @@ function verDetallesUnidad(index) {
         </div>
     `;
     
-    // Agregar modal al body
-    const modalContainer = document.createElement('div');
-    modalContainer.innerHTML = detallesHTML;
-    document.body.appendChild(modalContainer.firstChild);
+    // FORMA CORRECTA DE INSERTAR EL MODAL:
+    // Crear un div temporal
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = detallesHTML;
     
-    // Mostrar modal
-    setTimeout(() => {
-        const modal = document.getElementById('modalDetallesUnidad');
-        if (modal) {
-            modal.classList.add('active');
-            console.log('Modal mostrado correctamente');
-        } else {
-            console.error('Modal no encontrado después de crear');
-        }
-    }, 10);
+    // Obtener el elemento modal
+    const modalElement = tempDiv.querySelector('#modalDetallesUnidad');
+    
+    if (!modalElement) {
+        console.error('No se pudo crear el elemento modal');
+        return;
+    }
+    
+    // Insertar el modal directamente en el body
+    document.body.appendChild(modalElement);
+    
+    // Mostrar modal inmediatamente
+    modalElement.classList.add('active');
+    
+    console.log('Modal creado y mostrado correctamente');
 }
 
 // Función auxiliar para obtener clase de estado
@@ -443,7 +442,6 @@ function getClaseEstado(estado) {
     switch(estado) {
         case 'Disponible': return 'estado-disponible';
         case 'En Mantenimiento': return 'estado-mantenimiento';
-        case 'En Ruta': return 'estado-enruta';
         case 'Inactivo': return 'estado-inactivo';
         default: return '';
     }

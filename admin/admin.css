@@ -726,6 +726,56 @@ body.admin-logged-in .admin-content {
     box-shadow: 0 4px 8px rgba(217, 48, 37, 0.2);
 }
 
+/* Botón de mapa */
+.btn-map {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-map:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Para la tabla, ajustar el espaciado */
+.users-table td:last-child {
+    min-width: 280px; /* Para que quepan todos los botones */
+}
+
+/* Estilos específicos para botones en tabla de rutas */
+#cuerpoTablaRutas .btn-edit,
+#cuerpoTablaRutas .btn-map,
+#cuerpoTablaRutas .btn-delete {
+    margin: 2px;
+    padding: 5px 10px;
+    font-size: 13px;
+}
+
+/* Responsive para botones */
+@media (max-width: 1200px) {
+    .users-table td:last-child {
+        min-width: 250px;
+    }
+    
+    #cuerpoTablaRutas .btn-edit,
+    #cuerpoTablaRutas .btn-map,
+    #cuerpoTablaRutas .btn-delete {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+}
+
 /* estilos para tabla unidades */
 /* Estado de las unidades */
 .estado-unidad {
@@ -916,6 +966,68 @@ body.admin-logged-in .admin-content {
 .badge-turnos {
     background: #f3e5f5;
     color: #7b1fa2;
+}
+
+/* Badges para tipos de puntos */
+.badge-inicio {
+    background-color: #28a745;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge-destino {
+    background-color: #17a2b8;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge-cruce {
+    background-color: #6c757d;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge-parada {
+    background-color: #ffc107;
+    color: #212529;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Estilos para tabla en modal */
+.modal-content table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.modal-content th {
+    background-color: #e9ecef;
+    padding: 10px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.modal-content td {
+    padding: 10px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: top;
+}
+
+.modal-content tr:hover {
+    background-color: #f8f9fa;
 }
 
 /* Responsive para tabla */

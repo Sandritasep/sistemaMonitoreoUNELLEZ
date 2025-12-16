@@ -2,6 +2,10 @@
 // Lógica del mapa Leaflet
 // ========================================
 
+console.log('=== ADMIN-MAPA.JS CARGADO ===');
+console.log('window.mapa definido?', typeof window.mapa !== 'undefined');
+console.log('L definido?', typeof L !== 'undefined');
+
 // Variables para el mapa
 let mapa = null;
 let puntosRecorrido = [];
@@ -751,6 +755,155 @@ function puedeAgregarEnLinea() {
            puntosRecorrido.some(p => p.tipo === 'destino');
 }
 
+// Función simple para cargar ruta en el mapa
+function cargarRutaEnMapa(puntosRecorrido, puntosParada) {
+    console.log('Iniciando carga de ruta en mapa...');
+    
+    // Esperar a que el mapa esté listo
+    const esperarMapa = setInterval(() => {
+        if (window.mapa && typeof window.mapa.addLayer === 'function') {
+            clearInterval(esperarMapa);
+            console.log('Mapa listo, cargando puntos...');
+            
+            // 1. Primero, limpiar puntos existentes si es necesario
+            // (Comenta esta línea si quieres mantener puntos anteriores)
+            if (window.puntosRecorrido) {
+                window.puntosRecorrido = [];
+            }
+            if (window.puntosParada) {
+                window.puntosParada = [];
+            }
+            
+            // 2. Cargar puntos de recorrido
+            if (puntosRecorrido && Array.isArray(puntosRecorrido)) {
+                puntosRecorrido.forEach((punto, index) => {
+                    if (punto.coordenadas) {
+                        console.log(`Cargando punto ${index}:`, punto);
+                        
+                        // Agregar al array global
+                        if (!window.puntosRecorrido) window.puntosRecorrido = [];
+                        window.puntosRecorrido.push(punto);
+                        
+                        // Crear marcador en el mapa
+                        crearMarcadorParaEdicion(punto, index);
+                    }
+                });
+            }
+            
+            // 3. Cargar puntos de parada
+            if (puntosParada && Array.isArray(puntosParada)) {
+                puntosParada.forEach((parada, index) => {
+                    if (parada.coordenadas) {
+                        console.log(`Cargando parada ${index}:`, parada);
+                        
+                        // Agregar al array global
+                        if (!window.puntosParada) window.puntosParada = [];
+                        window.puntosParada.push(parada);
+                        
+                        // Crear marcador de parada
+                        crearMarcadorParadaParaEdicion(parada, index);
+                    }
+                });
+            }
+            
+            console.log('Ruta cargada exitosamente en el mapa');
+        }
+    }, 100);
+    
+    // Timeout después de 5 segundos
+    setTimeout(() => {
+        clearInterval(esperarMapa);
+        console.log('Timeout: No se pudo cargar el mapa');
+    }, 5000);
+}
+
+// Función auxiliar para crear marcador (versión simple)
+function crearMarcadorParaEdicion(punto, index) {
+    if (!window.mapa || !punto.coordenadas) return;
+    
+    let color, texto;
+    
+    switch(punto.tipo) {
+        case 'inicio':
+            color = '#28a745';
+            texto = 'I';
+            break;
+        case 'destino':
+            color = '#17a2b8';
+            texto = 'D';
+            break;
+        default:
+            color = '#6c757d';
+            texto = (index + 1).toString();
+    }
+    
+    const icon = L.divIcon({
+        html: `<div style="
+            background-color: ${color};
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        ">${texto}</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+    });
+    
+    const marker = L.marker([punto.coordenadas.lat, punto.coordenadas.lng], {
+        icon: icon,
+        draggable: true
+    }).addTo(window.mapa);
+    
+    // Agregar popup con información
+    marker.bindPopup(`
+        <strong>${punto.tipo.toUpperCase()}</strong><br>
+        ${punto.descripcion || 'Sin descripción'}<br>
+        Lat: ${punto.coordenadas.lat.toFixed(6)}<br>
+        Lng: ${punto.coordenadas.lng.toFixed(6)}
+    `);
+}
+
+// Función para crear marcador de parada
+function crearMarcadorParadaParaEdicion(parada, index) {
+    if (!window.mapa || !parada.coordenadas) return;
+    
+    const icon = L.divIcon({
+        html: `<div style="
+            background-color: #ffc107;
+            color: #212529;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        ">P</div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
+    });
+    
+    const marker = L.marker([parada.coordenadas.lat, parada.coordenadas.lng], {
+        icon: icon,
+        draggable: true
+    }).addTo(window.mapa);
+    
+    marker.bindPopup(`
+        <strong>PARADA</strong><br>
+        ${parada.descripcion || 'Parada de bus'}<br>
+        Lat: ${parada.coordenadas.lat.toFixed(6)}<br>
+        Lng: ${parada.coordenadas.lng.toFixed(6)}
+    `);
+}
+
 // Exportar funciones
 window.inicializarMapa = inicializarMapa;
 window.iniciarMarcadoInicio = iniciarMarcadoInicio;
@@ -761,3 +914,6 @@ window.limpiarMapa = limpiarMapa;
 window.eliminarPunto = eliminarPunto;
 window.puedeAgregarEnLinea = puedeAgregarEnLinea;
 window.mostrarUbicacionActual = mostrarUbicacionActual;
+window.cargarRutaEnMapa = cargarRutaEnMapa;
+window.crearMarcadorParaEdicion = crearMarcadorParaEdicion;
+window.crearMarcadorParadaParaEdicion = crearMarcadorParadaParaEdicion;
