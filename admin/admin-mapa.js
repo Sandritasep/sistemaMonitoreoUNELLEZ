@@ -1,27 +1,16 @@
 // ========================================
 // Lógica del mapa Leaflet
 // ========================================
-
-console.log('=== ADMIN-MAPA.JS CARGADO ===');
-console.log('window.mapa definido?', typeof window.mapa !== 'undefined');
-console.log('L definido?', typeof L !== 'undefined');
-
-// Variables para el mapa
-let mapa = null;
-let puntosRecorrido = [];
-let puntosParada = [];
-let modoMarcado = null;
-let puntoSeleccionado = null;
-let polilineaRecorrido = null;
-let marcadores = [];
-let lineaSeleccionable = null;
-let clickEnLineaActivo = false;
-let ubicacionUsuario = null;
-let marcadorUbicacion = null;
+// Declarar mapa como propiedad global de window
 
 // Inicializar mapa
-function inicializarMapa() {
-    console.log("Iniciando mapa...");
+function inicializarMapa(limpiarPuntos = true) {
+    console.log("Iniciando mapa...", limpiarPuntos ? "(limpiando puntos)" : "(manteniendo puntos)");
+    console.log("Puntos antes:", {
+        recorrido: puntosRecorrido.length,
+        parada: puntosParada.length,
+        marcadores: marcadores.length
+    });
 
     // Destruir mapa existente
     if (mapa) {
@@ -32,6 +21,7 @@ function inicializarMapa() {
     // Crear nuevo mapa centrado en Barinas Venezuela
     mapa = L.map('map', {
         attributionControl: false,
+        zoomControl: false,
     }).setView([8.630485, -70.209908], 13);
     
     // Añadir capa de cartoDB
@@ -88,27 +78,58 @@ function inicializarMapa() {
         }
     }, 300);
     
-    // Reiniciar arrays
-    puntosRecorrido = [];
-    puntosParada = [];
-    marcadores = [];
-    modoMarcado = null;
-    puntoSeleccionado = null;
-    clickEnLineaActivo = false;
-    ubicacionUsuario = null;
-
-    // Eliminar marcador de ubicación anterior si existe
-    if (marcadorUbicacion) {
-        mapa.removeLayer(marcadorUbicacion);
-        marcadorUbicacion = null;
+     // SOLO reiniciar arrays si se solicita limpiar puntos
+    if (limpiarPuntos) {
+        console.log("⚠️ LIMPIANDO PUNTOS DEL MAPA");
+        window.puntosRecorrido = [];
+        window.puntosParada = [];
+        window.marcadores = [];
+        window.modoMarcado = null;
+        window.puntoSeleccionado = null;
+        window.clickEnLineaActivo = false;
+        window.ubicacionUsuario = null;
+    } else {
+        console.log("✅ MANTENIENDO PUNTOS EXISTENTES");
+        console.log("Puntos en variables globales:", {
+            recorrido: window.puntosRecorrido ? window.puntosRecorrido.length : 0,
+            parada: window.puntosParada ? window.puntosParada.length : 0
+        });
+    }
+    // Forzar redibujado del mapa
+    setTimeout(() => {
+        if (mapa) {
+            mapa.invalidateSize();
+        }
+    }, 300);
+    
+    // Si hay puntos cargados, actualizar el mapa
+    if (window.puntosRecorrido && window.puntosRecorrido.length > 0) {
+        console.log("Actualizando mapa con puntos existentes...");
+        setTimeout(() => {
+            actualizarMapa();
+            actualizarListaPuntos();
+            
+            // Centrar en los puntos si existen
+            if (window.puntosRecorrido.length > 0) {
+                const coordenadas = window.puntosRecorrido
+                    .filter(p => p && p.coordenadas)
+                    .map(p => [p.coordenadas.lat, p.coordenadas.lng]);
+                
+                if (coordenadas.length > 0) {
+                    const bounds = L.latLngBounds(coordenadas);
+                    window.mapa.fitBounds(bounds, { padding: [50, 50] });
+                }
+            };
+        }, 500);
     }
     
-    // Actualizar lista de puntos
     actualizarListaPuntos();
-    
-    // Exportar para usar en admin-rutas.js
-    window.puntosRecorrido = puntosRecorrido;
-    window.puntosParada = puntosParada;
+}
+
+// Función específica para inicializar mapa cuando se edita
+function inicializarMapaParaEdicion() {
+    console.log("Inicializando mapa para edición (sin limpiar puntos)");
+    return inicializarMapa(false);
 }
 
 // Función para mostrar la ubicación actual del usuario
@@ -325,7 +346,6 @@ function manejarClicMapa(lat, lng) {
     actualizarListaPuntos();
     
     // NO desactivar modoMarcado automáticamente para permitir múltiples puntos del mismo tipo
-    // Solo desactivar si es inicio o destino (solo uno permitido)
     if (modoMarcado === 'inicio' || modoMarcado === 'destino') {
         // Verificar si ya se añadió el punto
         const puntosDelTipo = puntosRecorrido.filter(p => p.tipo === modoMarcado).length;
@@ -345,7 +365,6 @@ function agregarPuntoEnLinea(latlng) {
     // Encontrar el segmento más cercano
     let minDistance = Infinity;
     let insertIndex = -1;
-    let closestSegment = null;
     
     for (let i = 0; i < puntosRecorrido.length - 1; i++) {
         const puntoA = puntosRecorrido[i].coordenadas;
@@ -364,18 +383,14 @@ function agregarPuntoEnLinea(latlng) {
         }
     }
     
-    // Solo agregar si la distancia es razonable (menos de 50 metros en escala de mapa)
     if (insertIndex > 0 && minDistance < 0.0005) {
-        // Verificar que no estamos insertando después del destino (si ya existe)
         if (puntosRecorrido[insertIndex - 1].tipo === 'destino') {
             mostrarNotificacion('No puede agregar puntos después del destino final', 'error');
             return;
         }
         
-        // Verificar que no estamos insertando entre inicio y el primer cruce si no hay cruces
         if (insertIndex === 1 && puntosRecorrido[0].tipo === 'inicio' && 
             puntosRecorrido[1] && puntosRecorrido[1].tipo !== 'cruce') {
-            // Está bien, es entre inicio y el primer punto
         }
         
         // Insertar nuevo punto de cruce
@@ -446,8 +461,7 @@ function actualizarMapa() {
     const coordenadasRecorrido = puntosRecorrido.map(punto => 
         [punto.coordenadas.lat, punto.coordenadas.lng]
     );
-    
-    // Añadir polilínea del recorrido
+
     if (coordenadasRecorrido.length > 1) {
         polilineaRecorrido = L.polyline(coordenadasRecorrido, {
             color: '#007bff',
@@ -456,7 +470,6 @@ function actualizarMapa() {
             dashArray: '5, 10'
         }).addTo(mapa);
 
-        // Actualizar línea seleccionable SOLO si hay al menos 2 puntos
         if (coordenadasRecorrido.length >= 2) {
             lineaSeleccionable.setLatLngs(coordenadasRecorrido);
         } else {
@@ -500,7 +513,6 @@ function actualizarMapa() {
             .addTo(mapa)
             .bindPopup(`<strong>${punto.descripcion}</strong><br>Lat: ${punto.coordenadas.lat.toFixed(6)}<br>Lng: ${punto.coordenadas.lng.toFixed(6)}`)
             .on('dragstart', function() {
-                // Desactivar clics en línea mientras se arrastra
                 clickEnLineaActivo = true;
             })
             .on('dragend', function(e) {
@@ -509,7 +521,6 @@ function actualizarMapa() {
                 actualizarMapa();
                 actualizarListaPuntos();
                 mostrarNotificacion('Punto movido correctamente', 'info');
-                // Reactivar clics en línea después de un pequeño delay
                 setTimeout(() => {
                     clickEnLineaActivo = false;
                 }, 100);
@@ -548,21 +559,15 @@ function actualizarMapa() {
         marcadores.push(marker);
     });
     
-    // Solo ajustar vista si hay marcadores y NO hacer zoom out automático
     if (marcadores.length > 0) {
-        // Si es el primer punto, centrar en ese punto
         if (marcadores.length === 1) {
             mapa.setView([marcadores[0].getLatLng().lat, marcadores[0].getLatLng().lng], 15);
         }
-        // Para múltiples puntos, ajustar vista pero mantener zoom si es posible
         else {
             const group = new L.featureGroup(marcadores);
             const bounds = group.getBounds();
-            
-            // Mantener el zoom actual si los puntos están visibles
             const currentBounds = mapa.getBounds();
             if (!currentBounds.contains(bounds)) {
-                // Solo ajustar si los puntos no están visibles
                 mapa.fitBounds(bounds.pad(0.1));
             }
         }
@@ -676,19 +681,16 @@ function eliminarPunto(tipo, index) {
     if (tipo === 'recorrido') {
         const punto = puntosRecorrido[index];
         
-        // Validaciones especiales para eliminación
         if (punto.tipo === 'inicio') {
-            // Si se elimina el inicio, eliminar todos los puntos de cruce y destino
             if (confirm('¿Eliminar punto de INICIO? Esto eliminará todos los puntos de cruce y destino asociados.')) {
                 puntosRecorrido = [];
-                puntosParada = []; // También eliminar paradas
+                puntosParada = []; 
                 mostrarNotificacion('Punto de inicio y todos los puntos asociados eliminados', 'warning');
             } else {
                 return;
             }
         } 
         else if (punto.tipo === 'destino') {
-            // Si se elimina el destino, preguntar si mantener puntos de cruce
             if (confirm('¿Eliminar punto de DESTINO? Los puntos de cruce se mantendrán.')) {
                 puntosRecorrido.splice(index, 1);
                 mostrarNotificacion('Punto de destino eliminado', 'warning');
@@ -727,7 +729,6 @@ function limpiarMapa() {
             lineaSeleccionable.setLatLngs([]);
         }
 
-        // Limpiar marcador de ubicación
         if (marcadorUbicacion) {
             mapa.removeLayer(marcadorUbicacion);
             marcadorUbicacion = null;
@@ -755,165 +756,45 @@ function puedeAgregarEnLinea() {
            puntosRecorrido.some(p => p.tipo === 'destino');
 }
 
-// Función simple para cargar ruta en el mapa
-function cargarRutaEnMapa(puntosRecorrido, puntosParada) {
-    console.log('Iniciando carga de ruta en mapa...');
+// Inicializar mapa si es necesario
+function inicializarMapaSiEsNecesario(limpiarPuntos = true) {
+    console.log('Verificando si el mapa necesita inicialización...');
+    console.log('limpiarPuntos:', limpiarPuntos);
     
-    // Esperar a que el mapa esté listo
-    const esperarMapa = setInterval(() => {
-        if (window.mapa && typeof window.mapa.addLayer === 'function') {
-            clearInterval(esperarMapa);
-            console.log('Mapa listo, cargando puntos...');
-            
-            // 1. Primero, limpiar puntos existentes si es necesario
-            // (Comenta esta línea si quieres mantener puntos anteriores)
-            if (window.puntosRecorrido) {
-                window.puntosRecorrido = [];
-            }
-            if (window.puntosParada) {
-                window.puntosParada = [];
-            }
-            
-            // 2. Cargar puntos de recorrido
-            if (puntosRecorrido && Array.isArray(puntosRecorrido)) {
-                puntosRecorrido.forEach((punto, index) => {
-                    if (punto.coordenadas) {
-                        console.log(`Cargando punto ${index}:`, punto);
-                        
-                        // Agregar al array global
-                        if (!window.puntosRecorrido) window.puntosRecorrido = [];
-                        window.puntosRecorrido.push(punto);
-                        
-                        // Crear marcador en el mapa
-                        crearMarcadorParaEdicion(punto, index);
-                    }
-                });
-            }
-            
-            // 3. Cargar puntos de parada
-            if (puntosParada && Array.isArray(puntosParada)) {
-                puntosParada.forEach((parada, index) => {
-                    if (parada.coordenadas) {
-                        console.log(`Cargando parada ${index}:`, parada);
-                        
-                        // Agregar al array global
-                        if (!window.puntosParada) window.puntosParada = [];
-                        window.puntosParada.push(parada);
-                        
-                        // Crear marcador de parada
-                        crearMarcadorParadaParaEdicion(parada, index);
-                    }
-                });
-            }
-            
-            console.log('Ruta cargada exitosamente en el mapa');
-        }
-    }, 100);
-    
-    // Timeout después de 5 segundos
-    setTimeout(() => {
-        clearInterval(esperarMapa);
-        console.log('Timeout: No se pudo cargar el mapa');
-    }, 5000);
-}
-
-// Función auxiliar para crear marcador (versión simple)
-function crearMarcadorParaEdicion(punto, index) {
-    if (!window.mapa || !punto.coordenadas) return;
-    
-    let color, texto;
-    
-    switch(punto.tipo) {
-        case 'inicio':
-            color = '#28a745';
-            texto = 'I';
-            break;
-        case 'destino':
-            color = '#17a2b8';
-            texto = 'D';
-            break;
-        default:
-            color = '#6c757d';
-            texto = (index + 1).toString();
+    // Verificar si el elemento del mapa existe
+    const mapElement = document.getElementById('map');
+    if (!mapElement) {
+        console.error('❌ Elemento del mapa no encontrado');
+        return false;
     }
     
-    const icon = L.divIcon({
-        html: `<div style="
-            background-color: ${color};
-            color: white;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            border: 3px solid white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        ">${texto}</div>`,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
-    });
+    // Verificar si Leaflet está cargado
+    if (typeof L === 'undefined') {
+        console.error('❌ Leaflet no está cargado');
+        return false;
+    }
     
-    const marker = L.marker([punto.coordenadas.lat, punto.coordenadas.lng], {
-        icon: icon,
-        draggable: true
-    }).addTo(window.mapa);
-    
-    // Agregar popup con información
-    marker.bindPopup(`
-        <strong>${punto.tipo.toUpperCase()}</strong><br>
-        ${punto.descripcion || 'Sin descripción'}<br>
-        Lat: ${punto.coordenadas.lat.toFixed(6)}<br>
-        Lng: ${punto.coordenadas.lng.toFixed(6)}
-    `);
+    // Verificar si el mapa ya existe
+    if (!mapa || typeof mapa.setView !== 'function') {
+        console.log('Mapa no inicializado, iniciando ahora...');
+        
+        try {
+            // Llamar a la función original con el parámetro
+            inicializarMapa(limpiarPuntos);
+            console.log('✅ Mapa inicializado exitosamente');
+            return true;
+        } catch (error) {
+            console.error('❌ Error al inicializar el mapa:', error);
+            return false;
+        }
+    } else {
+        console.log('Mapa ya está inicializado');
+        
+        // Si no debemos limpiar puntos, mantener los existentes
+        if (!limpiarPuntos && window.puntosRecorrido && window.puntosRecorrido.length > 0) {
+            console.log('Manteniendo puntos existentes en el mapa');
+        }
+        
+        return true;
+    }
 }
-
-// Función para crear marcador de parada
-function crearMarcadorParadaParaEdicion(parada, index) {
-    if (!window.mapa || !parada.coordenadas) return;
-    
-    const icon = L.divIcon({
-        html: `<div style="
-            background-color: #ffc107;
-            color: #212529;
-            border-radius: 50%;
-            width: 26px;
-            height: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            border: 2px solid white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        ">P</div>`,
-        iconSize: [26, 26],
-        iconAnchor: [13, 13]
-    });
-    
-    const marker = L.marker([parada.coordenadas.lat, parada.coordenadas.lng], {
-        icon: icon,
-        draggable: true
-    }).addTo(window.mapa);
-    
-    marker.bindPopup(`
-        <strong>PARADA</strong><br>
-        ${parada.descripcion || 'Parada de bus'}<br>
-        Lat: ${parada.coordenadas.lat.toFixed(6)}<br>
-        Lng: ${parada.coordenadas.lng.toFixed(6)}
-    `);
-}
-
-// Exportar funciones
-window.inicializarMapa = inicializarMapa;
-window.iniciarMarcadoInicio = iniciarMarcadoInicio;
-window.iniciarMarcadoCruce = iniciarMarcadoCruce;
-window.iniciarMarcadoDestino = iniciarMarcadoDestino;
-window.iniciarMarcadoParada = iniciarMarcadoParada;
-window.limpiarMapa = limpiarMapa;
-window.eliminarPunto = eliminarPunto;
-window.puedeAgregarEnLinea = puedeAgregarEnLinea;
-window.mostrarUbicacionActual = mostrarUbicacionActual;
-window.cargarRutaEnMapa = cargarRutaEnMapa;
-window.crearMarcadorParaEdicion = crearMarcadorParaEdicion;
-window.crearMarcadorParadaParaEdicion = crearMarcadorParadaParaEdicion;
