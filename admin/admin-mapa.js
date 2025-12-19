@@ -117,7 +117,7 @@ function inicializarMapa(limpiarPuntos = true) {
                 
                 if (coordenadas.length > 0) {
                     const bounds = L.latLngBounds(coordenadas);
-                    window.mapa.fitBounds(bounds, { padding: [50, 50] });
+                    mapa.fitBounds(bounds, { padding: [50, 50] });
                 }
             };
         }, 500);
@@ -729,9 +729,9 @@ function limpiarMapa() {
             lineaSeleccionable.setLatLngs([]);
         }
 
-        if (marcadorUbicacion) {
-            mapa.removeLayer(marcadorUbicacion);
-            marcadorUbicacion = null;
+        if (window.marcadorUbicacion) {
+            mapa.removeLayer(window.marcadorUbicacion);
+            window.marcadorUbicacion = null;
         }
         
         // Restablecer controles

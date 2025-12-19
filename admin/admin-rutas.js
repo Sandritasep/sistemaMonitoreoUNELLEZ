@@ -12,6 +12,10 @@ if (typeof window !== 'undefined') {
     window.lineaSeleccionable = window.lineaSeleccionable || null;
     window.modoMarcado = window.modoMarcado || null;
     window.clickEnLineaActivo = window.clickEnLineaActivo || false;
+
+    // Variables de ubicación
+    window.marcadorUbicacion = window.marcadorUbicacion || null;
+    window.ubicacionUsuario = window.ubicacionUsuario || null;
     
     // Variables de rutas
     window.unidadesDisponibles = window.unidadesDisponibles || [];
@@ -111,9 +115,6 @@ function mostrarContenidoRutas() {
 // Mostrar formulario de ruta - VERSIÓN CON LÓGICA DE EDICIÓN MEJORADA
 function mostrarFormularioRuta(limpiarPuntos = true) {
     console.log('=== mostrarFormularioRuta ===');
-    console.log('limpiarPuntos:', limpiarPuntos);
-    console.log('rutaEditandoId:', rutaEditandoId);
-    console.log('window.rutaEditando:', window.rutaEditando);
     
     const accionesRuta = document.getElementById('accionesRuta');
     const tablaRutas = document.getElementById('tablaRutas');
@@ -824,7 +825,6 @@ function eliminarRuta(idRuta) {
 // Editar ruta - VERSIÓN CORREGIDA
 function editarRuta(idRuta) {
     try {
-        console.log('=== EDITAR RUTA ===');
         console.log('ID Ruta:', idRuta);
         
         // Cargar ruta desde localStorage directamente
@@ -836,7 +836,6 @@ function editarRuta(idRuta) {
             return;
         }
 
-        console.log('Ruta encontrada:', ruta);
         window.rutaEditandoId = idRuta;
         window.rutaEditando = ruta;
         
@@ -858,11 +857,6 @@ function editarRuta(idRuta) {
         // IMPORTANTE: Cargar los puntos en las variables globales ANTES de que el mapa se inicialice
         window.puntosRecorrido = ruta.puntosRecorrido ? [...ruta.puntosRecorrido] : [];
         window.puntosParada = ruta.puntosParada ? [...ruta.puntosParada] : [];
-        
-        console.log('Puntos cargados en variables globales:', {
-            recorrido: window.puntosRecorrido.length,
-            parada: window.puntosParada.length
-        });
         
         // Marcar unidades seleccionadas
         setTimeout(() => {
@@ -888,7 +882,7 @@ function editarRuta(idRuta) {
         // Esperar a que el mapa se cargue y luego forzar la actualización
         setTimeout(() => {
             // Verificar si el mapa ya está listo
-            if (window.mapa && typeof window.actualizarMapa === 'function') {
+            if (mapa && typeof window.actualizarMapa === 'function') {
                 console.log('Mapa listo, actualizando con puntos cargados...');
                 window.actualizarMapa();
                 
@@ -906,7 +900,7 @@ function editarRuta(idRuta) {
                     if (coordenadas.length > 0) {
                         setTimeout(() => {
                             const bounds = L.latLngBounds(coordenadas);
-                            window.mapa.fitBounds(bounds, { padding: [50, 50] });
+                            mapa.fitBounds(bounds, { padding: [50, 50] });
                             console.log('Vista ajustada a puntos');
                         }, 500);
                     }
@@ -915,7 +909,7 @@ function editarRuta(idRuta) {
                 console.log('Mapa no está listo aún, reintentando...');
                 // Reintentar después de 500ms
                 setTimeout(() => {
-                    if (window.mapa && typeof window.actualizarMapa === 'function') {
+                    if (mapa && typeof window.actualizarMapa === 'function') {
                         window.actualizarMapa();
                         if (typeof window.actualizarListaPuntos === 'function') {
                             window.actualizarListaPuntos();
@@ -937,7 +931,7 @@ function editarRuta(idRuta) {
 function crearPuntosEnMapa() {
     console.log('crearPuntosEnMapa() llamado');
     
-    if (!window.mapa) {
+    if (!mapa) {
         console.error('No hay mapa disponible');
         return;
     }
@@ -953,16 +947,16 @@ function crearPuntosEnMapa() {
     // Limpiar marcadores existentes
     if (window.marcadores && window.marcadores.length > 0) {
         window.marcadores.forEach(marker => {
-            if (marker && window.mapa.hasLayer(marker)) {
-                window.mapa.removeLayer(marker);
+            if (marker && mapa.hasLayer(marker)) {
+                mapa.removeLayer(marker);
             }
         });
     }
     window.marcadores = [];
     
     // Limpiar polilínea
-    if (window.polilineaRecorrido && window.mapa.hasLayer(window.polilineaRecorrido)) {
-        window.mapa.removeLayer(window.polilineaRecorrido);
+    if (window.polilineaRecorrido && mapa.hasLayer(window.polilineaRecorrido)) {
+        mapa.removeLayer(window.polilineaRecorrido);
     }
     
     // Crear marcadores
@@ -1006,7 +1000,7 @@ function crearPuntosEnMapa() {
                 iconAnchor: [18, 18]
             }),
             draggable: true
-        }).addTo(window.mapa);
+        }).addTo(mapa);
         
         marker.bindPopup(`
             <strong>${punto.descripcion || 'Punto sin descripción'}</strong><br>
@@ -1030,7 +1024,7 @@ function crearPuntosEnMapa() {
                 weight: 4,
                 opacity: 0.7,
                 dashArray: '5, 10'
-            }).addTo(window.mapa);
+            }).addTo(mapa);
         }
     }
     
@@ -1038,7 +1032,7 @@ function crearPuntosEnMapa() {
 }
 
 function crearMarcadorSimple(punto, index) {
-    if (!window.mapa || !punto.coordenadas) return;
+    if (!mapa || !punto.coordenadas) return;
     
     let color, texto;
     switch(punto.tipo) {
@@ -1074,7 +1068,7 @@ function crearMarcadorSimple(punto, index) {
             iconAnchor: [15, 15]
         }),
         draggable: true
-    }).addTo(window.mapa);
+    }).addTo(mapa);
     
     marker.bindPopup(`
         <strong>${punto.tipo.toUpperCase()}</strong><br>
@@ -1099,7 +1093,7 @@ function crearMarcadorSimple(punto, index) {
 
 // Función simple para crear marcador de parada
 function crearMarcadorParadaSimple(parada, index) {
-    if (!window.mapa || !parada.coordenadas) return;
+    if (!mapa || !parada.coordenadas) return;
     
     const marker = L.marker([parada.coordenadas.lat, parada.coordenadas.lng], {
         icon: L.divIcon({
@@ -1120,7 +1114,7 @@ function crearMarcadorParadaSimple(parada, index) {
             iconAnchor: [13, 13]
         }),
         draggable: true
-    }).addTo(window.mapa);
+    }).addTo(mapa);
     
     marker.bindPopup(`
         <strong>PARADA</strong><br>
@@ -1132,11 +1126,11 @@ function crearMarcadorParadaSimple(parada, index) {
 
 // Función simple para crear polilínea
 function crearPolilineaSimple() {
-    if (!window.mapa || !window.puntosRecorrido || window.puntosRecorrido.length < 2) return;
+    if (!mapa || !window.puntosRecorrido || window.puntosRecorrido.length < 2) return;
     
     // Eliminar polilínea anterior
     if (window.polyline) {
-        window.mapa.removeLayer(window.polyline);
+        mapa.removeLayer(window.polyline);
     }
     
     // Crear array de coordenadas
@@ -1150,7 +1144,7 @@ function crearPolilineaSimple() {
             weight: 4,
             opacity: 0.7,
             dashArray: '10, 10'
-        }).addTo(window.mapa);
+        }).addTo(mapa);
     }
 }
 
@@ -1309,17 +1303,17 @@ function eliminarPuntoDesdeRuta(tipo, index) {
     }
     
     // Actualizar mapa y lista
-    if (window.mapa) {
+    if (mapa) {
         // Recrear todo el mapa
         if (window.polyline) {
-            window.mapa.removeLayer(window.polyline);
+            mapa.removeLayer(window.polyline);
             window.polyline = null;
         }
         
         // Remover todos los marcadores
-        window.mapa.eachLayer(function(layer) {
+        mapa.eachLayer(function(layer) {
             if (layer instanceof L.Marker) {
-                window.mapa.removeLayer(layer);
+                mapa.removeLayer(layer);
             }
         });
         
@@ -1425,7 +1419,7 @@ function actualizarRutaFinal(idRuta, event) {
 
 // Función para inicializar o esperar el mapa
 function asegurarMapaInicializado(callback) {
-    if (window.mapa && typeof window.mapa.setView === 'function') {
+    if (mapa && typeof mapa.setView === 'function') {
         // El mapa ya está inicializado
         if (callback) callback();
         return true;

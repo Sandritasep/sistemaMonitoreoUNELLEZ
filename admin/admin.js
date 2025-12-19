@@ -178,6 +178,8 @@ function togglePasswordVisibility(buttonElement) {
 
 // Cerrar sesión admin
 function cerrarSesionAdmin() {
+    console.log('Cerrando sesión...');
+    
     if (confirm('¿Está seguro que desea cerrar sesión?')) {
         localStorage.removeItem('admin_session');
         sesionAdmin = null;
