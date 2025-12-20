@@ -26,6 +26,7 @@ body {
     flex-direction: row;
     gap: 15px;
 }
+
 .header h1 {
     font-size: 1.5rem;
     display: flex;
@@ -69,7 +70,7 @@ body {
 }
 
 #btn-cerrar{
-    padding: 4px 8px;
+    padding: 6px 12px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -78,8 +79,35 @@ body {
     align-items: center;
     gap: 8px;
     transition: all 0.3s;
-    background-color: #cf2020a9;
+    background-color: #dc3546a2;
     color: white;
+}
+
+#btn-cerrar:hover {
+    background-color: #c82333;
+}
+
+#btn-cerrar[title] {
+    position: relative;
+}
+
+#btn-cerrar[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    z-index: 10000;
+    margin-bottom: 8px;
+    pointer-events: none;
+    opacity: 0;
+    animation: fadeInTooltip 0.2s ease forwards;
 }
 
 .btn {
@@ -248,6 +276,34 @@ body {
 
 /* ===== ESTILOS RESPONSIVE ===== */
 @media (max-width: 992px) {
+
+    /* Para móviles */
+    .sidebar {
+        top: 110px; /* Ajuste para móviles */
+        height: calc(100vh - 110px);
+        width: 85%;
+        right: -80%; /* Ocultar completamente en móviles */
+        /* Cambio importante: Mostrar a un lado, no abajo */
+        bottom: auto;
+    }
+    
+    .sidebar.open {
+        right: 0;
+    }
+    
+    .sidebar.open ~ #map {
+        margin-right: 0; /* En móviles no dejamos margen */
+    }
+    
+    .sidebar-header {
+        padding: 12px 15px;
+    }
+    
+    .sidebar-title h3 {
+        font-size: 1rem;
+    }
+    
+    
     /* Para tablets */
     .btn .btn-text {
         display: none;
@@ -288,6 +344,15 @@ body {
         background-color: #cf2020a9;
         color: white;
     }
+
+     #btn-cerrar span {
+        display: none;
+    }
+
+    #btn-cerrar i {
+        margin: 0 !important;
+    }
+
     /* Para móviles */
     .sidebar {
         top: 110px; /* Ajuste para móviles */
@@ -377,35 +442,6 @@ body {
     }
 }
 
-/* ===== TOOLTIPS PARA BOTONES SIN TEXTO ===== */
-.controls-buttons .btn {
-    position: relative;
-}
-
-.controls-buttons .btn:hover::after {
-    content: attr(title);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    white-space: nowrap;
-    z-index: 10000;
-    margin-bottom: 8px;
-    pointer-events: none;
-    opacity: 0;
-    animation: fadeInTooltip 0.2s ease forwards;
-}
-
-@keyframes fadeInTooltip {
-    from { opacity: 0; transform: translateX(-50%) translateY(5px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
-}
-
 @media (max-width: 480px) {
     /* Teléfonos pequeños */
     .sidebar {
@@ -470,16 +506,17 @@ body {
         min-width: 30px;
         height: 30px;
     }
-}
-
-@media (max-width: 480px) {
     .map-container {
         height: calc(100vh - 100px);
     }
 }
 
-/* Tooltips para botones sin texto */
-.btn[title]:hover::after {
+/* ===== TOOLTIPS PARA BOTONES SIN TEXTO ===== */
+.controls-buttons .btn[title] {
+    position: relative;
+}
+
+.controls-buttons .btn[title]:hover::after {
     content: attr(title);
     position: absolute;
     bottom: 100%;
@@ -487,17 +524,22 @@ body {
     transform: translateX(-50%);
     background: #333;
     color: white;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 4px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     white-space: nowrap;
     z-index: 10000;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    pointer-events: none;
+    opacity: 0;
+    animation: fadeInTooltip 0.2s ease forwards;
 }
 
-.btn[title] {
-    position: relative;
+@keyframes fadeInTooltip {
+    from { opacity: 0; transform: translateX(-50%) translateY(5px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
 
 .puntos-lista {
     margin-bottom: 20px;
