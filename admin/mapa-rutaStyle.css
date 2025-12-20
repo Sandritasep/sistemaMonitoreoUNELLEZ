@@ -266,6 +266,11 @@ body {
 }
 
 @media (max-width: 768px) {
+    /* Ocultar texto en todos los botones de controls */
+    .controls-buttons .btn span.btn-text {
+        display: none !important;
+    }
+    
     .header-title{
         gap: 7px;
     }
