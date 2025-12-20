@@ -1,7 +1,6 @@
 // ========================================
 // Lógica del mapa Leaflet
 // ========================================
-// Declarar mapa como propiedad global de window
 
 // Inicializar mapa
 function inicializarMapa(limpiarPuntos = true) {

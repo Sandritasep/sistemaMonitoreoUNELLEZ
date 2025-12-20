@@ -1,5 +1,5 @@
 // ========================================
-// ADMIN-RUTAS.JS - Gestión de rutas
+//  Gestión de rutas
 // ========================================
 
 if (typeof window !== 'undefined') {
@@ -854,7 +854,7 @@ function editarRuta(idRuta) {
             formularioHeader.innerHTML = `<i class="fas fa-edit"></i> Editar Ruta: ${ruta.numero} - ${ruta.nombre}`;
         }
         
-        // IMPORTANTE: Cargar los puntos en las variables globales ANTES de que el mapa se inicialice
+        // Cargar los puntos en las variables globales ANTES de que el mapa se inicialice
         window.puntosRecorrido = ruta.puntosRecorrido ? [...ruta.puntosRecorrido] : [];
         window.puntosParada = ruta.puntosParada ? [...ruta.puntosParada] : [];
         
@@ -1029,180 +1029,6 @@ function crearPuntosEnMapa() {
     }
     
     console.log('Puntos creados exitosamente en el mapa');
-}
-
-function crearMarcadorSimple(punto, index) {
-    if (!mapa || !punto.coordenadas) return;
-    
-    let color, texto;
-    switch(punto.tipo) {
-        case 'inicio':
-            color = '#28a745';
-            texto = 'I';
-            break;
-        case 'destino':
-            color = '#17a2b8';
-            texto = 'D';
-            break;
-        default:
-            color = '#6c757d';
-            texto = (index + 1).toString();
-    }
-    
-    const marker = L.marker([punto.coordenadas.lat, punto.coordenadas.lng], {
-        icon: L.divIcon({
-            html: `<div style="
-                background-color: ${color};
-                color: white;
-                border-radius: 50%;
-                width: 30px;
-                height: 30px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-                border: 3px solid white;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            ">${texto}</div>`,
-            iconSize: [30, 30],
-            iconAnchor: [15, 15]
-        }),
-        draggable: true
-    }).addTo(mapa);
-    
-    marker.bindPopup(`
-        <strong>${punto.tipo.toUpperCase()}</strong><br>
-        ${punto.descripcion || 'Sin descripción'}<br>
-        Lat: ${punto.coordenadas.lat.toFixed(6)}<br>
-        Lng: ${punto.coordenadas.lng.toFixed(6)}
-    `);
-    
-    // Evento de arrastre simple
-    marker.on('dragend', function(e) {
-        const nuevaPos = e.target.getLatLng();
-        if (window.puntosRecorrido && window.puntosRecorrido[index]) {
-            window.puntosRecorrido[index].coordenadas = {
-                lat: nuevaPos.lat,
-                lng: nuevaPos.lng
-            };
-            crearPolilineaSimple();
-            actualizarListaPuntosSimple();
-        }
-    });
-}
-
-// Función simple para crear marcador de parada
-function crearMarcadorParadaSimple(parada, index) {
-    if (!mapa || !parada.coordenadas) return;
-    
-    const marker = L.marker([parada.coordenadas.lat, parada.coordenadas.lng], {
-        icon: L.divIcon({
-            html: `<div style="
-                background-color: #ffc107;
-                color: #212529;
-                border-radius: 50%;
-                width: 26px;
-                height: 26px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-                border: 2px solid white;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            ">P</div>`,
-            iconSize: [26, 26],
-            iconAnchor: [13, 13]
-        }),
-        draggable: true
-    }).addTo(mapa);
-    
-    marker.bindPopup(`
-        <strong>PARADA</strong><br>
-        ${parada.descripcion || 'Parada de bus'}<br>
-        Lat: ${parada.coordenadas.lat.toFixed(6)}<br>
-        Lng: ${parada.coordenadas.lng.toFixed(6)}
-    `);
-}
-
-// Función simple para crear polilínea
-function crearPolilineaSimple() {
-    if (!mapa || !window.puntosRecorrido || window.puntosRecorrido.length < 2) return;
-    
-    // Eliminar polilínea anterior
-    if (window.polyline) {
-        mapa.removeLayer(window.polyline);
-    }
-    
-    // Crear array de coordenadas
-    const coordenadas = window.puntosRecorrido
-        .filter(p => p.coordenadas)
-        .map(p => [p.coordenadas.lat, p.coordenadas.lng]);
-    
-    if (coordenadas.length >= 2) {
-        window.polyline = L.polyline(coordenadas, {
-            color: '#1a2a6c',
-            weight: 4,
-            opacity: 0.7,
-            dashArray: '10, 10'
-        }).addTo(mapa);
-    }
-}
-
-// Función simple para actualizar lista de puntos
-function actualizarListaPuntosSimple() {
-    const listaPuntos = document.getElementById('listaPuntos');
-    if (!listaPuntos) return;
-    
-    listaPuntos.innerHTML = '';
-    
-    // Mostrar puntos de recorrido
-    if (window.puntosRecorrido) {
-        window.puntosRecorrido.forEach((punto, index) => {
-            const puntoItem = document.createElement('div');
-            puntoItem.className = `punto-item ${punto.tipo}`;
-            puntoItem.innerHTML = `
-                <div class="punto-info">
-                    <div class="punto-numero">${index + 1}</div>
-                    <div>
-                        <div class="punto-descripcion">
-                            <strong>${punto.descripcion}</strong>
-                        </div>
-                        <div class="punto-coordenadas">
-                            Lat: ${punto.coordenadas.lat.toFixed(6)}, Lng: ${punto.coordenadas.lng.toFixed(6)}
-                        </div>
-                    </div>
-                </div>
-            `;
-            listaPuntos.appendChild(puntoItem);
-        });
-    }
-    
-    // Mostrar puntos de parada
-    if (window.puntosParada) {
-        window.puntosParada.forEach((punto, index) => {
-            const puntoItem = document.createElement('div');
-            puntoItem.className = 'punto-item parada';
-            puntoItem.innerHTML = `
-                <div class="punto-info">
-                    <div class="punto-numero">P${index + 1}</div>
-                    <div>
-                        <div class="punto-descripcion">
-                            <strong>${punto.descripcion}</strong>
-                        </div>
-                        <div class="punto-coordenadas">
-                            Lat: ${punto.coordenadas.lat.toFixed(6)}, Lng: ${punto.coordenadas.lng.toFixed(6)}
-                        </div>
-                    </div>
-                </div>
-            `;
-            listaPuntos.appendChild(puntoItem);
-        });
-    }
-    
-    if ((!window.puntosRecorrido || window.puntosRecorrido.length === 0) && 
-        (!window.puntosParada || window.puntosParada.length === 0)) {
-        listaPuntos.innerHTML = '<div class="no-puntos">No se han marcado puntos en el mapa</div>';
-    }
 }
 
 // Función para actualizar lista de puntos en la UI
@@ -1417,22 +1243,6 @@ function actualizarRutaFinal(idRuta, event) {
     }
 }
 
-// Función para inicializar o esperar el mapa
-function asegurarMapaInicializado(callback) {
-    if (mapa && typeof mapa.setView === 'function') {
-        // El mapa ya está inicializado
-        if (callback) callback();
-        return true;
-    } else {
-        // Esperar un momento y reintentar
-        console.log('Mapa no inicializado, esperando...');
-        setTimeout(() => {
-            asegurarMapaInicializado(callback);
-        }, 500);
-        return false;
-    }
-}
-
 // Función para agregar punto a la lista del formulario
 function agregarPuntoALista(punto, index, color, tipo) {
     const lista = document.getElementById('listaPuntos');
@@ -1481,9 +1291,5 @@ window.formatearFechaRuta = formatearFechaRuta;
 window.abrirMapaRuta = abrirMapaRuta;
 window.actualizarRutaFinal = actualizarRutaFinal;
 window.eliminarPuntoDesdeRuta = eliminarPuntoDesdeRuta;
-window.crearMarcadorSimple = crearMarcadorSimple;
-window.crearMarcadorParadaSimple = crearMarcadorParadaSimple;
-window.crearPolilineaSimple = crearPolilineaSimple;
-window.actualizarListaPuntosSimple = actualizarListaPuntosSimple;
 window.editarRuta = editarRuta;
 window.mostrarFormularioRuta = mostrarFormularioRuta;

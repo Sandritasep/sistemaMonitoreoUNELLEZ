@@ -5,6 +5,7 @@ let markers = [];
 let polyline = null;
 let inicioMarker = null;
 let destinoMarker = null;
+let tempMarker = null;
 
 // Función para obtener parámetros de URL
 function getUrlParams() {
@@ -271,7 +272,14 @@ function agregarPuntoALista(punto, index, color) {
     item.className = `punto-item ${punto.tipo}`;
     item.onclick = () => {
         if (punto.coordenadas && punto.coordenadas.lat && punto.coordenadas.lng) {
-            map.setView([punto.coordenadas.lat, punto.coordenadas.lng], 15);
+            // Centrar el mapa en el punto
+            map.setView([punto.coordenadas.lat, punto.coordenadas.lng], 16);
+            
+            // Mostrar marcador temporal
+            mostrarMarcadorTemporal(punto);
+            
+            // Abrir popup del marcador original si existe
+            abrirPopupMarcador(punto);
         }
     };
     
@@ -304,7 +312,14 @@ function agregarParadaALista(parada, index) {
     item.className = 'punto-item parada';
     item.onclick = () => {
         if (parada.coordenadas && parada.coordenadas.lat && parada.coordenadas.lng) {
-            map.setView([parada.coordenadas.lat, parada.coordenadas.lng], 16);
+            // Centrar el mapa en la parada
+            map.setView([parada.coordenadas.lat, parada.coordenadas.lng], 17);
+            
+            // Mostrar marcador temporal
+            mostrarMarcadorTemporal(parada, 'parada');
+            
+            // Abrir popup del marcador original si existe
+            abrirPopupMarcador(parada, true);
         }
     };
     
@@ -332,8 +347,8 @@ function actualizarContadores() {
     const totalPuntos = (rutaData.puntosRecorrido ? rutaData.puntosRecorrido.length : 0) +
                         (rutaData.puntosParada ? rutaData.puntosParada.length : 0);
     
-    document.getElementById('contadorPuntos').textContent = 
-        `${totalPuntos} puntos en el mapa`;
+    document.getElementById('puntosCount').textContent = 
+        `${totalPuntos}`;
 }
 
 // Funciones de zoom
@@ -356,17 +371,242 @@ function zoomCompleto() {
     }
 }
 
-// Inicializar cuando se carga la página
-document.addEventListener('DOMContentLoaded', initMap);
+// Nueva función para mostrar marcador temporal
+function mostrarMarcadorTemporal(punto, tipo = null) {
+    // Eliminar marcador temporal anterior si existe
+    if (tempMarker) {
+        map.removeLayer(tempMarker);
+    }
+    
+    const lat = punto.coordenadas.lat;
+    const lng = punto.coordenadas.lng;
+    
+    // Crear un icono personalizado para mejor control
+    const customIcon = L.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41],      // Tamaño del icono
+        iconAnchor: [12, 41],    // Punto del icono que corresponde a la posición
+        popupAnchor: [0, -40],   // ¡CRUCIAL: popup 40px POR ENCIMA del marcador!
+        shadowSize: [41, 41]
+    });
+    
+    // Crear marcador temporal
+    tempMarker = L.marker([lat, lng], {
+        icon: customIcon,
+        zIndexOffset: 1000,
+        title: 'Punto seleccionado'
+    }).addTo(map);
+    
+    // Agregar clase para animación
+    tempMarker.getElement()?.classList.add('marker-bounce');
+    
+    // Crear contenido para el popup
+    let popupContent = `<div style="text-align: center; padding: 10px; min-width: 180px; max-width: 250px;">`;
+    
+    // Icono según tipo
+    let icono = '';
+    if (tipo === 'parada') {
+        icono = '<i class="fas fa-bus" style="color: #ffc107; margin-right: 5px;"></i>';
+        popupContent += `<strong style="font-size: 14px; display: block; margin-bottom: 8px;">${icono}PARADA DE BUS</strong>`;
+    } else {
+        switch(punto.tipo) {
+            case 'inicio':
+                icono = '<i class="fas fa-play-circle" style="color: #28a745; margin-right: 5px;"></i>';
+                break;
+            case 'destino':
+                icono = '<i class="fas fa-flag-checkered" style="color: #17a2b8; margin-right: 5px;"></i>';
+                break;
+            default:
+                icono = '<i class="fas fa-location-dot" style="color: #1a2a6c; margin-right: 5px;"></i>';
+        }
+        popupContent += `<strong style="font-size: 14px; display: block; margin-bottom: 8px;">${icono}${getTipoNombre(punto.tipo).toUpperCase()}</strong>`;
+    }
+    
+    popupContent += `<div style="margin: 8px 0; font-size: 13px; line-height: 1.4;">${punto.descripcion || 'Punto seleccionado'}</div>`;
+    popupContent += `<div style="background: #f8f9fa; padding: 6px; border-radius: 4px; margin-top: 8px;">`;
+    popupContent += `<small style="color: #666; font-family: monospace; font-size: 11px; display: block;">`;
+    popupContent += `<i class="fas fa-map-marker-alt" style="margin-right: 4px;"></i>Lat: ${lat.toFixed(6)}<br>`;
+    popupContent += `<i class="fas fa-map-marker-alt" style="margin-right: 4px;"></i>Lng: ${lng.toFixed(6)}`;
+    popupContent += `</small></div></div>`;
+    
+    // Crear y abrir popup - IMPORTANTE: popupAnchor ya está configurado en el icono
+    tempMarker.bindPopup(popupContent, {
+        offset: L.point(0, -5),  // Offset adicional si es necesario
+        className: 'temp-popup',   // Clase personalizada
+        closeButton: true,
+        autoClose: false,
+        closeOnClick: false,
+        maxWidth: 250
+    }).openPopup();
+    
+    // Asegurarse de que el marcador esté encima del popup
+    setTimeout(() => {
+        if (tempMarker && tempMarker.getElement()) {
+            tempMarker.getElement().style.zIndex = '1001';
+        }
+    }, 100);
+    
+    // Auto-eliminar el marcador después de 5 segundos
+    setTimeout(() => {
+        if (tempMarker) {
+            // Remover animación primero
+            tempMarker.getElement()?.classList.remove('marker-bounce');
+            
+            // Cerrar popup
+            tempMarker.closePopup();
+            
+            // Esperar un momento antes de remover para que la animación termine
+            setTimeout(() => {
+                if (tempMarker) {
+                    map.removeLayer(tempMarker);
+                    tempMarker = null;
+                }
+            }, 1000);
+        }
+    }, 5000);
+}
 
-// Prevenir interacción con el mapa (solo zoom y pan)
+// Función auxiliar para configurar popups correctamente
+function configurarPopupMarker(marker, contenido, esTemporal = false) {
+    return marker.bindPopup(contenido, {
+        offset: L.point(0, -35), // Popup 35px por encima del marcador
+        className: esTemporal ? 'temp-popup' : '',
+        closeButton: true,
+        autoClose: !esTemporal,
+        closeOnClick: false,
+        maxWidth: 250
+    });
+}
+
+// Modifica la función toggleSidebar para usar solo iconos
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggleSidebarBtn');
+    const map = document.getElementById('map');
+    
+    if (sidebar.classList.contains('open')) {
+        // Cerrar sidebar
+        sidebar.classList.remove('open');
+        if (map) map.style.marginRight = '0';
+        if (toggleBtn) {
+            toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            toggleBtn.title = 'Mostrar Panel';
+        }
+    } else {
+        // Abrir sidebar
+        sidebar.classList.add('open');
+        if (map) map.style.marginRight = '300px';
+        if (toggleBtn) {
+            toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
+            toggleBtn.title = 'Ocultar Panel';
+        }
+        
+        // Ajustar para responsive
+        if (window.innerWidth <= 768) {
+            if (map) map.style.marginRight = '0';
+        }
+    }
+}
+
+// Función para verificar y aplicar estilos responsive al cargar
+function aplicarEstilosResponsive() {
+    const botones = document.querySelectorAll('.controls-buttons .btn');
+    
+    // Ocultar texto en botones si es mobile/tablet
+    if (window.innerWidth <= 768) {
+        botones.forEach(btn => {
+            const texto = btn.querySelector('.btn-text');
+            if (texto) {
+                texto.style.display = 'none';
+            }
+            // Asegurar que solo muestre icono
+            btn.style.justifyContent = 'center';
+            btn.style.width = '40px';
+            btn.style.minWidth = '40px';
+        });
+    }
+    
+    // Ajustar sidebar
+    ajustarSidebarResponsive();
+}
+
+
+// Función para ajustar el sidebar en responsive
+function ajustarSidebarResponsive() {
+    const sidebar = document.getElementById('sidebar');
+    const map = document.getElementById('map');
+    
+    if (!sidebar || !map) return;
+    
+    if (window.innerWidth <= 768) {
+        // En móviles, ajustar posicionamiento
+        sidebar.style.top = '110px';
+        sidebar.style.height = 'calc(100vh - 110px)';
+        
+        // Remover cualquier estilo que ponga el sidebar abajo
+        sidebar.style.bottom = 'auto';
+        
+        // Ajustar el mapa cuando el sidebar está abierto
+        if (sidebar.classList.contains('open')) {
+            map.style.width = '15%';
+            map.style.marginLeft = '-70%';
+        } else {
+            map.style.width = '100%';
+            map.style.marginLeft = '0';
+        }
+    } else {
+        // En desktop, estilos normales
+        sidebar.style.top = '130px';
+        sidebar.style.height = 'calc(100vh - 130px)';
+        map.style.width = '100%';
+        map.style.marginLeft = '0';
+    }
+}
+
+
+
+
+// Ajustar el mapa cuando se redimensiona la ventana
+function ajustarMapaResize() {
+    const sidebar = document.getElementById('sidebar');
+    const map = document.getElementById('map');
+    
+    if (sidebar.classList.contains('open')) {
+        if (window.innerWidth <= 768) {
+            if (map) map.style.marginRight = '0';
+        } else {
+            if (map) map.style.marginRight = '300px';
+        }
+    }
+}
+
+// Modifica el DOMContentLoaded para incluir la función responsive
 document.addEventListener('DOMContentLoaded', function() {
-    // Deshabilitar clic derecho
+    // Inicializar el mapa
+    initMap();
+    
+    // Inicializar la barra lateral como oculta
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        sidebar.classList.remove('open');
+    }
+    
+    // estilos responsive
+    aplicarEstilosResponsive();
+    
+    // Añadir listeners para redimensionamiento
+    window.addEventListener('resize', function() {
+        ajustarMapaResize();
+        ajustarBotonesResponsive();
+    });
+    
+    // Prevenir interacción con el mapa
     document.addEventListener('contextmenu', function(e) {
         e.preventDefault();
     });
     
-    // Deshabilitar arrastrar marcadores
     if (map) {
         map.boxZoom.disable();
         map.keyboard.disable();
