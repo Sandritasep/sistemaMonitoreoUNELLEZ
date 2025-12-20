@@ -86,21 +86,57 @@
             <div class="header-content">
                 <div class="logo">
                     <h1><i class="fas fa-cogs"></i> Panel Administrativo</h1>
-                    <p class="admin-welcome">Bienvenido, <span id="adminName">Administrador</span></p>
+                    <p class="admin-welcome">Bienvenido, <strong id="adminName">Administrador</strong></p>
                 </div>
-                <div class="admin-nav">
+                <div class="admin-nav-desktop">
                     <button class="btn-admin" onclick="mostrarSeccion('usuarios')">
-                        <i class="fas fa-users"></i> Gestionar Usuarios
+                        <i class="fas fa-users"></i> <span>Gestionar Usuarios</span>
                     </button>
                     <button class="btn-admin" onclick="mostrarSeccion('rutas')">
-                        <i class="fas fa-route"></i> Gestionar Rutas
+                        <i class="fas fa-route"></i> <span>Gestionar Rutas</span>
                     </button>
                     <button class="btn-adminn" onclick="cerrarSesionAdmin()" id="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span>
+                    </button>
+                </div>
+
+                <!-- Botón de menú hamburguesa para móviles -->
+                <button class="menu-toggle" id="menuToggle" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sidebar para móviles -->
+        <div class="mobile-sidebar" id="mobileSidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <h2><i class="fas fa-cogs"></i> Panel Admin</h2>
+                    <p class="sidebar-welcome">Bienvenido, <span id="mobileAdminName">Administrador</span></p>
+                </div>
+                <button class="sidebar-close" onclick="toggleMobileMenu()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-nav">
+                <button class="sidebar-btn" onclick="mostrarSeccion('usuarios'); toggleMobileMenu();">
+                    <i class="fas fa-users"></i> Gestionar Usuarios
+                </button>
+                <button class="sidebar-btn" onclick="mostrarSeccion('rutas'); toggleMobileMenu();">
+                    <i class="fas fa-route"></i> Gestionar Rutas
+                </button>
+                
+                <div class="sidebar-footer">
+                    <button class="sidebar-btn logout-btn" onclick="cerrarSesionAdmin()">
                         <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
                     </button>
                 </div>
             </div>
         </div>
+
+        <!-- Overlay para cerrar el sidebar al hacer clic fuera -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileMenu()"></div>
 
         <!-- Contenido Principal Admin -->
         <div class="admin-container">
@@ -159,14 +195,14 @@
                 <div class="table-container" id="tablaEstudiantes" style="display: none;">
                     <div class="table-header">
                         <div class="table-title">
-                            <i class="fas fa-user-graduate"></i> Lista de Estudiantes
+                            <i class="fas fa-user-graduate"></i> <span>Lista de</span>Estudiantes
                         </div>
                         <div class="table-actions">
                             <button class="btn btn-secondary" onclick="limpiarFiltros()">
-                                <i class="fas fa-filter"></i> Limpiar Filtros
+                                <i class="fas fa-filter"></i> <span>Limpiar Filtros</span>
                             </button>
                             <button class="btn btn-secondary" onclick="cargarUsuarios()">
-                                <i class="fas fa-sync"></i> Actualizar Lista
+                                <i class="fas fa-sync"></i> <span>Actualizar Lista</span>
                             </button>
                         </div>
                     </div>
@@ -226,14 +262,14 @@
                 <div class="table-container" id="tablaTrabajadores" style="display: none;">
                     <div class="table-header">
                         <div class="table-title">
-                            <i class="fas fa-briefcase"></i> Lista de Profesores/Trabajadores
+                            <i class="fas fa-briefcase"></i> <span>Lista de Profesores/</span>Trabajadores
                         </div>
                         <div class="table-actions">
                             <button class="btn btn-secondary" onclick="limpiarFiltros()">
-                                <i class="fas fa-filter"></i> Limpiar Filtros
+                                <i class="fas fa-filter"></i> <span>Limpiar Filtros</span>
                             </button>
                             <button class="btn btn-secondary" onclick="cargarUsuarios()">
-                                <i class="fas fa-sync"></i> Actualizar Lista
+                                <i class="fas fa-sync"></i> <span>Actualizar Lista</span>
                             </button>
                         </div>
                     </div>
@@ -298,14 +334,17 @@
                 <div class="table-container" id="tablaConductores" style="display: none;">
                     <div class="table-header">
                         <div class="table-title">
-                            <i class="fas fa-bus"></i> Lista de Conductores
+                            <i class="fas fa-bus"></i> <span>Lista de </span>Conductores
                         </div>
                         <div class="table-actions">
+                            <button class="btn btn-primary mobile-only" onclick="openDirectConductorModal()">
+                                <i class="fas fa-plus"></i> <span>Nuevo Conductor</span>
+                            </button>
                             <button class="btn btn-secondary" onclick="limpiarFiltrosConductores()">
-                                <i class="fas fa-filter"></i> Limpiar Filtros
+                                <i class="fas fa-filter"></i> <span>Limpiar Filtros</span>
                             </button>
                             <button class="btn btn-secondary" onclick="cargarUsuarios()">
-                                <i class="fas fa-sync"></i> Actualizar Lista
+                                <i class="fas fa-sync"></i> <span>Actualizar Lista</span>
                             </button>
                         </div>
                     </div>
@@ -381,14 +420,14 @@
                 <div class="table-container" id="tablaTodosUsuarios" style="display: none;">
                     <div class="table-header">
                         <div class="table-title">
-                            <i class="fas fa-users"></i> Lista de Todos los Usuarios
+                            <i class="fas fa-users"></i> <span>Lista de </span>Todos <span>los Usuarios</span>
                         </div>
                         <div class="table-actions">
                             <button class="btn btn-secondary" onclick="limpiarFiltrosTodos()">
-                                <i class="fas fa-filter"></i> Limpiar Filtros
+                                <i class="fas fa-filter"></i> <span>Limpiar Filtros</span>
                             </button>
                             <button class="btn btn-secondary" onclick="cargarUsuarios()">
-                                <i class="fas fa-sync"></i> Actualizar Lista
+                                <i class="fas fa-sync"></i> <span>Actualizar Lista</span>
                             </button>
                         </div>
                     </div>
@@ -487,14 +526,17 @@
                 <div class="table-container" id="tablaRutas" style="display: none;">
                     <div class="table-header">
                         <div class="table-title">
-                            <i class="fas fa-route"></i> Lista de Rutas
+                            <i class="fas fa-route"></i> <span>Lista de</span> Rutas
                         </div>
                         <div class="table-actions">
+                            <button class="btn btn-primary mobile-only" onclick="mostrarFormularioRuta()">
+                                <i class="fas fa-plus"></i> <span>Nueva Ruta</span>
+                            </button>
                             <button class="btn btn-secondary" onclick="limpiarFiltrosRutas()">
-                                <i class="fas fa-filter"></i> Limpiar Filtros
+                                <i class="fas fa-filter"></i> <span>Limpiar Filtros</span>
                             </button>
                             <button class="btn btn-secondary" onclick="cargarRutasDesdeStorage()">
-                                <i class="fas fa-sync"></i> Actualizar Lista
+                                <i class="fas fa-sync"></i> <span>Actualizar Lista</span>
                             </button>
                         </div>
                     </div>
@@ -545,14 +587,17 @@
                 <div class="table-container" id="tablaUnidades" style="display: none;">
                     <div class="table-header">
                         <div class="table-title">
-                            <i class="fas fa-bus"></i> Lista de Unidades de Bus
+                            <i class="fas fa-bus"></i> <span>Lista de Unidades de</span> Bus
                         </div>
                         <div class="table-actions">
+                            <button class="btn btn-primary mobile-only" onclick="mostrarFormularioUnidad()">
+                                <i class="fas fa-plus"></i> <span>Nueva Unidad</span>
+                            </button>
                             <button class="btn btn-secondary" onclick="limpiarFiltrosUnidades()">
-                                <i class="fas fa-filter"></i> Limpiar Filtros
+                                <i class="fas fa-filter"></i> <span>Limpiar Filtros</span>
                             </button>
                             <button class="btn btn-secondary" onclick="cargarUnidadesDesdeStorage()">
-                                <i class="fas fa-sync"></i> Actualizar
+                                <i class="fas fa-sync"></i> <span>Actualizar</span>
                             </button>
                         </div>
                     </div>
@@ -561,7 +606,7 @@
                         <thead>
                             <tr>
                                 <th width="10%">
-                                    <strong>ID Unidad</strong>
+                                    <strong>ID <span>Unidad</span></strong>
                                     <input type="text" class="filtro-columna-unidad" placeholder="Filtrar ID..." 
                                         data-columna="0" onkeyup="filtrarColumnaUnidad(this)">
                                 </th>
@@ -612,9 +657,9 @@
                 <!-- Formulario de Nueva Unidad (inicialmente oculto) -->
                 <div class="formulario-ruta-container" id="formularioUnidad" style="display: none;">
                     <div class="formulario-header">
-                        <h3><i class="fas fa-bus"></i> Registrar Nueva Unidad de Bus</h3>
+                        <h3><i class="fas fa-bus"></i> <span>Registrar</span> Nueva Unidad <span>de Bus</span></h3>
                         <button type="button" class="btn btn-secondary" onclick="mostrarTablaUnidades()">
-                            <i class="fas fa-arrow-left"></i> Volver a la lista
+                            <i class="fas fa-arrow-left"></i> <span>Volver a la lista</span>
                         </button>
                     </div>
                     
@@ -737,10 +782,10 @@
                         
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" onclick="mostrarTablaUnidades()">
-                                <i class="fas fa-times"></i> Cancelar
+                                <i class="fas fa-times"></i> <span>Cancelar</span>
                             </button>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Guardar Unidad
+                                <i class="fas fa-save"></i> <span>Guardar Unidad</span>
                             </button>
                         </div>
                     </form>
@@ -749,7 +794,11 @@
                 <!-- Formulario de Nueva Ruta (inicialmente oculto) -->
                 <div class="formulario-ruta-container" id="formularioRuta" style="display: none;">
                     <div class="formulario-header">
-                        <h3><i class="fas fa-plus-circle"></i> Crear Nueva Ruta</h3>
+                        <h3><i class="fas fa-plus-circle"></i> <span>Crear</span> Nueva Ruta</h3>
+                
+                        <button type="button" class="btn btn-secondary" onclick="mostrarContenidoRutas()">
+                            <i class="fas fa-arrow-left"></i> <span>Cancelar</span>
+                        </button>
                     </div>
                     
                     <form id="formNuevaRutaCompleta" class="formulario-ruta">
@@ -806,8 +855,17 @@
                                     <li><strong class="punto-destino">DESTINO</strong> para añadir el final de la ruta (UNELLEZ)</li>
                                     <li><strong class="punto-parada">PARADAS</strong> para añadir las paradas de la ruta</li>
                                 </ol>
+
+                                <!-- Botón para mostrar/ocultar instrucciones especiales -->
+                                <div class="instruccion-toggle">
+                                    <button type="button" class="btn-toggle-instrucciones" onclick="toggleInstruccionesEspeciales()">
+                                        <i class="fas fa-lightbulb"></i> 
+                                        <span>Mostrar funcionalidades adicionales</span>
+                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                    </button>
+                                </div>
                                 
-                                <div class="instruccion-especial">
+                                <div class="instruccion-especial" id="instruccionesEspeciales" style="display: none;">
                                     <p><i class="fas fa-lightbulb"></i> <strong>Funcionalidades adicionales:</strong></p>
                                     <ul>
                                         <li><i class="fas fa-arrows-alt"></i> <strong>Mover puntos:</strong> Arrastre cualquier punto en el mapa para reubicarlo</li>
@@ -827,19 +885,19 @@
                             
                             <div class="controles-mapa">
                                 <button type="button" class="btn btn-secondary" onclick="iniciarMarcadoInicio()">
-                                    <i class="fas fa-map-marker-alt"></i> INICIO
+                                    <i class="fas fa-map-marker-alt"></i> <span>INICIO</span>
                                 </button>
                                 <button type="button" class="btn btn-secondary" onclick="iniciarMarcadoCruce()">
-                                    <i class="fas fa-road"></i> Cruce
+                                    <i class="fas fa-road"></i> <span>Cruce</span>
                                 </button>
                                 <button type="button" class="btn btn-secondary" onclick="iniciarMarcadoDestino()">
-                                    <i class="fas fa-university"></i> Destino
+                                    <i class="fas fa-university"></i> <span>Destino</span>
                                 </button>
                                 <button type="button" class="btn btn-secondary" onclick="iniciarMarcadoParada()">
-                                    <i class="fas fa-bus"></i> Paradas
+                                    <i class="fas fa-bus"></i> <span>Paradas</span>
                                 </button>
                                 <button type="button" class="btn btn-danger" onclick="limpiarMapa()">
-                                    <i class="fas fa-trash"></i> Limpiar Mapa
+                                    <i class="fas fa-trash"></i> <span>Limpiar Mapa</span>
                                 </button>
                             </div>
                             
@@ -855,10 +913,10 @@
                         
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" onclick="mostrarContenidoRutas()">
-                                <i class="fas fa-times"></i> Cancelar
+                                <i class="fas fa-times"></i> <span>Cancelar</span>
                             </button>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Guardar Ruta
+                                <i class="fas fa-save"></i> <span>Guardar Ruta</span>
                             </button>
                         </div>
                     </form>
@@ -1038,10 +1096,10 @@
                     <!-- BOTONES -->
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" onclick="goBackToScan()">
-                            <i class="fas fa-arrow-left"></i> Volver
+                            <i class="fas fa-arrow-left"></i> <span>Volver</span>
                         </button>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Registrar Conductor
+                            <i class="fas fa-save"></i> <span>Registrar Conductor</span>
                         </button>
                     </div>
                 </form>

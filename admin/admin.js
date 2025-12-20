@@ -1,3 +1,68 @@
+// Función para alternar el menú móvil
+function toggleMobileMenu() {
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const menuToggle = document.getElementById('menuToggle');
+    
+    if (sidebar.classList.contains('open')) {
+        // Cerrar sidebar
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        if (menuToggle) {
+            menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+        }
+    } else {
+        // Abrir sidebar
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+        if (menuToggle) {
+            menuToggle.innerHTML = '<i class="fas fa-times"></i>';
+        }
+    }
+}
+
+// Función para alternar la visibilidad de las instrucciones especiales
+function toggleInstruccionesEspeciales() {
+    const instruccionesEspeciales = document.getElementById('instruccionesEspeciales');
+    const toggleButton = document.querySelector('.btn-toggle-instrucciones');
+    const toggleIcon = document.querySelector('.toggle-icon');
+    const toggleText = toggleButton.querySelector('span');
+    
+    if (instruccionesEspeciales.style.display === 'none' || !instruccionesEspeciales.style.display) {
+        // Mostrar instrucciones
+        instruccionesEspeciales.style.display = 'block';
+        toggleButton.classList.add('active');
+        toggleText.textContent = 'Ocultar funcionalidades adicionales';
+        
+        // Cambiar icono a bombillo encendido
+        const bombilloIcon = toggleButton.querySelector('.fa-lightbulb');
+        bombilloIcon.classList.remove('far');
+        bombilloIcon.classList.add('fas');
+        bombilloIcon.style.color = '#FFD700';
+        
+        // Animar el icono de flecha
+        toggleIcon.style.transform = 'rotate(180deg)';
+        
+        // Animar la aparición
+        instruccionesEspeciales.style.animation = 'slideDown 0.3s ease-out';
+    } else {
+        // Ocultar instrucciones
+        instruccionesEspeciales.style.display = 'none';
+        toggleButton.classList.remove('active');
+        toggleText.textContent = 'Mostrar funcionalidades adicionales';
+        
+        // Cambiar icono a bombillo normal
+        const bombilloIcon = toggleButton.querySelector('.fa-lightbulb');
+        bombilloIcon.classList.remove('far');
+        bombilloIcon.classList.add('fas');
+        bombilloIcon.style.color = '#FFD700';
+        
+        // Animar el icono de flecha
+        toggleIcon.style.transform = 'rotate(0deg)';
+    }
+}
+
+
 // ========================================
 // ADMIN.JS - Funciones principales del panel
 // ========================================

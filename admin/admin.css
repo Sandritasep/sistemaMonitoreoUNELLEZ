@@ -276,39 +276,6 @@ body.admin-logged-in .main-header {
     font-weight: bold;
 }
 
-/* Responsive para login */
-@media (max-width: 768px) {
-    .login-container {
-        padding: 1rem;
-    }
-    
-    .login-card {
-        padding: 1.5rem;
-    }
-    
-    .login-title {
-        font-size: 1.5rem;
-    }
-    
-    .login-subtitle {
-        font-size: 0.9rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .login-icon i {
-        font-size: 2.5rem;
-        width: 70px;
-        height: 70px;
-        line-height: 70px;
-    }
-    
-    .login-form .form-group input {
-        padding: 10px 12px;
-        font-size: 0.95rem;
-    }
-}
-
 /* =========================================== */
 /* CONTENIDO ADMIN (solo visible cuando HAY SESIÓN) */
 /* =========================================== */
@@ -361,7 +328,180 @@ body.admin-logged-in .admin-content {
     font-weight: normal;
 }
 
-.admin-nav {
+/* =========================================== */
+/* SIDEBAR PARA MÓVILES */
+/* =========================================== */
+
+/* Botón de menú hamburguesa */
+.menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    z-index: 1001;
+}
+
+.menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Sidebar para móviles */
+.mobile-sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100vh;
+    background: white;
+    box-shadow: 2px 0 15px rgba(0,0,0,0.15);
+    z-index: 2000;
+    transition: left 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-sidebar.open {
+    left: 0;
+}
+
+/* Header del sidebar */
+.sidebar-header {
+    background: #1a2a6c;
+    color: white;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #20478b;
+}
+
+.sidebar-logo h2 {
+    color: white;
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-welcome {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.sidebar-close {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
+}
+
+/* Navegación del sidebar */
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+}
+
+.sidebar-btn {
+    background: transparent;
+    border: none;
+    border-bottom: #333 1px;
+    color: #333;
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-left: 4px solid transparent;
+}
+
+.sidebar-btn:hover {
+    background: #f8f9fa;
+    color: #1a2a6c;
+    border-left-color: #1a2a6c;
+}
+
+.sidebar-btn.active {
+    background: #f0f4ff;
+    color: #1a2a6c;
+    border-left-color: #1a2a6c;
+    font-weight: 600;
+}
+
+.sidebar-btn i {
+    font-size: 1.2rem;
+    width: 24px;
+    text-align: center;
+}
+
+.sidebar-btn span {
+    flex: 1;
+}
+
+/* Footer del sidebar con botón de cerrar sesión */
+.sidebar-footer {
+    margin-top: auto;
+    padding: 1rem;
+    border-top: 1px solid #e9ecef;
+    align-self: center;
+}
+
+.logout-btn {
+    background: rgba(223, 17, 17, 0.1) !important;
+    color: #d93025 !important;
+    border-radius: 8px;
+    margin: 0;
+}
+
+.logout-btn:hover {
+    background: rgba(223, 17, 17, 0.2) !important;
+    color: #c82333 !important;
+}
+
+/* Overlay para cerrar sidebar */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    z-index: 1999;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Distinguir navegación desktop vs móvil */
+.admin-nav-desktop {
     display: flex;
     gap: 1rem;
 }
@@ -389,6 +529,8 @@ body.admin-logged-in .admin-content {
     color: white;
     transform: translateY(-2px);
 }
+
+
 
 /* Contenedor Admin */
 .admin-container {
@@ -446,6 +588,7 @@ body.admin-logged-in .admin-content {
 .stat-info p {
     color: #666;
     font-size: 0.9rem;
+    margin: 0;
 }
 
 #totalU{
@@ -463,6 +606,26 @@ body.admin-logged-in .admin-content {
 
 #totalUsuarios, #totalu{
     color: white;
+}
+
+/* Para tablets */
+@media (min-width: 769px) and (max-width: 992px) {
+    .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stat-card {
+        padding: 1.25rem;
+    }
+    
+    .stat-info h3 {
+        font-size: 1.6rem;
+    }
+    
+    /* Mostrar texto en tablets */
+    .stat-info p {
+        font-size: 0.85rem;
+    }
 }
 
 /* Loading Message */
@@ -512,10 +675,11 @@ body.admin-logged-in .admin-content {
 /* ===== ESTILOS PARA TABLAS ===== */
 .table-container {
     background: white;
-    border-radius: 12px;
+    border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     overflow: hidden;
     margin-top: 20px;
+    margin-bottom: 30px;
 }
 
 .table-header {
@@ -525,10 +689,12 @@ body.admin-logged-in .admin-content {
     justify-content: space-between;
     align-items: center;
     background: #f8fafc;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .table-title {
-    font-size: 18px;
+    font-size: 1.5rem;
     font-weight: 600;
     color: #2c3e50;
     display: flex;
@@ -536,9 +702,15 @@ body.admin-logged-in .admin-content {
     gap: 10px;
 }
 
+.table-title i {
+    color: #0983d4;
+    font-size: 1.3rem;
+}
+
 .table-actions {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 /* Tabla responsive */
@@ -762,20 +934,6 @@ body.admin-logged-in .admin-content {
     font-size: 13px;
 }
 
-/* Responsive para botones */
-@media (max-width: 1200px) {
-    .users-table td:last-child {
-        min-width: 250px;
-    }
-    
-    #cuerpoTablaRutas .btn-edit,
-    #cuerpoTablaRutas .btn-map,
-    #cuerpoTablaRutas .btn-delete {
-        padding: 4px 8px;
-        font-size: 12px;
-    }
-}
-
 /* estilos para tabla unidades */
 /* Estado de las unidades */
 .estado-unidad {
@@ -796,11 +954,6 @@ body.admin-logged-in .admin-content {
 .estado-mantenimiento {
     background: #fff3e0;
     color: #ef6c00;
-}
-
-.estado-enruta {
-    background: #e3f2fd;
-    color: #1565c0;
 }
 
 .estado-inactivo {
@@ -853,30 +1006,21 @@ body.admin-logged-in .admin-content {
     flex: 1;
 }
 
-/* .formulario-unidad-container input[type="number"] {
-    -moz-appearance: textfield;
-} */
-
 .formulario-unidad-container input[type="number"]::-webkit-outer-spin-button,
 .formulario-unidad-container input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-/* Responsive para formulario de unidad */
-@media (max-width: 768px) {
-    .formulario-unidad-container .form-row {
-        flex-direction: column;
-        gap: 1rem;
+/* Animación para tooltips */
+@keyframes fadeInTooltip {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(5px);
     }
-    
-    .table-actions {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .table-actions button {
-        width: 100%;
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
     }
 }
 
@@ -1041,34 +1185,9 @@ body.admin-logged-in .admin-content {
     }
 }
 
-@media (max-width: 768px) {
-    .table-header {
-        flex-direction: column;
-        gap: 15px;
-        align-items: stretch;
-    }
-    
-    .table-actions {
-        flex-wrap: wrap;
-    }
-}
-
-/* Sección RUTAS */
-
 /* Estilos para inputs de solo letras en filtros */
 input[oninput*="replace"][oninput*="A-Za-z"] {
     text-transform: uppercase;
-}
-
-/* Asegurar que la sección de rutas sea responsive */
-@media (max-width: 768px) {
-    #tablaRutas {
-        overflow-x: auto;
-    }
-    
-    #tablaRutas .users-table {
-        min-width: 800px;
-    }
 }
 
 /* MODALES GENERALES */
@@ -1195,61 +1314,6 @@ input[oninput*="replace"][oninput*="A-Za-z"] {
     color: #333 !important;
     text-align: center !important;
     font-size: 14px !important;
-}
-
-/* Ajustes responsive para el modal */
-@media (max-width: 768px) {
-    .modal-content.large h2 {
-        font-size: 1.2rem;
-        padding: 15px;
-        margin: -1.5rem -1.5rem 1rem -1.5rem;
-    }
-    
-    .data-summary {
-        padding: 15px;
-    }
-    
-    .summary-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-    }
-    
-    .summary-value {
-        max-width: 100%;
-        text-align: left;
-    }
-    
-    .checkbox-group-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .form-actions {
-        flex-direction: column;
-        gap: 10px;
-        padding: 15px;
-    }
-    
-    .form-actions .btn {
-        width: 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .checkbox-group-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .modal-content.large h2 {
-        font-size: 1.1rem;
-        padding: 12px;
-        margin: -1rem -1rem 0.5rem -1rem;
-    }
-    
-    .form-section h3 {
-        font-size: 1rem;
-        padding: 8px 12px;
-    }
 }
 
 /* Iconos */
@@ -1572,19 +1636,6 @@ input[oninput*="replace"][oninput*="A-Za-z"] {
     box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.1);
 }
 
-/* Responsive para checkboxes */
-@media (max-width: 768px) {
-    .checkbox-group-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 480px) {
-    .checkbox-group-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
 /* ESTILOS PARA EL RESUMEN DE DATOS*/
 .data-summary {
     background: linear-gradient(135deg, rgba(26, 42, 108, 0.05) 0%, rgba(26, 42, 108, 0.1) 100%);
@@ -1712,94 +1763,6 @@ input[oninput*="replace"][oninput*="A-Za-z"] {
 /* Si el modal necesita ajustes de tamaño */
 .modal-content {
     max-width: 500px !important;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .login-container {
-        padding: 1rem;
-    }
-    
-    .login-card {
-        padding: 1.5rem;
-    }
-    
-    .admin-stats {
-        grid-template-columns: 1fr;
-    }
-    
-    .admin-header .header-content {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-    }
-    
-    .admin-nav {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .btn-admin {
-        padding: 8px 16px;
-        font-size: 0.9rem;
-    }
-    
-    .form-row {
-        flex-direction: column;
-    }
-    
-    .admin-actions {
-        flex-direction: column;
-    }
-    
-    .modal-content {
-        width: 95%;
-        padding: 1.5rem;
-    }
-    
-    .stat-card {
-        padding: 1rem;
-    }
-    
-    .direct-form-row {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .summary-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-    }
-    
-    .form-actions .btn {
-        width: 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .logo h1 {
-        font-size: 1.5rem;
-    }
-    
-    .login-header .logo h1 {
-        font-size: 1.5rem;
-    }
-    
-    .login-title {
-        font-size: 1.5rem;
-    }
-    
-    .admin-section h2 {
-        font-size: 1.5rem;
-    }
-    
-    .btn-login {
-        padding: 10px 16px;
-        font-size: 0.9rem;
-    }
 }
 
 /* =========================================== */
@@ -2076,34 +2039,6 @@ input[oninput*="replace"][oninput*="A-Za-z"] {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .form-row {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .controles-mapa {
-        flex-direction: column;
-    }
-    
-    .controles-mapa .btn {
-        width: 100%;
-    }
-    
-    .leyenda-mapa {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .formulario-header {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: flex-start;
-    }
-}
-
-
 /* Estilos para controles del mapa */
 .control-mapa {
     background: white;
@@ -2171,80 +2106,6 @@ input[oninput*="replace"][oninput*="A-Za-z"] {
     border-radius: 50%;
     border: 2px solid white;
 }
-
-/* Estilos para los botones de controles del mapa en móviles */
-@media (max-width: 768px) {
-    .control-mapa {
-        display: flex;
-        gap: 5px;
-    }
-    
-    .control-mapa button {
-        width: 32px;
-        height: 32px;
-        font-size: 14px;
-    }
-}
-
-/* Agregar al final del archivo admin.css */
-
-/* Estilos para la línea seleccionable */
-.linea-seleccionable {
-    cursor: crosshair !important;
-}
-
-.linea-seleccionable:hover {
-    stroke: #ff9800 !important;
-    stroke-width: 8px !important;
-    stroke-opacity: 0.3 !important;
-}
-
-/* Estilos para marcadores draggables */
-.inicio-draggable div:hover,
-.cruce-draggable div:hover,
-.destino-draggable div:hover,
-.parada-draggable div:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Indicador en la lista de puntos */
-.punto-acciones {
-    margin-top: 5px;
-    font-size: 0.8rem;
-    color: #666;
-}
-
-.punto-acciones i {
-    margin-right: 5px;
-    color: #1a2a6c;
-}
-
-/* Instrucciones mejoradas */
-.instrucciones-mapa ul {
-    margin: 10px 0 10px 20px;
-}
-
-.instrucciones-mapa li {
-    margin-bottom: 8px;
-    padding-left: 5px;
-}
-
-.instrucciones-mapa .instruccion-especial {
-    background: #fff3cd;
-    padding: 10px;
-    border-radius: 5px;
-    margin: 10px 0;
-    border-left: 4px solid #ffc107;
-}
-
-.instruccion-especial i {
-    color: #ff9800;
-    margin-right: 5px;
-}
-
-/* Agregar al final del archivo admin.css */
 
 /* Estilos para la línea seleccionable */
 .linea-seleccionable {
@@ -2403,4 +2264,1241 @@ input[oninput*="replace"][oninput*="A-Za-z"] {
     align-items: center;
     justify-content: center;
     border: 2px solid white;
+}
+
+/* Media Queries adicionales para 480px */
+@media (max-width: 480px) {
+    .login-icon i {
+        font-size: 2.5rem;
+        width: 70px;
+        height: 70px;
+        line-height: 70px;
+    }
+    
+    .login-form .form-group input {
+        padding: 10px 12px;
+        font-size: 0.95rem;
+    }
+    
+    .logo h1 {
+        font-size: 1.5rem;
+    }
+    
+    .login-title {
+        font-size: 1.5rem;
+    }
+    
+    .admin-section h2 {
+        font-size: 1.5rem;
+    }
+    
+    .btn-login {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .checkbox-group-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content.large h2 {
+        font-size: 1.1rem;
+        padding: 12px;
+        margin: -1rem -1rem 0.5rem -1rem;
+    }
+    
+    .form-section h3 {
+        font-size: 1rem;
+    }
+
+    /* Estadísticas responsive */
+    .admin-stats {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* =========================================== */
+/* TOGGLE DE INSTRUCCIONES ESPECIALES */
+/* =========================================== */
+
+.instruccion-toggle {
+    margin: 15px 0;
+}
+
+.btn-toggle-instrucciones {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.btn-toggle-instrucciones:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+.btn-toggle-instrucciones:active {
+    transform: translateY(0);
+}
+
+.btn-toggle-instrucciones i.fa-lightbulb {
+    font-size: 1.2rem;
+    color: #FFD700;
+    margin-right: 8px;
+}
+
+.btn-toggle-instrucciones span {
+    flex: 1;
+    text-align: left;
+}
+
+.toggle-icon {
+    font-size: 0.9rem;
+    transition: transform 0.3s ease;
+}
+
+.btn-toggle-instrucciones.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Instrucciones especiales con animación */
+.instruccion-especial {
+    background: #e8f4fd;
+    border: 1px solid #b6d4fe;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =========================================== */
+/* MEDIA QUERIES CONSOLIDADAS (768px) */
+/* =========================================== */
+
+@media (max-width: 768px) {
+    /* Login */
+    .login-container {
+        padding: 1rem;
+    }
+    
+    .login-card {
+        padding: 1.5rem;
+    }
+    
+    .login-title {
+        font-size: 1.5rem;
+    }
+    
+    .login-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    /* Admin Header */
+    .admin-header {
+        padding: 15px 15px;
+    }
+    
+    .admin-header .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+    }
+    
+    .admin-header .logo {
+        text-align: left;
+        flex: 1;
+        max-width: 60%;
+    }
+    
+    .admin-header .logo h1 {
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.2rem;
+        justify-content: flex-start;
+    }
+    
+    .admin-welcome {
+        font-size: 0.8rem;
+        text-align: left;
+    }
+    
+    .admin-nav {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .admin-actions {
+        display: none !important;
+    }
+    
+    .btn-admin, .btn-adminn {
+        padding: 5px 5px;
+        min-width: 38px;
+        height: 40px;
+        border-radius: 8px;
+        justify-content: center;
+        position: relative;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+    
+    .btn-admin span,
+    .btn-adminn span {
+        display: none;
+    }
+    
+    .btn-admin i,
+    .btn-adminn i {
+        font-size: 1rem;
+        margin: 0;
+    }
+    
+    /* Botón de cerrar sesión - siempre visible a la derecha */
+    #btn-logout {
+        background: rgba(223, 17, 17, 0.7) !important;
+        color: white;
+        min-width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    #btn-logout:hover {
+        background: rgba(223, 17, 17, 0.685) !important;
+    }
+    
+    /* Tooltips para botones sin texto */
+    .btn-admin[title]:hover::after,
+    .btn-adminn[title]:hover::after {
+        content: attr(title);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        z-index: 10000;
+        margin-bottom: 8px;
+        pointer-events: none;
+        opacity: 0;
+        animation: fadeInTooltip 0.2s ease forwards;
+    }
+    
+    .btn-admin[title],
+    .btn-adminn[title] {
+        position: relative;
+    }
+
+    .admin-header .header-content {
+        flex-direction: row;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .admin-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .btn-admin {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    
+    /* Formularios */
+    .form-row,
+    .direct-form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* =========================================== */
+    /* TABLAS RESPONSIVE PARA TODAS LAS TABLAS */
+    /* =========================================== */
+    
+    /* Aplicar a todas las tablas, no solo a #tablaRutas */
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    .users-table {
+        min-width: 800px; /* Ancho mínimo para mantener las columnas */
+    }
+    
+    .table-header {
+        flex-direction: row;
+        align-items: stretch;
+        padding: 15px;
+        gap: 10px;
+        justify-content: space-between;
+    }
+
+    .table-title {
+        font-size: 1.1rem;
+        justify-content: center;
+        white-space: nowrap;
+        text-align: center;
+        min-width: 120px;
+    }
+    
+    .table-actions {
+        flex-shrink: 0;
+        display: flex;
+        gap: 4px;
+    }
+
+    /* Estilo específico para botones "Nuevo" en móviles */
+    .btn-primary.mobile-only {
+        color: white;
+        border: none;
+        padding: 6px 8px;
+        min-width: 40px;
+        min-height: 36px;
+        order: -1; /* Para ponerlo primero */
+    }
+    
+    .btn-primary.mobile-only:hover {
+        background: #218838;
+    }
+
+    .btn {
+        padding: 6px 12px;
+        font-size: 13px;
+        min-height: 36px;
+        min-width: auto;
+    }
+
+    .btn span {
+        display: none;
+    }
+
+    .btn i {
+        margin: 0;
+        font-size: 14px;
+    }
+    
+    /* Contadores de resultados */
+    .contador-resultados {
+        text-align: center;
+        font-size: 13px;
+        padding: 12px 15px;
+    }
+    
+    .users-table th,
+    .users-table td {
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+
+    .filtro-columna,
+    .filtro-columna-conductor,
+    .filtro-columna-todos {
+        padding: 5px;
+        font-size: 12px;
+    }
+    
+    /* Acciones en todas las tablas */
+    .users-table td:last-child {
+        min-width: 15px;
+    }
+    
+    /* Botones de acción en todas las tablas */
+    .btn-edit,
+    .btn-map,
+    .btn-delete,
+    .btn-view {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+    
+    /* =========================================== */
+    /* OPCIONAL: TARJETAS MÓVILES */
+    /* =========================================== */
+    
+    /* Mostrar tarjetas en móviles */
+    .table-container .users-table + .mobile-cards-container {
+        display: flex;
+    }
+    
+    .mobile-cards-container {
+        display: none;
+        padding: 15px;
+    }
+    
+    /* Estilos para las tarjetas móviles */
+    .mobile-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    .card-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .card-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    .card-label {
+        font-weight: 600;
+        color: #495057;
+        font-size: 14px;
+        min-width: 120px;
+    }
+    
+    .card-value {
+        color: #6c757d;
+        font-size: 14px;
+        text-align: right;
+        flex: 1;
+        padding-left: 10px;
+    }
+    
+    .card-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        padding-top: 10px;
+        border-top: 1px solid #f8f9fa;
+        margin-top: 10px;
+    }
+    
+    .action-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-height: 32px;
+    }
+    
+    /* Filtros en móviles */
+    .mobile-filters {
+        padding: 15px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .filter-group {
+        margin-bottom: 10px;
+    }
+    
+    .filter-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .mobile-filter-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    /* =========================================== */
+    /* BOTONES GENERALES */
+    /* =========================================== */
+    
+    .btn {
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    /* Checkboxes */
+    .checkbox-group-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Formulario de unidad */
+    .formulario-unidad-container .form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* Modales */
+    .modal-content {
+        width: 95%;
+        padding: 1.5rem;
+    }
+    
+    .modal-content.large h2 {
+        font-size: 1.2rem;
+        padding: 15px;
+        margin: -1.5rem -1.5rem 1rem -1.5rem;
+    }
+    
+    .data-summary {
+        padding: 15px;
+    }
+    
+    .summary-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .summary-value {
+        max-width: 100%;
+        text-align: left;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+    
+    /* Mapa */
+    .controles-mapa {
+        flex-direction: row;
+    }
+    
+    
+    .leyenda-mapa {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .formulario-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .control-mapa {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .control-mapa button {
+        width: 15px;
+        height: 15px;
+        font-size: 14px;
+    }
+
+    span{
+        display: none;
+    }
+
+     /* Contenedor principal de formularios */
+    .formulario-ruta-container {
+        padding: 15px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin: 15px 0;
+        overflow-x: hidden;
+    }
+    
+    /* Header del formulario */
+    .formulario-header {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .formulario-header h3 {
+        font-size: 1.2rem;
+        text-align: left;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1; /* Ocupar espacio disponible */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .formulario-header .btn {
+        width: auto !important; 
+        padding: 8px !important;
+        min-width: 44px; 
+        min-height: 44px;
+        flex-shrink: 0; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .formulario-header .btn i {
+        margin: 0 !important;
+        font-size: 1.1rem;
+    }
+    
+    /* Formulario en sí */
+    .formulario-ruta {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    /* Secciones del formulario */
+    .form-section {
+        background: white;
+        border-radius: 8px;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .form-section h3 {
+        font-size: 1.1rem;
+        margin: 0 0 15px 0;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    /* Filas del formulario - siempre en columna en móviles */
+    .form-row {
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 0;
+    }
+    
+    .form-row .form-group {
+        width: 100%;
+        margin-bottom: 0;
+    }
+    
+    /* Grupos de formulario */
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: #495057;
+        font-size: 14px;
+    }
+    
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group input[type="date"],
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    
+    .form-group textarea {
+        min-height: 80px;
+        resize: vertical;
+    }
+    
+    .form-group small {
+        display: block;
+        margin-top: 4px;
+        color: #6c757d;
+        font-size: 12px;
+        font-style: italic;
+    }
+    
+    /* Checkboxes en grid - ajustar para móviles */
+    .checkbox-group-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+        max-height: 200px;
+        overflow-y: auto;
+        padding: 10px;
+        background: white;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+    }
+    
+    .checkbox-group-grid .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+    }
+    
+    .checkbox-group-grid input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* =========================================== */
+    /* MEJORAS DE ACCESIBILIDAD */
+    /* =========================================== */
+    
+    /* Focus visible para navegación con teclado */
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus,
+    .btn:focus {
+        outline: 2px solid #007bff;
+        outline-offset: 2px;
+    }
+    
+    /* Mejor contraste para labels */
+    .form-group label {
+        color: #212529;
+    }
+    
+    /* Espaciado consistente */
+    .form-group + .form-group {
+        margin-top: 0;
+    }
+    
+    /* Asegurar que todo el contenido sea visible */
+    .formulario-ruta-container {
+        overflow-y: auto;
+        max-height: calc(100vh - 100px);
+    }
+    
+    /* =========================================== */
+    /* ESPECÍFICO PARA FORMULARIO DE RUTA */
+    /* =========================================== */
+    
+    /* Instrucciones del mapa */
+    .instrucciones-mapa {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        font-size: 13px;
+    }
+    
+    .instrucciones-mapa p {
+        margin: 0 0 10px 0;
+    }
+    
+    .instrucciones-mapa ol,
+    .instrucciones-mapa ul {
+        margin: 10px 0;
+        padding-left: 20px;
+    }
+    
+    .instrucciones-mapa li {
+        margin-bottom: 5px;
+        line-height: 1.4;
+    }
+
+    .btn-toggle-instrucciones {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+    
+    .btn-toggle-instrucciones i.fa-lightbulb {
+        font-size: 1.1rem;
+        margin-right: 6px;
+    }
+    
+    .btn-toggle-instrucciones span {
+        font-size: 13px;
+    }
+    
+    .instruccion-especial {
+        padding: 12px;
+        margin: 8px 0;
+    }
+    
+    .instruccion-especial ul {
+        margin: 8px 0;
+        padding-left: 18px;
+    }
+    
+    .instruccion-especial li {
+        margin-bottom: 6px;
+        font-size: 12.5px;
+        line-height: 1.4;
+    }
+    
+    .hint {
+        padding: 6px 8px;
+        font-size: 11.5px;
+    }
+    
+    /* Leyenda del mapa */
+    .leyenda-mapa {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin-top: 15px;
+    }
+    
+    .leyenda-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+    
+    .color-inicio,
+    .color-cruce,
+    .color-destino,
+    .color-parada {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    
+    .color-inicio { background: #28a745; }
+    .color-cruce { background: #007bff; }
+    .color-destino { background: #dc3545; }
+    .color-parada { background: #ffc107; }
+    
+    /* Controles del mapa - en columna */
+    .controles-mapa {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important; 
+        gap: 4px !important; 
+        margin: 15px 0;
+        justify-content: flex-start !important; 
+        overflow-x: auto !important; 
+        padding: 5px 0 10px 0; 
+        -webkit-overflow-scrolling: touch; 
+        scrollbar-width: none; 
+        padding-left: 20px;
+    }
+    
+    .controles-mapa .btn {
+        width: auto !important; /* Ancho automático */
+        padding: 8px 10px !important;
+        min-width: 44px; /* Tamaño mínimo para tocar */
+        min-height: 44px;
+        flex: 0 0 auto; /* No crecer ni encoger */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .controles-mapa .btn i {
+        margin: 0 !important;
+        font-size: 1.1rem;
+    }
+
+    /* Mapa - altura reducida para móviles */
+    #map {
+        height: 350px !important;
+        margin-top: 10px;
+        border: 1px solid #dee2e6;
+    }
+    
+    /* Resumen de puntos */
+    .resumen-puntos {
+        margin-top: 15px;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+    }
+    
+    .resumen-puntos h4 {
+        font-size: 1rem;
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .lista-puntos {
+        max-height: 150px;
+        overflow-y: auto;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+    
+    /* Botones de acción del formulario */
+     .form-actions {
+        display: flex !important;
+        flex-direction: row !important; /* En fila */
+        gap: 10px !important;
+        padding-top: 20px;
+        border-top: 1px solid #e9ecef;
+        margin-top: 20px;
+        justify-content: center; /* Centrar los botones */
+    }
+    
+    .form-actions .btn {
+        width: auto !important; /* Ancho automático */
+        padding: 10px 12px !important;
+        min-width: 44px; /* Tamaño mínimo para tocar */
+        min-height: 44px;
+        flex: 1; /* Ocupar espacio disponible equitativamente */
+        max-width: 150px; /* Máximo ancho para que no se estiren demasiado */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .form-actions .btn i {
+        margin: 0 !important;
+        font-size: 1.1rem;
+    }
+    
+    
+    /* =========================================== */
+    /* MEJORAS ESPECÍFICAS PARA ENTRADAS */
+    /* =========================================== */
+    
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    /* Select más grandes para tocar fácil */
+    select {
+        height: 44px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 12px;
+        padding-right: 35px;
+    }
+    
+    /* Para campos obligatorios */
+    .form-group input:required,
+    .form-group select:required {
+        border-left: 3px solid #dc3545;
+    }
+    
+    .form-group input:valid,
+    .form-group select:valid {
+        border-left: 3px solid #28a745;
+    }
+}
+
+/* =========================================== */
+/* MEDIA QUERY ADICIONAL PARA TABLAS */
+/* =========================================== */
+@media (max-width: 768px) {
+    /* Estadísticas responsive */
+    .admin-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 0.5rem;
+        position: relative;
+        padding: 10px;
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(26, 42, 108, 0.08);
+        border-radius: 8px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-icon i {
+        font-size: 1.2rem;
+        color: #1a2a6c;
+    }
+    
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .stat-info h3 {
+        font-size: 1.4rem;
+        color: #1a2a6c;
+        margin: 0;
+        line-height: 1;
+        font-weight: 700;
+    }
+    
+    /* Ocultar texto en móviles - solo mostrar en hover */
+    .stat-info p {
+        display: none;
+        position: absolute;
+        bottom: -25px;
+        left: 0;
+        right: 0;
+        background: #1a2a6c;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        z-index: 10;
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+    }
+    
+    /* Mostrar tooltip al hover en móviles */
+    .stat-card:hover .stat-info p {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    /* Para el stat de total usuarios (fondo azul) */
+    #total-usuarios .stat-icon {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    #total-usuarios .stat-icon i {
+        color: white;
+    }
+    
+    #total-usuarios .stat-info h3 {
+        color: white;
+    }
+    
+    /* Asegurar que el texto del tooltip sea visible en el stat azul */
+    #total-usuarios:hover .stat-info p {
+        background: rgba(255, 255, 255, 0.9);
+        color: #1a2a6c;
+        font-weight: 600;
+    }
+
+    /* Ocultar navegación desktop en móviles */
+    .admin-nav-desktop {
+        display: none;
+    }
+    
+    /* Mostrar botón de menú hamburguesa */
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Ajustar el header */
+    .admin-header .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+    }
+    
+    .admin-header .logo {
+        text-align: left;
+        flex: 1;
+        max-width: calc(100% - 50px);
+    }
+    
+    .admin-header .logo h1 {
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.2rem;
+        justify-content: flex-start;
+    }
+    
+    .admin-welcome {
+        font-size: 0.8rem;
+        text-align: left;
+    }
+    
+    /* Login responsive (mantener existente) */
+    .login-container {
+        padding: 1rem;
+    }
+    
+    .login-card {
+        padding: 1.5rem;
+    }
+    
+    .login-title {
+        font-size: 1.5rem;
+    }
+    
+    .login-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    /* Admin Container */
+    .admin-container {
+        padding: 1.5rem;
+    }
+    
+    /* =========================================== */
+    /* REGLAS ESPECÍFICAS PARA TABLAS INDIVIDUALES */
+    /* =========================================== */
+    
+    /* Ajustar ancho mínimo según el número de columnas */
+    #tablaEstudiantes .users-table,
+    #tablaTodosUsuarios .users-table {
+        min-width: 700px;
+    }
+    
+    #tablaTrabajadores .users-table {
+        min-width: 900px;
+    }
+    
+    #tablaConductores .users-table {
+        min-width: 850px;
+    }
+    
+    /* Formularios */
+    .form-row,
+    .direct-form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* Checkboxes */
+    .checkbox-group-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Formulario de unidad */
+    .formulario-unidad-container .form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* Modales */
+    .modal-content {
+        width: 95%;
+        padding: 1.5rem;
+    }
+    
+    .modal-content.large h2 {
+        font-size: 1.2rem;
+        padding: 15px;
+        margin: -1.5rem -1.5rem 1rem -1.5rem;
+    }
+    
+    .data-summary {
+        padding: 15px;
+    }
+    
+    .summary-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .summary-value {
+        max-width: 100%;
+        text-align: left;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+    
+    /* Mapa */
+    .controles-mapa {
+        flex-direction: row;
+    }
+    
+    
+    .leyenda-mapa {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .formulario-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .control-mapa {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .control-mapa button {
+        width: 15px;
+        height: 15px;
+        font-size: 14px;
+    }
 }
