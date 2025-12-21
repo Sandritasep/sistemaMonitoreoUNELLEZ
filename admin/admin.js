@@ -62,9 +62,8 @@ function toggleInstruccionesEspeciales() {
     }
 }
 
-
 // ========================================
-// ADMIN.JS - Funciones principales del panel
+// Funciones principales del panel
 // ========================================
 
 // Variables globales para administración
@@ -659,7 +658,7 @@ function renderizarTablaConductores(conductores) {
                 <span class="user-status ${claseEstado}">${estado}</span>
             </td>
             <td>
-                <button class="btn-edit" onclick="editarConductor('${conductor.cedula}')">
+                <button class="btn-edit" onclick="editarUsuario('${conductor.cedula}')">
                     <i class="fas fa-edit"></i> Editar
                 </button>
                 <button class="btn-delete" onclick="eliminarConductor('${conductor.cedula}')">
@@ -745,7 +744,7 @@ function renderizarTablaTodosUsuarios(usuarios) {
         let acciones = '';
         if (usuario.tipo === 'conductor') {
             acciones = `
-                <button class="btn-edit" onclick="editarConductor('${usuario.cedula}')">
+                <button class="btn-edit" onclick="editarUsuario('${usuario.cedula}')">
                     <i class="fas fa-edit"></i> Editar
                 </button>
                 <button class="btn-delete" onclick="eliminarConductor('${usuario.cedula}')">
@@ -789,12 +788,552 @@ function renderizarTablaTodosUsuarios(usuarios) {
     }
 }
 
-// Ocultar todas las tablas
+// ========================================
+// FUNCIONES AUXILIARES PARA EDICIÓN
+// ========================================
+
+// Función para capitalizar primera letra
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+// Cargar rutas en un select
+function cargarRutasEnSelect(selectId, rutaSeleccionada = '') {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    
+    // Guardar opción actual
+    const opcionesActuales = select.innerHTML;
+    
+    try {
+        const rutasDB = JSON.parse(localStorage.getItem('unellez_routes')) || {};
+        let opcionesHTML = '<option value="">Seleccione una ruta</option>';
+        
+        Object.keys(rutasDB).forEach(clave => {
+            const ruta = rutasDB[clave];
+            if (ruta.estado === 'Activa') {
+                const seleccionado = (clave === rutaSeleccionada) ? 'selected' : '';
+                opcionesHTML += `<option value="${clave}" ${seleccionado}>Ruta ${clave.slice(-1)} - ${ruta.nombre}</option>`;
+            }
+        });
+        
+        select.innerHTML = opcionesHTML;
+        
+    } catch (error) {
+        console.error("Error cargando rutas:", error);
+        select.innerHTML = opcionesActuales; // Restaurar opciones anteriores
+    }
+}
+
+// Funciones para checkboxes en edición
+function seleccionarTodosDiasEditar(checkbox) {
+    const checkboxesDias = document.querySelectorAll('input[name="editarDias"]');
+    checkboxesDias.forEach(checkboxDia => {
+        checkboxDia.checked = checkbox.checked;
+    });
+}
+
+function seleccionarTodosTurnosEditar(checkbox) {
+    const checkboxesTurnos = document.querySelectorAll('input[name="editarTurnos"]');
+    checkboxesTurnos.forEach(checkboxTurno => {
+        checkboxTurno.checked = checkbox.checked;
+    });
+}
+
+function configurarEventosCheckboxesEditar() {
+    const checkboxesDias = document.querySelectorAll('input[name="editarDias"]');
+    checkboxesDias.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const checkboxTodosDias = document.getElementById('editarTodosDias');
+            if (!this.checked && checkboxTodosDias.checked) {
+                checkboxTodosDias.checked = false;
+            }
+        });
+    });
+    
+    const checkboxesTurnos = document.querySelectorAll('input[name="editarTurnos"]');
+    checkboxesTurnos.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const checkboxTodosTurnos = document.getElementById('editarTodosTurnos');
+            if (!this.checked && checkboxTodosTurnos.checked) {
+                checkboxTodosTurnos.checked = false;
+            }
+        });
+    });
+}
+
+// Funciones para verificar contraseñas
+function verificarCoincidenciaContraseñaEstudiante() {
+    const password = document.getElementById('editarEstudiantePassword').value;
+    const confirmPassword = document.getElementById('editarEstudianteConfirmPassword').value;
+    const mensaje = document.getElementById('editarEstudiantePasswordMatch');
+    
+    if (password && confirmPassword) {
+        if (password === confirmPassword) {
+            mensaje.className = 'password-match';
+            mensaje.innerHTML = '<i class="fas fa-check-circle"></i> Las contraseñas coinciden';
+            mensaje.style.display = 'block';
+        } else {
+            mensaje.className = 'password-mismatch';
+            mensaje.innerHTML = '<i class="fas fa-times-circle"></i> Las contraseñas no coinciden';
+            mensaje.style.display = 'block';
+        }
+    } else {
+        mensaje.style.display = 'none';
+    }
+}
+
+function verificarCoincidenciaContraseñaTrabajador() {
+    const password = document.getElementById('editarTrabajadorPassword').value;
+    const confirmPassword = document.getElementById('editarTrabajadorConfirmPassword').value;
+    const mensaje = document.getElementById('editarTrabajadorPasswordMatch');
+    
+    if (password && confirmPassword) {
+        if (password === confirmPassword) {
+            mensaje.className = 'password-match';
+            mensaje.innerHTML = '<i class="fas fa-check-circle"></i> Las contraseñas coinciden';
+            mensaje.style.display = 'block';
+        } else {
+            mensaje.className = 'password-mismatch';
+            mensaje.innerHTML = '<i class="fas fa-times-circle"></i> Las contraseñas no coinciden';
+            mensaje.style.display = 'block';
+        }
+    } else {
+        mensaje.style.display = 'none';
+    }
+}
+
+function verificarCoincidenciaContraseñaConductor() {
+    const password = document.getElementById('editarConductorPassword').value;
+    const confirmPassword = document.getElementById('editarConductorConfirmPassword').value;
+    const mensaje = document.getElementById('editarConductorPasswordMatch');
+    
+    if (password && confirmPassword) {
+        if (password === confirmPassword) {
+            mensaje.className = 'password-match';
+            mensaje.innerHTML = '<i class="fas fa-check-circle"></i> Las contraseñas coinciden';
+            mensaje.style.display = 'block';
+        } else {
+            mensaje.className = 'password-mismatch';
+            mensaje.innerHTML = '<i class="fas fa-times-circle"></i> Las contraseñas no coinciden';
+            mensaje.style.display = 'block';
+        }
+    } else {
+        mensaje.style.display = 'none';
+    }
+}
+
+// ========================================
+// FUNCIONES PARA GUARDAR EDICIONES
+// ========================================
+
+// Guardar edición de estudiante
+function guardarEdicionEstudiante(event, usuarioId) {
+    event.preventDefault();
+    
+    // Validar contraseñas
+    const password = document.getElementById('editarEstudiantePassword').value;
+    const confirmPassword = document.getElementById('editarEstudianteConfirmPassword').value;
+    
+    if (password && password.length < 6) {
+        mostrarNotificacion('La contraseña debe tener al menos 6 caracteres', 'error');
+        return;
+    }
+    
+    if (password && password !== confirmPassword) {
+        mostrarNotificacion('Las contraseñas no coinciden', 'error');
+        return;
+    }
+    
+    try {
+        const usuariosDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+        
+        // Verificar si existe el usuario a editar
+        if (!usuariosDB[usuarioId]) {
+            mostrarNotificacion('Usuario no encontrado en la base de datos', 'error');
+            return;
+        }
+        
+        // Obtener datos del formulario (cédula no se edita)
+        const nombre = document.getElementById('editarEstudianteNombre').value.trim();
+        const apellido = document.getElementById('editarEstudianteApellido').value.trim();
+        const carrera = document.getElementById('editarEstudianteCarrera').value.trim();
+        const nombreUsuario = document.getElementById('editarEstudianteUsuario').value.trim();
+        const email = document.getElementById('editarEstudianteEmail').value.trim();
+        const activo = document.getElementById('editarEstudianteActivo').value === 'true';
+        
+        // Verificar si el nombre de usuario ya existe en OTRO usuario
+        const cedula = usuariosDB[usuarioId].cedula; // Obtener cédula del usuario existente
+        const usuarioNombreExistente = Object.entries(usuariosDB).find(([id, usuario]) => 
+            usuario.nombreUsuario === nombreUsuario && id !== usuarioId
+        );
+        
+        if (usuarioNombreExistente) {
+            mostrarNotificacion('El nombre de usuario ya está en uso por otro usuario', 'error');
+            return;
+        }
+        
+        // Obtener nombre de ruta
+        const rutaId = document.getElementById('editarEstudianteRuta').value;
+        let rutaNombre = '';
+        if (rutaId) {
+            const rutasDB = JSON.parse(localStorage.getItem('unellez_routes')) || {};
+            rutaNombre = rutasDB[rutaId] ? `Ruta ${rutaId.slice(-1)} - ${rutasDB[rutaId].nombre}` : '';
+        }
+        
+        // Mantener datos existentes y actualizar solo los modificados
+        usuariosDB[usuarioId] = {
+            ...usuariosDB[usuarioId], // Mantener todos los datos existentes incluyendo cédula
+            nombre: nombre,
+            apellido: apellido,
+            carrera: carrera,
+            ruta: rutaId,
+            rutaNombre: rutaNombre,
+            nombreUsuario: nombreUsuario,
+            email: email,
+            activo: activo,
+            fechaActualizacion: new Date().toISOString(),
+            actualizadoPor: sesionAdmin ? sesionAdmin.username : 'admin'
+        };
+        
+        // Actualizar contraseña solo si se proporcionó una nueva
+        if (password) {
+            usuariosDB[usuarioId].contraseña = password;
+        }
+        
+        // Guardar en localStorage
+        localStorage.setItem('unellez_users', JSON.stringify(usuariosDB));
+        
+        mostrarNotificacion('Estudiante actualizado exitosamente', 'success');
+        
+        // Volver a la tabla y actualizar
+        setTimeout(() => {
+            volverATablaEstudiantes();
+            cargarUsuarios();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Error al guardar estudiante:', error);
+        mostrarNotificacion('Error al guardar los cambios', 'error');
+    }
+}
+
+// Guardar edición de trabajador
+function guardarEdicionTrabajador(event, usuarioId) {
+    event.preventDefault();
+    
+    // Validar contraseñas
+    const password = document.getElementById('editarEstudiantePassword').value;
+    const confirmPassword = document.getElementById('editarEstudianteConfirmPassword').value;
+    
+    if (password && password.length < 6) {
+        mostrarNotificacion('La contraseña debe tener al menos 6 caracteres', 'error');
+        return;
+    }
+    
+    if (password && password !== confirmPassword) {
+        mostrarNotificacion('Las contraseñas no coinciden', 'error');
+        return;
+    }
+    
+    try {
+        const usuariosDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+        
+        // Verificar si existe el usuario a editar
+        if (!usuariosDB[usuarioId]) {
+            mostrarNotificacion('Usuario no encontrado en la base de datos', 'error');
+            return;
+        }
+        
+        // Obtener datos del formulario
+        const cedula = document.getElementById('editarEstudianteCedula').value.trim();
+        const nombre = document.getElementById('editarEstudianteNombre').value.trim();
+        const apellido = document.getElementById('editarEstudianteApellido').value.trim();
+        const carrera = document.getElementById('editarEstudianteCarrera').value.trim();
+        const nombreUsuario = document.getElementById('editarEstudianteUsuario').value.trim();
+        const email = document.getElementById('editarEstudianteEmail').value.trim();
+        const activo = document.getElementById('editarEstudianteActivo').value === 'true';
+        
+        // Verificar si la cédula ya existe en OTRO usuario (no en este mismo)
+        const usuarioExistente = Object.entries(usuariosDB).find(([id, usuario]) => 
+            usuario.cedula === cedula && id !== usuarioId
+        );
+        
+        if (usuarioExistente) {
+            mostrarNotificacion('Ya existe otro usuario con esta cédula', 'error');
+            return;
+        }
+        
+        // Verificar si el nombre de usuario ya existe en OTRO usuario
+        const usuarioNombreExistente = Object.entries(usuariosDB).find(([id, usuario]) => 
+            usuario.nombreUsuario === nombreUsuario && id !== usuarioId
+        );
+        
+        if (usuarioNombreExistente) {
+            mostrarNotificacion('El nombre de usuario ya está en uso por otro usuario', 'error');
+            return;
+        }
+        
+        // Obtener nombre de ruta
+        const rutaId = document.getElementById('editarEstudianteRuta').value;
+        let rutaNombre = '';
+        if (rutaId) {
+            const rutasDB = JSON.parse(localStorage.getItem('unellez_routes')) || {};
+            rutaNombre = rutasDB[rutaId] ? `Ruta ${rutaId.slice(-1)} - ${rutasDB[rutaId].nombre}` : '';
+        }
+        
+        // Mantener datos existentes y actualizar solo los modificados
+        usuariosDB[usuarioId] = {
+            ...usuariosDB[usuarioId], // Mantener todos los datos existentes
+            cedula: cedula,
+            nombre: nombre,
+            apellido: apellido,
+            carrera: carrera,
+            ruta: rutaId,
+            rutaNombre: rutaNombre,
+            nombreUsuario: nombreUsuario,
+            email: email,
+            activo: activo,
+            tipo: 'estudiante',
+            fechaActualizacion: new Date().toISOString(),
+            actualizadoPor: sesionAdmin ? sesionAdmin.username : 'admin'
+        };
+        
+        // Actualizar contraseña solo si se proporcionó una nueva
+        if (password) {
+            usuariosDB[usuarioId].contraseña = password;
+        }
+        
+        // Guardar en localStorage (esto actualiza el usuario existente)
+        localStorage.setItem('unellez_users', JSON.stringify(usuariosDB));
+        
+        mostrarNotificacion('Estudiante actualizado exitosamente', 'success');
+        
+        // Volver a la tabla y actualizar
+        setTimeout(() => {
+            volverATablaEstudiantes();
+            cargarUsuarios();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Error al guardar estudiante:', error);
+        mostrarNotificacion('Error al guardar los cambios', 'error');
+    }
+}
+
+// Guardar edición de conductor
+function guardarEdicionConductor(event, usuarioId) {
+    event.preventDefault();
+    
+    // Validar días de trabajo
+    const diasSeleccionados = Array.from(document.querySelectorAll('input[name="editarDias"]:checked'))
+        .map(checkbox => checkbox.value);
+    
+    if (diasSeleccionados.length === 0) {
+        mostrarNotificacion('Debe seleccionar al menos un día de trabajo', 'error');
+        return;
+    }
+    
+    // Validar turnos
+    const turnosSeleccionados = Array.from(document.querySelectorAll('input[name="editarTurnos"]:checked'))
+        .map(checkbox => checkbox.value);
+    
+    if (turnosSeleccionados.length === 0) {
+        mostrarNotificacion('Debe seleccionar al menos un turno', 'error');
+        return;
+    }
+    
+    try {
+        const usuariosDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+        
+        // Verificar si existe el usuario a editar
+        if (!usuariosDB[usuarioId]) {
+            mostrarNotificacion('Usuario no encontrado en la base de datos', 'error');
+            return;
+        }
+        
+        // Obtener datos del formulario
+        const cedula = document.getElementById('editarConductorCedula').value.trim();
+        const nombre = document.getElementById('editarConductorNombre').value.trim();
+        const apellido = document.getElementById('editarConductorApellido').value.trim();
+        const nombreUsuario = document.getElementById('editarConductorUsuario').value.trim();
+        const licencia = document.getElementById('editarConductorLicencia')?.value.trim() || '';
+        const activo = document.getElementById('editarConductorActivo').value === 'true';
+        
+        // Verificar si la cédula ya existe en OTRO usuario
+        const usuarioExistente = Object.entries(usuariosDB).find(([id, usuario]) => 
+            usuario.cedula === cedula && id !== usuarioId
+        );
+        
+        if (usuarioExistente) {
+            mostrarNotificacion('Ya existe otro usuario con esta cédula', 'error');
+            return;
+        }
+        
+        // Verificar si el nombre de usuario ya existe en OTRO usuario
+        const usuarioNombreExistente = Object.entries(usuariosDB).find(([id, usuario]) => 
+            usuario.nombreUsuario === nombreUsuario && id !== usuarioId
+        );
+        
+        if (usuarioNombreExistente) {
+            mostrarNotificacion('El nombre de usuario ya está en uso por otro usuario', 'error');
+            return;
+        }
+        
+        // Obtener nombre de ruta
+        const rutaId = document.getElementById('editarConductorRuta').value;
+        let rutaNombre = '';
+        if (rutaId) {
+            const rutasDB = JSON.parse(localStorage.getItem('unellez_routes')) || {};
+            rutaNombre = rutasDB[rutaId] ? `Ruta ${rutaId.slice(-1)} - ${rutasDB[rutaId].nombre}` : '';
+        }
+        
+        // Mantener datos existentes y actualizar solo los modificados
+        usuariosDB[usuarioId] = {
+            ...usuariosDB[usuarioId],
+            cedula: cedula,
+            nombre: nombre,
+            apellido: apellido,
+            condicion: 'Conductor',
+            cargo: 'Conductor UNELLEZ',
+            ruta: rutaId,
+            rutaNombre: rutaNombre,
+            diasTrabajo: diasSeleccionados,
+            turnos: turnosSeleccionados,
+            nombreUsuario: nombreUsuario,
+            licencia: licencia,
+            activo: activo,
+            tipo: 'conductor',
+            detalles: `Conductor | Ruta: ${rutaNombre}`,
+            horarioDetalles: `Días: ${diasSeleccionados.join(', ')} | Turnos: ${turnosSeleccionados.join(', ')}`,
+            fechaActualizacion: new Date().toISOString(),
+            actualizadoPor: sesionAdmin ? sesionAdmin.username : 'admin'
+        };
+        
+        // Obtener contraseña si se proporcionó
+        const passwordInput = document.getElementById('editarConductorPassword');
+        if (passwordInput && passwordInput.value) {
+            const password = passwordInput.value;
+            const confirmPasswordInput = document.getElementById('editarConductorConfirmPassword');
+            
+            if (confirmPasswordInput && password !== confirmPasswordInput.value) {
+                mostrarNotificacion('Las contraseñas no coinciden', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                mostrarNotificacion('La contraseña debe tener al menos 6 caracteres', 'error');
+                return;
+            }
+            
+            usuariosDB[usuarioId].contraseña = password;
+        }
+        
+        // Guardar en localStorage
+        localStorage.setItem('unellez_users', JSON.stringify(usuariosDB));
+        
+        mostrarNotificacion('Conductor actualizado exitosamente', 'success');
+        
+        // Volver a la tabla y actualizar
+        setTimeout(() => {
+            volverATablaConductores();
+            cargarUsuarios();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Error al guardar conductor:', error);
+        mostrarNotificacion('Error al guardar los cambios', 'error');
+    }
+}
+
+// ========================================
+// FUNCIONES PARA VOLVER A LAS TABLAS
+// ========================================
+
+function volverATablaEstudiantes() {
+    mostrarStats();
+    ocultarFormulariosEdicion();
+    document.getElementById('tablaEstudiantes').style.display = 'block';
+    filtroActual = 'estudiante';
+}
+
+function volverATablaTrabajadores() {
+    mostrarStats();
+    ocultarFormulariosEdicion();
+    document.getElementById('tablaTrabajadores').style.display = 'block';
+    filtroActual = 'trabajador';
+}
+
+function volverATablaConductores() {
+    mostrarStats();
+    ocultarFormulariosEdicion();
+    document.getElementById('tablaConductores').style.display = 'block';
+    filtroActual = 'conductor';
+    document.getElementById('accionesConductor').style.display = 'flex';
+}
+
+function volverATablaTodos() {
+    mostrarStats();
+    ocultarFormulariosEdicion();
+    document.getElementById('tablaTodosUsuarios').style.display = 'block';
+    filtroActual = 'todos';
+}
+
+function ocultarFormulariosEdicion() {
+    const formularios = [
+        'formularioEditarEstudiante',
+        'formularioEditarTrabajador',
+        'formularioEditarConductor'
+    ];
+    
+    formularios.forEach(id => {
+        const formulario = document.getElementById(id);
+        if (formulario) {
+            formulario.style.display = 'none';
+        }
+    });
+}
+
+// Modificar la función ocultarTodasLasTablas para que también oculte formularios
 function ocultarTodasLasTablas() {
     document.getElementById('tablaEstudiantes').style.display = 'none';
     document.getElementById('tablaTrabajadores').style.display = 'none';
     document.getElementById('tablaConductores').style.display = 'none';
     document.getElementById('tablaTodosUsuarios').style.display = 'none';
+    ocultarFormulariosEdicion();
+}
+
+// Función para ocultar elementos antes de mostrar formulario de edición
+function ocultarTodoParaFormularioEdicion() {
+    // Ocultar estadísticas
+    const statsContainer = document.querySelector('.admin-stats');
+    if (statsContainer) {
+        statsContainer.style.display = 'none';
+    }
+    
+    // Ocultar botón "Nuevo Conductor" (si existe)
+    const accionesConductor = document.getElementById('accionesConductor');
+    if (accionesConductor) {
+        accionesConductor.style.display = 'none';
+    }
+    
+    // Ocultar todas las tablas
+    ocultarTodasLasTablas();
+}
+
+// Función para ocultar elementos antes de mostrar formulario de edición
+function mostrarStats() {
+    // Mostar estadísticas
+    const statsContainer = document.querySelector('.admin-stats');
+    if (statsContainer) {
+        statsContainer.style.display = 'grid';
+    }
+    
+    // Ocultar botón "Nuevo Conductor" (si existe)
+    const accionesConductor = document.getElementById('accionesConductor');
+    if (accionesConductor) {
+        accionesConductor.style.display = 'flex';
+    }
 }
 
 // Funciones de filtrado
@@ -1125,14 +1664,695 @@ function eliminarUsuarioPorCedula(cedula, esConductor = false) {
     }
 }
 
-// Editar usuario (placeholder)
+// Función principal para editar usuario
 function editarUsuario(cedula) {
-    mostrarNotificacion(`Editar usuario ${cedula} - Funcionalidad en desarrollo`, 'info');
+    console.log(`Editando usuario con cédula: ${cedula}`);
+
+    ocultarTodoParaFormularioEdicion();
+    
+    try {
+        const usuariosDB = JSON.parse(localStorage.getItem('unellez_users')) || {};
+        let usuarioEncontrado = null;
+        let usuarioId = null;
+        
+        // Buscar usuario por cédula
+        for (const [id, usuario] of Object.entries(usuariosDB)) {
+            if (usuario.cedula === cedula) {
+                usuarioEncontrado = usuario;
+                usuarioId = id;
+                break;
+            }
+        }
+        
+        if (!usuarioEncontrado) {
+            mostrarNotificacion('Usuario no encontrado', 'error');
+            return;
+        }
+        
+        // Determinar tipo de usuario y mostrar formulario correspondiente
+        const tipo = usuarioEncontrado.tipo || 'estudiante';
+        
+        switch(tipo) {
+            case 'estudiante':
+                mostrarFormularioEditarEstudiante(usuarioEncontrado, usuarioId);
+                break;
+            case 'trabajador':
+            case 'obrero':
+                mostrarFormularioEditarTrabajador(usuarioEncontrado, usuarioId);
+                break;
+            case 'conductor':
+                mostrarFormularioEditarConductor(usuarioEncontrado, usuarioId);
+                break;
+            default:
+                // Si es un tipo no reconocido, usar formulario de estudiante
+                mostrarFormularioEditarEstudiante(usuarioEncontrado, usuarioId);
+        }
+        
+    } catch (error) {
+        console.error('Error al editar usuario:', error);
+        mostrarNotificacion('Error al cargar los datos del usuario', 'error');
+    }
 }
 
-// Editar conductor (placeholder)
-function editarConductor(cedula) {
-    mostrarNotificacion(`Editar conductor ${cedula} - Funcionalidad en desarrollo`, 'info');
+// ========================================
+// FORMULARIOS DE EDICIÓN
+// ========================================
+
+// Mostrar formulario para editar estudiante
+function mostrarFormularioEditarEstudiante(estudiante, usuarioId) {
+    // Ocultar todas las tablas y mostrar formulario
+    ocultarTodoParaFormularioEdicion();
+    
+    // Crear o mostrar contenedor del formulario
+    let formularioContainer = document.getElementById('formularioEditarEstudiante');
+    
+    if (!formularioContainer) {
+        formularioContainer = document.createElement('div');
+        formularioContainer.id = 'formularioEditarEstudiante';
+        formularioContainer.className = 'formulario-editar-container';
+        formularioContainer.innerHTML = `
+            <div class="formulario-header">
+                <h3><i class="fas fa-user-graduate"></i> Editar Estudiante</h3>
+                <button type="button" class="btn btn-secondary" onclick="volverATablaEstudiantes()">
+                    <i class="fas fa-arrow-left"></i> <span>Volver a la lista</span>
+                </button>
+            </div>
+            
+            <form id="formEditarEstudiante" class="formulario-editar" onsubmit="guardarEdicionEstudiante(event, '${usuarioId}')">
+                <input type="hidden" id="editarEstudianteId" value="${usuarioId}">
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-info-circle"></i> Información Personal</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarEstudianteCedula">Cédula *</label>
+                            <input type="text" id="editarEstudianteCedula" required 
+                                placeholder="Ej: 12345678"
+                                maxlength="8"
+                                minlength="6"
+                                pattern="[0-9]{6,8}"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                readonly
+                                style=background-color: #f8f9fa; cursor: not-allowed;">
+                            <small>6-8 dígitos numéricos (no editable)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="editarEstudianteNombre">Nombre *</label>
+                            <input type="text" id="editarEstudianteNombre" required 
+                                placeholder="Ej: Juan"
+                                maxlength="50">
+                        </div>
+                        <div class="form-group">
+                            <label for="editarEstudianteApellido">Apellido *</label>
+                            <input type="text" id="editarEstudianteApellido" required 
+                                placeholder="Ej: Pérez"
+                                maxlength="50">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarEstudianteCarrera">Carrera *</label>
+                            <input type="text" id="editarEstudianteCarrera" required 
+                                placeholder="Ej: Ingeniería Informática"
+                                maxlength="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="editarEstudianteRuta">Ruta Elegida</label>
+                            <select id="editarEstudianteRuta">
+                                <option value="">Seleccione una ruta</option>
+                                <!-- Las rutas se cargarán dinámicamente -->
+                            </select>
+                            <small>Ruta de transporte asignada</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-user-lock"></i> Credenciales de Acceso</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarEstudianteUsuario">Nombre de Usuario *</label>
+                            <input type="text" id="editarEstudianteUsuario" required 
+                                placeholder="Ej: jperez2024"
+                                maxlength="30">
+                            <small>Para iniciar sesión en el sistema</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="editarEstudiantePassword">Contraseña *</label>
+                            <div class="password-input">
+                                <input type="password" id="editarEstudiantePassword" required 
+                                    placeholder="Ingrese nueva contraseña">
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small>Mínimo 6 caracteres</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="editarEstudianteConfirmPassword">Confirmar Contraseña *</label>
+                            <div class="password-input">
+                                <input type="password" id="editarEstudianteConfirmPassword" required 
+                                    placeholder="Confirme la contraseña">
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div id="editarEstudiantePasswordMatch" class="password-match" style="display: none;">
+                            <i class="fas fa-check-circle"></i> Las contraseñas coinciden
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-user-check"></i> Estado del Usuario</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarEstudianteActivo">Estado</label>
+                            <select id="editarEstudianteActivo">
+                                <option value="true">Activo</option>
+                                <option value="false">Inactivo</option>
+                            </select>
+                            <small>Usuario activo podrá usar el sistema</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="editarEstudianteEmail">Correo Electrónico</label>
+                            <input type="email" id="editarEstudianteEmail" 
+                                placeholder="Ej: estudiante@unellez.edu.ve"
+                                maxlength="100">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="volverATablaEstudiantes()">
+                        <i class="fas fa-times"></i> <span>Cancelar</span>
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> <span>Guardar Cambios</span>
+                    </button>
+                </div>
+            </form>
+        `;
+        
+        document.getElementById('usuariosSection').appendChild(formularioContainer);
+    }
+    
+    // Mostrar el formulario
+    formularioContainer.style.display = 'block';
+    
+    // Usar setTimeout para asegurar que el DOM se haya actualizado
+    setTimeout(() => {
+        // Cargar datos del estudiante
+        const cedulaInput = document.getElementById('editarEstudianteCedula');
+        const nombreInput = document.getElementById('editarEstudianteNombre');
+        const apellidoInput = document.getElementById('editarEstudianteApellido');
+        const carreraInput = document.getElementById('editarEstudianteCarrera');
+        const usuarioInput = document.getElementById('editarEstudianteUsuario');
+        const emailInput = document.getElementById('editarEstudianteEmail');
+        const activoSelect = document.getElementById('editarEstudianteActivo');
+        
+        // Verificar que los elementos existen antes de asignar valores
+        if (cedulaInput) cedulaInput.value = estudiante.cedula || '';
+        if (nombreInput) nombreInput.value = estudiante.nombre || '';
+        if (apellidoInput) apellidoInput.value = estudiante.apellido || '';
+        if (carreraInput) carreraInput.value = estudiante.carrera || '';
+        if (usuarioInput) usuarioInput.value = estudiante.nombreUsuario || estudiante.usuario || '';
+        if (emailInput) emailInput.value = estudiante.email || '';
+        if (activoSelect) activoSelect.value = estudiante.activo ? 'true' : 'false';
+        
+        // Cargar rutas disponibles
+        cargarRutasEnSelect('editarEstudianteRuta', estudiante.ruta || '');
+        
+        // Configurar validación de contraseñas
+        const inputsPassword = ['editarEstudiantePassword', 'editarEstudianteConfirmPassword'];
+        inputsPassword.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', verificarCoincidenciaContraseñaEstudiante);
+            }
+        });
+    }, 50);
+}
+
+// Mostrar formulario para editar trabajador
+function mostrarFormularioEditarTrabajador(trabajador, usuarioId) {
+    ocultarTodasLasTablas();
+    
+    let formularioContainer = document.getElementById('formularioEditarTrabajador');
+    
+    if (!formularioContainer) {
+        formularioContainer = document.createElement('div');
+        formularioContainer.id = 'formularioEditarTrabajador';
+        formularioContainer.className = 'formulario-editar-container';
+        formularioContainer.innerHTML = `
+            <div class="formulario-header">
+                <h3><i class="fas fa-briefcase"></i> Editar Trabajador</h3>
+                <button type="button" class="btn btn-secondary" onclick="volverATablaTrabajadores()">
+                    <i class="fas fa-arrow-left"></i> <span>Volver a la lista</span>
+                </button>
+            </div>
+            
+            <form id="formEditarTrabajador" class="formulario-editar" onsubmit="guardarEdicionTrabajador(event, '${usuarioId}')">
+                <input type="hidden" id="editarTrabajadorId" value="${usuarioId}">
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-info-circle"></i> Información Personal</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarTrabajadorCedula">Cédula *</label>
+                            <input type="text" id="editarTrabajadorCedula" required 
+                                placeholder="Ej: V-12345678"
+                                maxlength="10"
+                                oninput="this.value = this.value.toUpperCase()">
+                        </div>
+                        <div class="form-group">
+                            <label for="editarTrabajadorNombre">Nombre *</label>
+                            <input type="text" id="editarTrabajadorNombre" required 
+                                placeholder="Ej: Juan"
+                                maxlength="50">
+                        </div>
+                        <div class="form-group">
+                            <label for="editarTrabajadorApellido">Apellido *</label>
+                            <input type="text" id="editarTrabajadorApellido" required 
+                                placeholder="Ej: Pérez"
+                                maxlength="50">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarTrabajadorCondicion">Condición *</label>
+                            <select id="editarTrabajadorCondicion" required>
+                                <option value="Profesor">Profesor</option>
+                                <option value="Obrero">Obrero</option>
+                                <option value="Administrativo">Administrativo</option>
+                                <option value="Directivo">Directivo</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editarTrabajadorCargo">Cargo *</label>
+                            <input type="text" id="editarTrabajadorCargo" required 
+                                placeholder="Ej: Profesor de Matemáticas"
+                                maxlength="100">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarTrabajadorRuta">Ruta Elegida</label>
+                            <select id="editarTrabajadorRuta">
+                                <option value="">Seleccione una ruta</option>
+                                <!-- Las rutas se cargarán dinámicamente -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-user-lock"></i> Credenciales de Acceso</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarTrabajadorUsuario">Nombre de Usuario *</label>
+                            <input type="text" id="editarTrabajadorUsuario" required 
+                                placeholder="Ej: jperez.prof"
+                                maxlength="30">
+                        </div>
+                        <div class="form-group">
+                            <label for="editarTrabajadorPassword">Contraseña *</label>
+                            <div class="password-input">
+                                <input type="password" id="editarTrabajadorPassword" required 
+                                    placeholder="Ingrese nueva contraseña">
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small>Mínimo 6 caracteres. Deje en blanco para mantener la actual</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="editarTrabajadorConfirmPassword">Confirmar Contraseña *</label>
+                            <div class="password-input">
+                                <input type="password" id="editarTrabajadorConfirmPassword" required 
+                                    placeholder="Confirme la contraseña">
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div id="editarTrabajadorPasswordMatch" class="password-match" style="display: none;">
+                            <i class="fas fa-check-circle"></i> Las contraseñas coinciden
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-user-check"></i> Estado del Usuario</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarTrabajadorActivo">Estado</label>
+                            <select id="editarTrabajadorActivo">
+                                <option value="true">Activo</option>
+                                <option value="false">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editarTrabajadorEmail">Correo Electronico</label>
+                            <input type="email" id="editarTrabajadorEmail" 
+                                placeholder="Ej: profesor@gmail.com"
+                                maxlength="100">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="volverATablaTrabajadores()">
+                        <i class="fas fa-times"></i> <span>Cancelar</span>
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> <span>Guardar Cambios</span>
+                    </button>
+                </div>
+            </form>
+        `;
+        
+        document.getElementById('usuariosSection').appendChild(formularioContainer);
+    }
+    
+    formularioContainer.style.display = 'block';
+    
+    setTimeout(()=>{
+        // Cargar datos del trabajador
+        const cedula = document.getElementById('editarTrabajadorCedula');
+        const nombre = document.getElementById('editarTrabajadorNombre');
+        const apellido = document.getElementById('editarTrabajadorApellido');
+        const condicion = document.getElementById('editarTrabajadorCondicion');
+        const cargo =document.getElementById('editarTrabajadorCargo');
+        const nombreUsuario = document.getElementById('editarTrabajadorUsuario');
+        const email = document.getElementById('editarTrabajadorEmail');
+        const status = document.getElementById('editarTrabajadorActivo');
+
+        if (cedula) cedula.value = trabajador.cedula || '';
+        if (nombre) nombre.value = trabajador.nombre || '';
+        if (apellido) apellido.value = trabajador.apellido || '';
+        if (condicion) condicion.value = trabajador.condicion || 'Profesor';
+        if (cargo) cargo.value = trabajador.cargo || '';
+        if (nombreUsuario) nombreUsuario.value = trabajador.nombreUsuario || trabajador.usuario || '';
+        if (email) email.value = trabajador.email || '';
+        if (status) status.value = trabajador.activo ? 'true' : 'false';
+        
+        cargarRutasEnSelect('editarTrabajadorRuta', trabajador.ruta || '');
+        
+        const inputsPassword = ['editarTrabajadorPassword', 'editarTrabajadorConfirmPassword'];
+        inputsPassword.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', verificarCoincidenciaContraseñaTrabajador);
+            }
+        });
+    }, 50);
+};
+
+// Mostrar formulario para editar conductor
+function mostrarFormularioEditarConductor(conductor, usuarioId) {
+    ocultarTodasLasTablas();
+    document.getElementById('accionesConductor').style.display = 'none';
+    
+    let formularioContainer = document.getElementById('formularioEditarConductor');
+    
+    if (!formularioContainer) {
+        formularioContainer = document.createElement('div');
+        formularioContainer.id = 'formularioEditarConductor';
+        formularioContainer.className = 'formulario-editar-container';
+        formularioContainer.innerHTML = `
+            <div class="formulario-header">
+                <h3><i class="fas fa-user-tie"></i> Editar Conductor</h3>
+                <button type="button" class="btn btn-secondary" onclick="volverATablaConductores()">
+                    <i class="fas fa-arrow-left"></i> <span>Volver a la lista</span>
+                </button>
+            </div>
+            
+            <form id="formEditarConductor" class="formulario-editar" onsubmit="guardarEdicionConductor(event, '${usuarioId}')">
+                <input type="hidden" id="editarConductorId" value="${usuarioId}">
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-info-circle"></i> Información Personal</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarConductorCedula">Cédula *</label>
+                            <input type="text" id="editarEstudianteCedula" required 
+                                placeholder="Ej: 12345678"
+                                maxlength="8"
+                                minlength="6"
+                                pattern="[0-9]{6,8}"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                readonly
+                                style="background-color: #f8f9fa; cursor: not-allowed;">
+                            <small>6-8 dígitos numéricos (no editable)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="editarConductorNombre">Nombre *</label>
+                            <input type="text" id="editarConductorNombre" required 
+                                placeholder="Ej: Carlos"
+                                maxlength="50">
+                        </div>
+                        <div class="form-group">
+                            <label for="editarConductorApellido">Apellido *</label>
+                            <input type="text" id="editarConductorApellido" required 
+                                placeholder="Ej: Rodríguez"
+                                maxlength="50">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarConductorCondicion">Condición *</label>
+                            <input type="text" id="editarConductorCondicion" required 
+                                value="Conductor"
+                                readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editarConductorCargo">Cargo *</label>
+                            <input type="text" id="editarConductorCargo" required 
+                                value="Conductor UNELLEZ"
+                                readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarConductorRuta">Ruta Asignada *</label>
+                            <select id="editarConductorRuta" required>
+                                <option value="">Seleccione una ruta</option>
+                                <!-- Las rutas se cargarán dinámicamente -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-calendar-alt"></i> Horario de Trabajo</h3>
+                    
+                    <div class="direct-form-group">
+                        <label>Días de Trabajo *</label>
+                        <div class="checkbox-group-grid">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editarDiaLunes" name="editarDias" value="lunes">
+                                <label for="editarDiaLunes">Lunes</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editarDiaMartes" name="editarDias" value="martes">
+                                <label for="editarDiaMartes">Martes</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editarDiaMiercoles" name="editarDias" value="miercoles">
+                                <label for="editarDiaMiercoles">Miércoles</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editarDiaJueves" name="editarDias" value="jueves">
+                                <label for="editarDiaJueves">Jueves</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editarDiaViernes" name="editarDias" value="viernes">
+                                <label for="editarDiaViernes">Viernes</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editarDiaSabado" name="editarDias" value="sabado">
+                                <label for="editarDiaSabado">Sábado</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editarTodosDias" onclick="seleccionarTodosDiasEditar(this)">
+                                <label for="editarTodosDias">Seleccionar todos</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="direct-form-group">
+                        <label>Turnos *</label>
+                        <div class="checkbox-group-grid">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editarTurnoManana" name="editarTurnos" value="mañana">
+                                <label for="editarTurnoManana">Mañana (6:00 AM)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editarTurnoMedioDia" name="editarTurnos" value="medio dia">
+                                <label for="editarTurnoMedioDia">Medio Día (12:00 PM)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editarTurnoTarde" name="editarTurnos" value="tarde">
+                                <label for="editarTurnoTarde">Tarde (6:00 PM)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editarTodosTurnos" onclick="seleccionarTodosTurnosEditar(this)">
+                                <label for="editarTodosTurnos">Seleccionar todos</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-user-lock"></i> Credenciales de Acceso</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarConductorUsuario">Nombre de Usuario *</label>
+                            <input type="text" id="editarConductorUsuario" required 
+                                placeholder="Ej: crodriguez"
+                                maxlength="30">
+                        </div>
+                        <div class="form-group">
+                            <label for="editarConductorPassword">Contraseña</label>
+                            <div class="password-input">
+                                <input type="password" id="editarConductorPassword" 
+                                    placeholder="Ingrese nueva contraseña">
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small>Deje en blanco para mantener la contraseña actual</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="editarConductorConfirmPassword">Confirmar Contraseña</label>
+                            <div class="password-input">
+                                <input type="password" id="editarConductorConfirmPassword" 
+                                    placeholder="Confirme la contraseña">
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div id="editarConductorPasswordMatch" class="password-match" style="display: none;">
+                            <i class="fas fa-check-circle"></i> Las contraseñas coinciden
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-user-check"></i> Estado del Conductor</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editarConductorActivo">Estado</label>
+                            <select id="editarConductorActivo">
+                                <option value="true">Activo</option>
+                                <option value="false">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editarConductorLicencia">Licencia de Conducir</label>
+                            <input type="text" id="editarConductorLicencia" 
+                                placeholder="Ej: ABC123456"
+                                maxlength="20"
+                                oninput="this.value = this.value.toUpperCase()">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="volverATablaConductores()">
+                        <i class="fas fa-times"></i> <span>Cancelar</span>
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> <span>Guardar Cambios</span>
+                    </button>
+                </div>
+            </form>
+        `;
+        
+        document.getElementById('usuariosSection').appendChild(formularioContainer);
+    }
+    
+    formularioContainer.style.display = 'block';
+    
+    setTimeout(()=>{
+        // Cargar datos del conductor
+        const cedula = document.getElementById('editarConductorCedula');
+        const nombre = document.getElementById('editarConductorNombre');
+        const apellido = document.getElementById('editarConductorApellido');
+        const nombreUsuario = document.getElementById('editarConductorUsuario')
+        const licencia = document.getElementById('editarConductorLicencia');
+        const status = document.getElementById('editarConductorActivo');
+
+        if (cedula) cedula.value = conductor.cedula || '';
+        if (nombre) nombre.value = conductor.nombre || '';
+        if (apellido) apellido.value = conductor.apellido || '';
+        if (nombreUsuario) nombreUsuario.value = conductor.nombreUsuario || conductor.usuario || '';
+        if (licencia) licencia.value = conductor.licencia || '';
+        if (status) status.value = conductor.activo ? 'true' : 'false';
+    
+        // Cargar rutas
+        cargarRutasEnSelect('editarConductorRuta', conductor.ruta || '');
+        
+        // Marcar días de trabajo
+        if (Array.isArray(conductor.diasTrabajo)) {
+            conductor.diasTrabajo.forEach(dia => {
+                const checkbox = document.getElementById(`editarDia${capitalizeFirstLetter(dia)}`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+        
+        // Marcar turnos
+        if (Array.isArray(conductor.turnos)) {
+            conductor.turnos.forEach(turno => {
+                let checkboxId = '';
+                if (turno === 'mañana') checkboxId = 'editarTurnoManana';
+                else if (turno === 'medio dia') checkboxId = 'editarTurnoMedioDia';
+                else if (turno === 'tarde') checkboxId = 'editarTurnoTarde';
+                
+                const checkbox = document.getElementById(checkboxId);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+        
+        // Configurar eventos para checkboxes
+        configurarEventosCheckboxesEditar();
+        
+        // Configurar validación de contraseñas
+        const inputsPassword = ['editarConductorPassword', 'editarConductorConfirmPassword'];
+        inputsPassword.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', verificarCoincidenciaContraseñaConductor);
+            }
+        });
+    }, 50);
 }
 
 // ========================================
