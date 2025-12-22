@@ -956,11 +956,9 @@ function guardarEdicionEstudiante(event, usuarioId) {
         
         // Obtener datos del formulario (cédula no se edita)
         const nombre = document.getElementById('editarEstudianteNombre').value.trim();
-        const apellido = document.getElementById('editarEstudianteApellido').value.trim();
         const carrera = document.getElementById('editarEstudianteCarrera').value.trim();
         const nombreUsuario = document.getElementById('editarEstudianteUsuario').value.trim();
         const email = document.getElementById('editarEstudianteEmail').value.trim();
-        const activo = document.getElementById('editarEstudianteActivo').value === 'true';
         
         // Verificar si el nombre de usuario ya existe en OTRO usuario
         const cedula = usuariosDB[usuarioId].cedula; // Obtener cédula del usuario existente
@@ -985,13 +983,12 @@ function guardarEdicionEstudiante(event, usuarioId) {
         usuariosDB[usuarioId] = {
             ...usuariosDB[usuarioId], // Mantener todos los datos existentes incluyendo cédula
             nombre: nombre,
-            apellido: apellido,
             carrera: carrera,
             ruta: rutaId,
             rutaNombre: rutaNombre,
             nombreUsuario: nombreUsuario,
+            password: password,
             email: email,
-            activo: activo,
             fechaActualizacion: new Date().toISOString(),
             actualizadoPor: sesionAdmin ? sesionAdmin.username : 'admin'
         };
@@ -1023,8 +1020,8 @@ function guardarEdicionTrabajador(event, usuarioId) {
     event.preventDefault();
     
     // Validar contraseñas
-    const password = document.getElementById('editarEstudiantePassword').value;
-    const confirmPassword = document.getElementById('editarEstudianteConfirmPassword').value;
+    const password = document.getElementById('editarTrabajadorPassword').value;
+    const confirmPassword = document.getElementById('editarTrabajadorConfirmPassword').value;
     
     if (password && password.length < 6) {
         mostrarNotificacion('La contraseña debe tener al menos 6 caracteres', 'error');
@@ -1046,13 +1043,12 @@ function guardarEdicionTrabajador(event, usuarioId) {
         }
         
         // Obtener datos del formulario
-        const cedula = document.getElementById('editarEstudianteCedula').value.trim();
-        const nombre = document.getElementById('editarEstudianteNombre').value.trim();
-        const apellido = document.getElementById('editarEstudianteApellido').value.trim();
-        const carrera = document.getElementById('editarEstudianteCarrera').value.trim();
-        const nombreUsuario = document.getElementById('editarEstudianteUsuario').value.trim();
-        const email = document.getElementById('editarEstudianteEmail').value.trim();
-        const activo = document.getElementById('editarEstudianteActivo').value === 'true';
+        const cedula = document.getElementById('editarTabajadorCedula').value.trim();
+        const nombre = document.getElementById('editarTrabajadorNombre').value.trim();
+        const condicion = document.getElementById('editarTrabajadorCondicion').value.trim();
+        const cargo = document.getElementById('editarTrabajadorCargo').value.trim();
+        const nombreUsuario = document.getElementById('editarTrabajadorUsuario').value.trim();
+        const email = document.getElementById('editarTrabajadorEmail').value.trim();
         
         // Verificar si la cédula ya existe en OTRO usuario (no en este mismo)
         const usuarioExistente = Object.entries(usuariosDB).find(([id, usuario]) => 
@@ -1087,14 +1083,14 @@ function guardarEdicionTrabajador(event, usuarioId) {
             ...usuariosDB[usuarioId], // Mantener todos los datos existentes
             cedula: cedula,
             nombre: nombre,
-            apellido: apellido,
-            carrera: carrera,
+            condicion: condicion,
+            cargo: cargo,
             ruta: rutaId,
             rutaNombre: rutaNombre,
             nombreUsuario: nombreUsuario,
+            password: password,
             email: email,
-            activo: activo,
-            tipo: 'estudiante',
+            tipo: 'trabajador',
             fechaActualizacion: new Date().toISOString(),
             actualizadoPor: sesionAdmin ? sesionAdmin.username : 'admin'
         };
@@ -1155,7 +1151,8 @@ function guardarEdicionConductor(event, usuarioId) {
         // Obtener datos del formulario
         const cedula = document.getElementById('editarConductorCedula').value.trim();
         const nombre = document.getElementById('editarConductorNombre').value.trim();
-        const apellido = document.getElementById('editarConductorApellido').value.trim();
+        const condicion = document.getElementById('editarConductorCondicion').value.trim();
+        const cargo = document.getElementById('editarConductorCargo').value.trim();
         const nombreUsuario = document.getElementById('editarConductorUsuario').value.trim();
         const licencia = document.getElementById('editarConductorLicencia')?.value.trim() || '';
         const activo = document.getElementById('editarConductorActivo').value === 'true';
@@ -1193,9 +1190,8 @@ function guardarEdicionConductor(event, usuarioId) {
             ...usuariosDB[usuarioId],
             cedula: cedula,
             nombre: nombre,
-            apellido: apellido,
-            condicion: 'Conductor',
-            cargo: 'Conductor UNELLEZ',
+            condicion: condicion,
+            cargo: cargo,
             ruta: rutaId,
             rutaNombre: rutaNombre,
             diasTrabajo: diasSeleccionados,
@@ -1752,22 +1748,21 @@ function mostrarFormularioEditarEstudiante(estudiante, usuarioId) {
                                 maxlength="8"
                                 minlength="6"
                                 pattern="[0-9]{6,8}"
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                                readonly
-                                style=background-color: #f8f9fa; cursor: not-allowed;">
+                                inputmode="numeric"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                >
                             <small>6-8 dígitos numéricos (no editable)</small>
                         </div>
                         <div class="form-group">
-                            <label for="editarEstudianteNombre">Nombre *</label>
+                            <label for="editarEstudianteNombre">Nombre Completo*</label>
                             <input type="text" id="editarEstudianteNombre" required 
-                                placeholder="Ej: Juan"
-                                maxlength="50">
-                        </div>
-                        <div class="form-group">
-                            <label for="editarEstudianteApellido">Apellido *</label>
-                            <input type="text" id="editarEstudianteApellido" required 
-                                placeholder="Ej: Pérez"
-                                maxlength="50">
+                                placeholder="Ej: NOMBRES APELLIDOS"
+                                pattern="[A-Za-z]+" 
+                                title="Solo se permiten letras"
+                                maxlength="100"
+                                style="background-color: #f8f9fa;"
+                                oninput="this.value = this.value.toUpperCase()"
+                                onkeypress="return /^[A-Za-z\s]$/.test(String.fromCharCode(event.charCode))">
                         </div>
                     </div>
                     
@@ -1776,7 +1771,11 @@ function mostrarFormularioEditarEstudiante(estudiante, usuarioId) {
                             <label for="editarEstudianteCarrera">Carrera *</label>
                             <input type="text" id="editarEstudianteCarrera" required 
                                 placeholder="Ej: Ingeniería Informática"
-                                maxlength="100">
+                                pattern="[A-Za-z]+" 
+                                title="Solo se permiten letras"
+                                maxlength="100"
+                                oninput="this.value = this.value.toUpperCase()"
+                                onkeypress="return /^[A-Za-z\s]$/.test(String.fromCharCode(event.charCode))">
                         </div>
                         <div class="form-group">
                             <label for="editarEstudianteRuta">Ruta Elegida</label>
@@ -1835,18 +1834,11 @@ function mostrarFormularioEditarEstudiante(estudiante, usuarioId) {
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="editarEstudianteActivo">Estado</label>
-                            <select id="editarEstudianteActivo">
-                                <option value="true">Activo</option>
-                                <option value="false">Inactivo</option>
-                            </select>
-                            <small>Usuario activo podrá usar el sistema</small>
-                        </div>
-                        <div class="form-group">
                             <label for="editarEstudianteEmail">Correo Electrónico</label>
                             <input type="email" id="editarEstudianteEmail" 
                                 placeholder="Ej: estudiante@unellez.edu.ve"
-                                maxlength="100">
+                                maxlength="50"
+                                oninput="this.value = this.value.replace(/[^A-Za-z0-9@.]/g, '').toUpperCase()">
                         </div>
                     </div>
                 </div>
@@ -1930,40 +1922,43 @@ function mostrarFormularioEditarTrabajador(trabajador, usuarioId) {
                         <div class="form-group">
                             <label for="editarTrabajadorCedula">Cédula *</label>
                             <input type="text" id="editarTrabajadorCedula" required 
-                                placeholder="Ej: V-12345678"
-                                maxlength="10"
-                                oninput="this.value = this.value.toUpperCase()">
+                                placeholder="Ej: 12345678"
+                                maxlength="8"
+                                minlength="6"
+                                pattern="[0-9]{6,8}"
+                                inputmode="numeric"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               >
+                            <small>6-8 dígitos numéricos (no editable)</small>
                         </div>
                         <div class="form-group">
-                            <label for="editarTrabajadorNombre">Nombre *</label>
+                            <label for="editarTrabajadorNombre">Nombre Completo*</label>
                             <input type="text" id="editarTrabajadorNombre" required 
-                                placeholder="Ej: Juan"
-                                maxlength="50">
-                        </div>
-                        <div class="form-group">
-                            <label for="editarTrabajadorApellido">Apellido *</label>
-                            <input type="text" id="editarTrabajadorApellido" required 
-                                placeholder="Ej: Pérez"
-                                maxlength="50">
+                                placeholder="NOMBRES APELLIDOS"
+                                maxlength="50"
+                                pattern="[A-Za-z]+"
+                                title="Solo se permiten letras"
+                                oninput="this.value = this.value.toUpperCase()"
+                                onkeypress="return /^[A-Za-z\s]$/.test(String.fromCharCode(event.charCode))">
                         </div>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editarTrabajadorCondicion">Condición *</label>
-                            <select id="editarTrabajadorCondicion" required>
-                                <option value="Profesor">Profesor</option>
-                                <option value="Obrero">Obrero</option>
-                                <option value="Administrativo">Administrativo</option>
-                                <option value="Directivo">Directivo</option>
-                                <option value="Otro">Otro</option>
-                            </select>
+                            <input type="text" id="editarTrabajadorCondicion" required 
+                                placeholder="Ej: Profesor de Matemáticas"
+                                maxlength="50"
+                                oninput="this.value = this.value.toUpperCase()"
+                                onkeypress="return /[A-Za-z0-9-]/.test(String.fromCharCode(event.charCode))">
                         </div>
                         <div class="form-group">
                             <label for="editarTrabajadorCargo">Cargo *</label>
                             <input type="text" id="editarTrabajadorCargo" required 
                                 placeholder="Ej: Profesor de Matemáticas"
-                                maxlength="100">
+                                maxlength="50"
+                                oninput="this.value = this.value.toUpperCase()"
+                                onkeypress="return /[A-Za-z0-9-]/.test(String.fromCharCode(event.charCode))">
                         </div>
                     </div>
                     
@@ -2023,17 +2018,11 @@ function mostrarFormularioEditarTrabajador(trabajador, usuarioId) {
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="editarTrabajadorActivo">Estado</label>
-                            <select id="editarTrabajadorActivo">
-                                <option value="true">Activo</option>
-                                <option value="false">Inactivo</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
                             <label for="editarTrabajadorEmail">Correo Electronico</label>
                             <input type="email" id="editarTrabajadorEmail" 
                                 placeholder="Ej: profesor@gmail.com"
-                                maxlength="100">
+                                maxlength="50"
+                                oninput="this.value = this.value.replace(/[^A-Za-z0-9@.]/g, '').toUpperCase()">
                         </div>
                     </div>
                 </div>
@@ -2114,27 +2103,23 @@ function mostrarFormularioEditarConductor(conductor, usuarioId) {
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editarConductorCedula">Cédula *</label>
-                            <input type="text" id="editarEstudianteCedula" required 
+                            <input type="text" id="editarConductorCedula" required 
                                 placeholder="Ej: 12345678"
                                 maxlength="8"
                                 minlength="6"
                                 pattern="[0-9]{6,8}"
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                readonly
-                                style="background-color: #f8f9fa; cursor: not-allowed;">
+                                inputmode="numeric"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                             <small>6-8 dígitos numéricos (no editable)</small>
                         </div>
                         <div class="form-group">
-                            <label for="editarConductorNombre">Nombre *</label>
-                            <input type="text" id="editarConductorNombre" required 
-                                placeholder="Ej: Carlos"
-                                maxlength="50">
-                        </div>
-                        <div class="form-group">
-                            <label for="editarConductorApellido">Apellido *</label>
-                            <input type="text" id="editarConductorApellido" required 
-                                placeholder="Ej: Rodríguez"
-                                maxlength="50">
+                            <label for="editarConductorNombre">Nombre Completo*</label>
+                            <input type="text" id="editarConductorNombre" required
+                            placeholder="NOMBRES APELLIDOS"
+                            pattern="[A-Za-z]+"
+                            maxlength="50"
+                            oninput="this.value = this.value.toUpperCase()"
+                            onkeypress="return /^[A-Za-z\s]$/.test(String.fromCharCode(event.charCode))">
                         </div>
                     </div>
                     
@@ -2142,14 +2127,18 @@ function mostrarFormularioEditarConductor(conductor, usuarioId) {
                         <div class="form-group">
                             <label for="editarConductorCondicion">Condición *</label>
                             <input type="text" id="editarConductorCondicion" required 
-                                value="Conductor"
-                                readonly>
+                                placeholder="Ej: Profesor de Matemáticas"
+                                maxlength="100"
+                                oninput="this.value = this.value.toUpperCase()"
+                                onkeypress="return /[A-Za-z0-9-]/.test(String.fromCharCode(event.charCode))">
                         </div>
                         <div class="form-group">
                             <label for="editarConductorCargo">Cargo *</label>
-                            <input type="text" id="editarConductorCargo" required 
-                                value="Conductor UNELLEZ"
-                                readonly>
+                            <input type="text" id="editarTrabajadorCargo" required 
+                                placeholder="Ej: Profesor de Matemáticas"
+                                maxlength="100"
+                                oninput="this.value = this.value.toUpperCase()"
+                                onkeypress="return /[A-Za-z0-9-]/.test(String.fromCharCode(event.charCode))">
                         </div>
                     </div>
                     
