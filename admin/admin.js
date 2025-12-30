@@ -2373,7 +2373,6 @@ function closeDirectConductorModal() {
     const contenedorQR = document.getElementById('qr-reader');
     if (contenedorQR) {
         contenedorQR.innerHTML = '';
-        console.log("✅ Contenedor QR limpiado");
     }
     
     datosUsuarioEscaneado = null;
@@ -2381,7 +2380,6 @@ function closeDirectConductorModal() {
     const modal = document.getElementById('modalDirectConductor');
     if (modal) {
         modal.classList.remove('active');
-        console.log("✅ Modal cerrado");
     }
     
     const formulario = document.getElementById('directConductorForm');
@@ -2442,6 +2440,15 @@ function goBackToScan() {
 // Procesar datos del QR
 async function procesarDatosQR(datosQR) {
     try {
+        // MOSTRAR PANTALLA DE CARGA PRIMERO
+        mostrarPaso('stepLoading');
+        
+        // Animar la barra de progreso
+        const progressBar = document.querySelector('.progress-bar');
+        if (progressBar) {
+            progressBar.style.width = '100%';
+        }
+        
         // Simular validación con backend
         const datosBackend = await validarQRConBackend(datosQR);
         datosUsuarioEscaneado = datosBackend;
@@ -2453,6 +2460,7 @@ async function procesarDatosQR(datosQR) {
     } catch (error) {
         console.error("Error procesando QR:", error);
         mostrarNotificacion('Error al procesar el código QR', 'error');
+        goBackToScan();
     }
 }
 
@@ -2740,16 +2748,22 @@ function generarContraseñaTemporal() {
 function verificarCoincidenciaContraseña() {
     const contraseña = document.getElementById('directPassword').value;
     const confirmarContraseña = document.getElementById('directConfirmPassword').value;
-    const elementoMensaje = document.getElementById('passwordMatchMessage') || crearElementoMensajeContraseña();
+    const elementoMensaje = document.getElementById('passwordMatchMessage');
+    
+    if (!elementoMensaje) return;
     
     if (contraseña && confirmarContraseña) {
+        elementoMensaje.style.display = 'flex';
+        
         if (contraseña === confirmarContraseña) {
-            elementoMensaje.className = 'password-match';
+            elementoMensaje.className = 'password-match password-match-message';
             elementoMensaje.innerHTML = '<i class="fas fa-check-circle"></i> Las contraseñas coinciden';
         } else {
-            elementoMensaje.className = 'password-mismatch';
+            elementoMensaje.className = 'password-mismatch password-match-message';
             elementoMensaje.innerHTML = '<i class="fas fa-times-circle"></i> Las contraseñas no coinciden';
         }
+    } else {
+        elementoMensaje.style.display = 'none';
     }
 }
 

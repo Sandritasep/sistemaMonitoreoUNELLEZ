@@ -628,25 +628,6 @@ body.admin-logged-in .admin-content {
     }
 }
 
-/* Loading Message */
-.mensaje-cargando {
-    text-align: center;
-    padding: 3rem;
-    color: #666;
-    font-size: 1.1rem;
-}
-
-.mensaje-cargando i {
-    margin-right: 0.5rem;
-    color: #1a2a6c;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
 .admin-section {
     display: none;
 }
@@ -1295,7 +1276,7 @@ input[oninput*="replace"][oninput*="A-Za-z"] {
     transform: rotate(90deg);
 }
 
-/* Pasos del modal */
+/* Pasos del modal registro nuevo conductor */
 .modal-step {
     display: none;
 }
@@ -1376,6 +1357,141 @@ input[oninput*="replace"][oninput*="A-Za-z"] {
     100% { background-position: 0% 50%; }
 }
 
+/* Añade esto a tu CSS existente */
+
+/* =========================================== */
+/* CORRECCIONES ESPECÍFICAS PARA MODAL CONDUCTOR */
+/* =========================================== */
+
+/* Asegurar que todos los inputs de contraseña tengan padding para el botón del ojo */
+#modalDirectConductor .password-input {
+    position: relative;
+    width: 100%;
+}
+
+#modalDirectConductor .password-input input {
+    width: 100%;
+    padding-right: 45px !important; /* Espacio para el botón del ojo */
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px 15px !important;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+    color: #333;
+    box-sizing: border-box !important; /* Asegurar que padding se incluya en el ancho */
+}
+
+#modalDirectConductor .password-input input:focus {
+    outline: none;
+    border-color: #1a2a6c;
+    box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.1);
+}
+
+#modalDirectConductor .password-input .toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1rem;
+    z-index: 10;
+    height: auto;
+    width: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#modalDirectConductor .password-input .toggle-password:hover {
+    color: #1a2a6c;
+}
+
+/* Contenedor para los inputs de contraseña con mensaje */
+#modalDirectConductor .password-field-group {
+    position: relative;
+    margin-bottom: 20px; /* Espacio para el mensaje */
+}
+
+/* Mensaje de validación de contraseñas - POSICIONADO CORRECTAMENTE */
+#passwordMatchMessage {
+    position: absolute;
+    bottom: -5px; /* Coloca el mensaje debajo del input */
+    left: 0;
+    width: 100%;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    animation: fadeIn 0.3s ease;
+    z-index: 1;
+}
+
+/* Mensaje para ambos campos de contraseña */
+#modalDirectConductor .password-match-message {
+    grid-column: span 2; /* Ocupa ambas columnas en el grid */
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Otra solución: usar flexbox para alinear correctamente */
+#modalDirectConductor .direct-form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    position: relative; /* Para posicionar el mensaje */
+}
+
+#modalDirectConductor .direct-form-row:has(.password-input) {
+    margin-bottom: 30px; /* Espacio extra para el mensaje */
+}
+
+/* Solución alternativa: mensaje debajo de toda la fila */
+#modalDirectConductor .password-row-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+#modalDirectConductor .password-inputs-container {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+}
+
+#modalDirectConductor .password-message-container {
+    margin-top: 10px;
+    width: 100%;
+}
+
+/* Loading Message */
+.mensaje-cargando {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.mensaje-cargando i {
+    margin-right: 0.5rem;
+    color: #1a2a6c;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
 /* Secciones del formulario registro de nuevo conductor*/
 .form-section {

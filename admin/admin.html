@@ -832,7 +832,7 @@
                                 <textarea id="observacionesUnidad" rows="2" 
                                     placeholder="Observaciones importantes sobre el estado o mantenimiento"
                                     onkeypress="return /^[A-Za-z\s]$/.test(String.fromCharCode(event.charCode))">
-                                    ></textarea>
+                                </textarea>
                             </div>
                         </div>
                         
@@ -1128,24 +1128,31 @@
                             </div>
                         </div>
                         
-                        <div class="direct-form-row">
-                            <div class="direct-form-group">
-                                <label for="directPassword">Contraseña *</label>
-                                <div class="password-input">
-                                    <input type="password" id="directPassword" placeholder="Ingrese contraseña" required>
-                                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                        <!-- CONTENEDOR PARA AMBAS CONTRASEÑAS Y EL MENSAJE -->
+                        <div class="password-row-container">
+                            <div class="password-inputs-container">
+                                <div class="direct-form-group">
+                                    <label for="directPassword">Contraseña *</label>
+                                    <div class="password-input">
+                                        <input type="password" id="directPassword" placeholder="Ingrese contraseña" required>
+                                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="direct-form-group">
+                                    <label for="directConfirmPassword">Confirmar Contraseña *</label>
+                                    <div class="password-input">
+                                        <input type="password" id="directConfirmPassword" placeholder="Confirme la contraseña" required>
+                                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="direct-form-group">
-                                <label for="directConfirmPassword">Confirmar Contraseña *</label>
-                                <div class="password-input">
-                                    <input type="password" id="directConfirmPassword" placeholder="Confirme la contraseña" required>
-                                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
+                            <!-- MENSAJE DE VALIDACIÓN DEBE ESTAR AQUÍ, NO DENTRO DE CADA INPUT -->
+                            <div id="passwordMatchMessage" class="password-match-message" style="display: none;">
+                                <!-- Se llenará dinámicamente por JavaScript -->
                             </div>
                         </div>
                     </div>
